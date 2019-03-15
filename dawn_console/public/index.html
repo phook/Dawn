@@ -1,0 +1,106 @@
+<html>
+<head>
+<title>
+Dawn Console
+</title>
+</head>
+<style>
+  body,html
+  {
+    background-color:black;
+    margin:0;
+	padding:0;
+  }
+  textarea 
+  {
+    margin:0;
+	padding:0;
+    background-color: transparent;
+	border-style: none; 
+    border-color: transparent;   
+	resize: none;
+    outline: none;
+	color: gray;
+	font-family: Arial;
+	font-size: 12pt;
+    position:absolute; 
+    width:100%;
+    top:0; 
+	bottom:0;
+  }
+</style>
+<script src="require.js"></script>
+<body>
+ <script>
+  Hub = require("hubclient");
+  var hub = Hub.createClient();
+//  hub.server.eval(
+var console_element = null;
+var console_history = "";
+var console_command = "";
+var console_cursor_position = 0;
+
+function updateConsole()
+{
+    if (!console_element)
+	   console_element  = document.getElementById('console');
+	console_element.value = console_history + console_command;
+	console_element.selectionStart = console_history.length + console_cursor_position; // consider allowing shift selections and cut copy paste
+	console_element.selectionEnd   = console_history.length + console_cursor_position;
+}
+
+function processKey(e) {
+    var code = (e.keyCode ? e.keyCode : e.which);
+	      e.preventDefault();
+    if (code == 8 && console_cursor_position > 0) // backspace
+	{
+	    console_cursor_position -=1;
+ 		console_command = console_command.substring(0,console_cursor_position) + console_command.substring(console_cursor_position+1);
+    }
+	else
+    if (code == 37 && console_cursor_position > 0) // left
+	{
+	    console_cursor_position -=1;
+    }
+	else
+    if (code == 39 && console_cursor_position < console_command.length) // right
+	{
+	    console_cursor_position +=1;
+    }
+	else
+	if (code == 13) // return 
+	{ 
+		hub.server.eval("console.log('Enter Pressed');");
+		console_history += console_command + "\r";
+		console_command = "";
+		console_cursor_position = 0;
+		console.log(console_command);
+	}
+	else
+	if (e.key.length === 1)
+	{
+		console_command = console_command.substring(0,console_cursor_position) + e.key + console_command.substring(console_cursor_position);
+		console_cursor_position += 1;
+	}
+    updateConsole();
+}
+
+function processPaste(e)
+{
+   e.stopPropagation();
+   e.preventDefault();
+   // remember to delete any selection when pasting
+   // also consider splitting it by newlines and applying commands one by one
+   pastedData = (e.clipboardData || window.clipboardData).getData('text');
+   console_command = console_command.substring(0,console_cursor_position) + pastedData + console_command.substring(console_cursor_position);
+   console_cursor_position += pastedData.length;
+   updateConsole();
+}
+
+</script>
+<form method="post" action="query.php">
+<textarea id="console" autofocus type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
+</textarea>
+</form>
+</body>
+</html>
