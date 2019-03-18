@@ -1,4 +1,21 @@
 <html>
+<link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+<link rel="manifest" href="/favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
 <head>
 <title>
 Dawn Console
@@ -27,27 +44,36 @@ Dawn Console
     width:100%;
     top:0; 
 	bottom:0;
+	caret-color: gray;
   }
 </style>
 <script src="require.js"></script>
-<body>
+<body onload="autoFocus()">
+<form method="post" action="query.php">
+<textarea id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
+</textarea>
+</form>
  <script>
   Hub = require("hubclient");
   var hub = Hub.createClient();
-//  hub.server.eval(
-var console_element = null;
-var console_history = "";
-var console_command = "";
-var console_cursor_position = 0;
 
 function updateConsole()
 {
     if (!console_element)
 	   console_element  = document.getElementById('console');
-	console_element.value = console_history + console_command;
-	console_element.selectionStart = console_history.length + console_cursor_position; // consider allowing shift selections and cut copy paste
-	console_element.selectionEnd   = console_history.length + console_cursor_position;
+	console_element.value = console_history + console_prefix + console_command;
+	console_element.selectionStart = console_history.length + console_prefix.length + console_cursor_position; // consider allowing shift selections and cut copy paste
+	console_element.selectionEnd   = console_history.length + console_prefix.length + console_cursor_position;
 }
+
+
+var console_element = null;
+var console_history = "";
+var console_cursor_position = 0;
+var console_prefix = "#> ";
+var console_command = "";
+
+updateConsole();
 
 function processKey(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
@@ -70,8 +96,8 @@ function processKey(e) {
 	else
 	if (code == 13) // return 
 	{ 
-		hub.server.eval("console.log('Enter Pressed');");
-		console_history += console_command + "\r";
+		hub.server.eval("dawnCommand(\"" + console_command + "\")");
+		console_history += console_prefix + console_command + "\r";
 		console_command = "";
 		console_cursor_position = 0;
 		console.log(console_command);
@@ -97,10 +123,12 @@ function processPaste(e)
    updateConsole();
 }
 
+function autoFocus()
+{
+    if (!console_element)
+	   console_element  = document.getElementById('console');
+    console_element.focus();
+}
 </script>
-<form method="post" action="query.php">
-<textarea id="console" autofocus type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
-</textarea>
-</form>
 </body>
 </html>

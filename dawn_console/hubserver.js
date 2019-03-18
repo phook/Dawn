@@ -1,6 +1,8 @@
 var Socket = require('socket.io');
+
 exports.createServer = function(server)
 	{
+
 	  // listen with socket.io
 	  var io = Socket.listen(server);
 	  io.set("origins", "*:*");
