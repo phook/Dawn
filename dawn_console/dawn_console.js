@@ -27,7 +27,7 @@ fs.readFile("dawn.bnft", 'utf8', function(err, source) {
   console.log("dawn parser loaded");
 });
 
-var debug = false;
+var debug = true;
 function debugInfo(s)
 {
 	  if (debug)
@@ -52,31 +52,34 @@ function testMain(obj, text)
 		throw "error "+text;
 }
 
-_Dawn_Identifiers = {};
+/// MAYBE LIST AND PIPE IS NOT NECESSARY - ROLL FUNC INTO FOB?
+
 function Fob(name)
 {
 	this._name = name;
 	this._type="Fob";
-	if (name)
-       _Dawn_Identifiers[name] = this;
+	this.children = {};
+    this._add=function(child)
+	{
+		this.children[child._name] = child;
+	}
 	this._previous = null;
 	this._setprevious = function(previous)
 	{
 		testMain(previous, "in the setprevious function");
 		this._previous = previous;
 	}
-	this._new = function()
-	{
-		return new Fob("");
-	}
 	this._lookup = function(identifier)
 	{
 		debugInfo("lookup(" + identifier +")");
-		for(id in _Dawn_Identifiers)
+		for(id in this.children)
 		{
+     		debugInfo("looking at " + id);
 			if (identifier.indexOf(id) == 0)
 			{
-				return _Dawn_Identifiers[id]._new(identifier);
+				offerResult = this.children[id]._lookup(identifier);
+				if (offerResult)
+					return offerResult;
 			}
 		}
 		throw "id not found: "+identifier;
@@ -114,23 +117,6 @@ function Fob(name)
 		
 		return bindee;
 	}
-	this._list = function() // args
-	{
-		var newList = new List();
-		var inputs="";
-        var args = Array.prototype.slice.call(arguments);
-        args.forEach(function(element) {
-			testMain(newList, "in the _list function in the loop");
-			element._setprevious(newList);
-            newList._elements.push(element);
-        });
-		testMain(newList, "in the _list function");
-		return newList;
-	}
-	this._pipe = function(pipe)
-	{
-		return (new Pipe())._new(pipe);
-	}
 	this._go = function()
 	{
 		debugInfo("fob go called");
@@ -166,22 +152,29 @@ function Fob(name)
 
 function Pipe(name)
 {
+	// THE POINT OF PIPE IS TO BREAK THE BACKCHAIN, SO GO EXECUTES FROM START OF PIPE
 	Fob.call(this,name);
 	this._type="Pipe";
+	this._element=null;
 	this._bind = function(bindee)
 	{
-		this._element._bind(bindee);
+		if (this._element)
+			this._element._bind(bindee);
 	}
-	this._new = function(element)
+	this._add = function(element)
 	{
-		var newPipe = new Pipe();
-		newPipe._element = element;
-		return newPipe;
+		this._element=element;
+		return this;
+	}
+	this._lookup = function()
+	{
+		return new Pipe();
 	}
 	this._go = function()
 	{
 		debugInfo("pipe go called");
-		this._element._go_from_start();
+		if (this._element)
+			this._element._go_from_start();
 	}
 }
 
@@ -204,7 +197,19 @@ function List(name)
 		this.bindee = bindee;
 		return bindee;
 	}
-	this._new = function()
+	this._add = function()
+	{
+		var inputs="";
+        var args = Array.prototype.slice.call(arguments);
+		var list = this;
+		debugInfo("adding "+ args.toString() +" to " + this._type);
+        args.forEach(function(element) {
+			element._setprevious(list);
+            list._elements.push(element);
+        });
+		return list;
+	}
+	this._lookup = function()
 	{
 		return new List();
 	}
@@ -230,7 +235,7 @@ function String(name)
     	this._value=name.substring(7);
 	else
 		this._value="";
-	this._new = function(value)
+	this._lookup = function(value)
 	{
 		debugInfo("returning new String");
 		var newString = new String();
@@ -257,7 +262,7 @@ function Concatenate(name)
 	{
 		this._value += s;
 	}
-	this._new = function()
+	this._lookup = function()
 	{
 		debugInfo("returning new Concatenate");
 		return new Concatenate();
@@ -275,7 +280,7 @@ function Console(name)
 {
 	Fob.call(this,name);
 	this._type="Console";
-	this._new = function()
+	this._lookup = function()
 	{
 		return new Console();
 	}
@@ -287,9 +292,12 @@ function Console(name)
 	}
 }
 
-new String("String");
-new Concatenate("Concatenate");
-new Console("Console");
+var _Dawn_Root = new Fob();
+_Dawn_Root._add(new String("String"));
+_Dawn_Root._add(new Concatenate("Concatenate"));
+_Dawn_Root._add(new Console("Console"));
+_Dawn_Root._add(new List("List"));
+_Dawn_Root._add(new Pipe("Pipe"));
 
 function dawnCommand(command)
 {
@@ -299,9 +307,7 @@ function dawnCommand(command)
 		debugInfo(source);
 		if (source != "ERROR")
 		{
-			var fob = new Fob();
-			fob.main="main";
-			eval.call(fob,source);
+			eval.call(_Dawn_Root,source);
 		}
 	}
 }
