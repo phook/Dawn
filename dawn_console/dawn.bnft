@@ -20,10 +20,13 @@ SAFE:
  "$" | "-" | "_" | "@" | "." | "&" | ":"
  
 EXTRA:
- "!" | "*" | "\"" | "'" | "|" | ","
- 
+ "!" | "*" | "\"" | "'" | "|" | "," | "(" | ")"
+
 ESCAPE:
  "%" HEX HEX
+
+ESCAPEDECODE:
+ ESCAPE { ESCAPE } ->  #decodeuri ESCAPE
  
 HEX:
  DIGIT
@@ -33,8 +36,14 @@ HEX:
 XALPHA:
  ALPHA | DIGIT | SAFE | EXTRA | ESCAPE 
 
+XALPHADECODE:
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPEDECODE 
+
 URI:
  XALPHA { XALPHA }
+
+URIDECODE:
+ XALPHADECODE { XALPHADECODE }
 
 URILOOKUP:
  URI -> "._lookup(\"" URI "\")" 
@@ -56,7 +65,7 @@ PIPELISTEND:
  { WHITESPACE PIPELISTELEMENTS } 
 
 PIPELIST:
- "(" OPTWHITESPACE PIPE PIPELISTEND ")" -> "this._lookup(\"List\")._add(" PIPE PIPELISTEND ")"
+ "[" OPTWHITESPACE PIPE PIPELISTEND "]" -> "this._lookup(\"List\")._add(" PIPE PIPELISTEND ")"
 
 PIPE:
  URILIST  PIPEEND -> "this._lookup(\"Pipe\")._add(" URILIST  PIPEEND ")"
@@ -64,4 +73,5 @@ PIPE:
  URILIST
 
 COMMMAND_LINE:
- OPTWHITESPACE PIPE OPTWHITESPACE NEWLINE -> PIPE "._go()"
+ "Native.Javascript:" URIDECODE           -> URIDECODE
+ OPTWHITESPACE PIPE OPTWHITESPACE NEWLINE -> PIPE "._in_go()"

@@ -49,7 +49,7 @@ exports.createServer = function(server)
 				}
 				else
 				{
-   			  //console.log("evaling " + packet);
+//   			  console.log("evaling " + packet);
 					try
 					{
 						callback = function(result)

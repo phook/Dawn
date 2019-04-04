@@ -126,7 +126,9 @@ function processKey(e) {
 	else
 	if (code == 13) // return 
 	{ 
-		hub.server.eval("dawnCommand(\"" + console_command + "\")");
+	    var eval_command = console_command.replace(/\"/g,"\\\""); // escape double quotes
+		console.log(eval_command);
+		hub.server.eval("dawnCommand(\"" + eval_command + "\")");
 		console_history += console_prefix + console_command + "\r";
         if (console_command_history.length == 0 || console_command != console_command_history[0])
 			console_command_history.unshift(console_command);
