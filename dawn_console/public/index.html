@@ -138,6 +138,16 @@ function processKey(e) {
 		console.log(console_command);
 	}
 	else
+	if (e.key == "v" && e.ctrlKey)
+	{
+		navigator.clipboard.readText()
+		  .then(text => {
+				console_command = console_command.substring(0,console_cursor_position) + text + console_command.substring(console_cursor_position);
+				console_cursor_position += text.length;
+                updateConsole();
+		  })
+	}
+	else
 	if (e.key.length === 1)
 	{
 		console_command = console_command.substring(0,console_cursor_position) + e.key + console_command.substring(console_cursor_position);

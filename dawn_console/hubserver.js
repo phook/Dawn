@@ -1,6 +1,5 @@
 var Socket = require('socket.io');
-
-exports.createServer = function(server)
+exports.createServer = function(server,passedEval)
 	{
 
 	  // listen with socket.io
@@ -67,7 +66,7 @@ exports.createServer = function(server)
 								server.clients[whatToEvaluate.source].emit("result",evalResult);
 							}				  
 						}
-						var result = eval(whatToEvaluate.evaluate);
+						var result = passedEval(whatToEvaluate.evaluate);
 						if (result != "returnValueInCallback")
 							callback(result);
 					}

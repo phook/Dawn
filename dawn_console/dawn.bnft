@@ -15,7 +15,11 @@ OPTWHITESPACE:
 NEWLINE:
  "\r" { OPTWHITESPACE NEWLINE }
  "\n" { OPTWHITESPACE NEWLINE }
- 
+
+SEPARATOR:
+ NEWLINE
+ WHITESPACE 
+
 SAFE:
  "$" | "-" | "_" | "@" | "." | "&" | ":"
  
@@ -49,7 +53,7 @@ URILOOKUP:
  URI -> "._lookup(\"" URI "\")" 
 
 URILIST:
- URI { "|" URILOOKUP } -> "this._lookup(\"" URI "\")" 
+ URI { "|" URILOOKUP } -> "new Reference(this._lookup(\"" URI "\"))" 
 
 EOT:
  "\0x0004"
@@ -62,16 +66,22 @@ PIPELISTELEMENTS:
   PIPE -> "," PIPE
   
 PIPELISTEND:
- { WHITESPACE PIPELISTELEMENTS } 
+ { SEPARATOR PIPELISTELEMENTS } 
+
+INNER_PIPELIST:
+ PIPE PIPELISTEND -> "new Reference(this._lookup(\"List\")._add(" PIPE PIPELISTEND "))"
 
 PIPELIST:
- "[" OPTWHITESPACE PIPE PIPELISTEND "]" -> "this._lookup(\"List\")._add(" PIPE PIPELISTEND ")"
+ "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
 
 PIPE:
- URILIST  PIPEEND -> "this._lookup(\"Pipe\")._add(" URILIST  PIPEEND ")"
- PIPELIST PIPEEND -> "this._lookup(\"Pipe\")._add(" PIPELIST PIPEEND ")"
+ URILIST  PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" URILIST  PIPEEND "))"
+ PIPELIST PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" PIPELIST PIPEEND "))"
  URILIST
 
 COMMMAND_LINE:
- "Native.Javascript:" URIDECODE           -> URIDECODE
+ "Old.Native.Javascript:" URIDECODE           -> URIDECODE
  OPTWHITESPACE PIPE OPTWHITESPACE NEWLINE -> PIPE "._in_go()"
+
+PROGRAM:
+ INNER_PIPELIST -> INNER_PIPELIST "._in_go()"

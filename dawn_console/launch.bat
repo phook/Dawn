@@ -1,1 +1,1 @@
-node dawn_console.js
+node --inspect dawn_console.js

@@ -1,46 +1,58 @@
 function DawnList(name)
 {
+    var self = this;
     var Fob = require("./Fob.js");
-	Fob.call(this,name);
-	this._elements=[];
-	this.bindee = null;
-	this._type="List";
-	this._bind = function(bindee)
+	Fob.call(self,name);
+	self._elements=[];
+	self._bindee = null;
+	self._type="List";
+	self._sub_bind = function(pipe, bindee)
 	{
         console.log("list binding");
-		for(element in this._elements)
+		for(element in self._elements)
 		{
-	        this._elements[element]._setprevious(this);
-			this._elements[element]._bind(bindee);
+	        self._elements[element]._set_previous(pipe);
+			self._elements[element]._bind(bindee);
 		}
-	    bindee._setprevious(this);
-		this.bindee = bindee;
+	    bindee._set_previous(pipe);
+		self._bindee = bindee;
 		return bindee;
 	}
-	this._add = function()
+	self._offer_bind = function(match)
+	{
+		for(element in self._elements)
+		{
+			var input_bound = self._elements[element]._offer_bind(match);
+		    if (input_bound)
+				return input_bound;
+		}
+	}
+	self._add = function()
 	{
         console.log("list adding");
 		var inputs="";
         var args = Array.prototype.slice.call(arguments);
-		var list = this;
+		var list = self;
         args.forEach(function(element) {
-			element._setprevious(list);
+			element._set_owner(list);
             list._elements.push(element);
         });
 		return list;
 	}
-	this._lookup = function()
+	self._lookup = function()
 	{
 		return new DawnList();
 	}
-	this._in_go = function()
+	self._in_go = function(pipe)
 	{
         console.log("list going");
-		for(element in this._elements)
+		for(element in self._elements)
 		{
-			this._elements[element]._in_go();
+			if (self._elements[element])
+				self._elements[element]._in_go(pipe);
 		}
-		this.bindee._in_go();
+		if (self._bindee)
+			self._bindee._in_go(pipe);
 	}
 }
 module.exports=DawnList;

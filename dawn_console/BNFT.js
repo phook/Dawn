@@ -500,11 +500,25 @@
                           }
                           i = i + 1;
                         } else {
-                          if (localEntry[0] === '"') {
-                            concat += localEntry.substring(1);
-                          } else {
-                            concat += result.find(localEntry);
-                          }
+                            if (localEntry === "#encodeuri") {
+                              var escapeSequence = "";
+                              if (i + 1 < this.newOutputSpecification.length) {
+                                nextEntry = this.newOutputSpecification[i + 1];
+                                escapeSequence = result.find(nextEntry);
+                              }
+                              try {
+                                concat += encodeURIComponent(escapeSequence);
+                              } catch (e)
+                              {
+                              }
+                              i = i + 1;
+                            } else {
+                              if (localEntry[0] === '"') {
+                                concat += localEntry.substring(1);
+                              } else {
+                                concat += result.find(localEntry);
+                              }
+                            }
                         }
                     }
                   }
@@ -1122,6 +1136,12 @@
         return true;
       }
 
+      if (this.tokenizer.nextIs("#encodeuri")) {
+        this.lastOutput.push("#encodeuri");
+        this._output();
+        return true;
+      }
+
       if (this.tokenizer.nextIs("#include")) {
         this.lastOutput.push("#include");
         this._output();
@@ -1172,21 +1192,33 @@
       }
 
 
-    this.parse = function (source, alert) {
+    this.parse = function (source, options) {
       this.tokenizer = new this.Tokenizer(source);
       if (this.lastExpression !== null) {
         this.errorPosition = -1;
         this.lastExpression.fold();
-        var result = this.lastExpression.parse();
+        var start_non_terminal = this.lastExpression;
+        if (typeof(options.nonterminal) == "string")
+        {
+              for(var i in this.entry)
+              {
+                  if (this.entry[i].nonterminal == options.nonterminal)
+                  {
+                      start_non_terminal = this.entry[i];
+                      break;
+                  }
+              }
+        }            
+        var result = start_non_terminal.parse();
         if (result !== null) {
           return result.result();
         }
-        if (typeof(alert) == "function")
-          alert(this.errorFormatting("BNFT parse fail"));
+        if (typeof(options.alert) == "function")
+          options.alert(this.errorFormatting("BNFT parse fail"));
         return "ERROR";
       }
-        if (typeof(alert) == "function")
-          alert(this.errorFormatting("BNFT parse fail"));
+        if (typeof(options.alert) == "function")
+          options.alert(this.errorFormatting("BNFT parse fail"));
       return "ERROR";
     };
 /*

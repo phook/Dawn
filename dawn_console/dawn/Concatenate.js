@@ -1,25 +1,24 @@
 function Concatenate(name)
 {
-    var Fob = require("./Fob.js");
-	Fob.call(this,name);
-	this._type="Concatenate";
-	this._out_string = null;
-	this._value = "";
-	this._in_string_$ = function(s)
-	{
-		this._value += s._value;
-	}
-	this._lookup = function()
+    var self = this;
+    var Fob = require("./String.js");
+	Fob.call(self,name);
+	self._type="Concatenate";
+    self._value = "";
+	self._lookup = function()
 	{
 		return new Concatenate();
 	}
-	this._in_go = function()
+    self._string_in_go = self._in_go;
+	self._in_go = function(pipe)
 	{
-        // inherit from string? or have a string inside?
-        console.log("concatenating " +this._value);
-		if (this._out_string)
-			this._out_string._call(this);
-    	this._value = "";
+        self._string_in_go(pipe);
+    	self._value = "";
+	}
+	self._in_string_$ = function(pipe, s)
+	{
+        console.log("concatting "+s._value);
+		self._value += s._value;
 	}
 }
 module.exports = Concatenate;

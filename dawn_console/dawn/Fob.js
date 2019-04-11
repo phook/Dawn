@@ -1,5 +1,12 @@
 function Fob(name)
 {
+    var self = this;
+    Fob.reference = function(reference)
+	{
+	    // self should hold previous, output bindings etc.. pass to object, scopet!!! det er den piperne er bygget op af...
+		self.reference = reference;
+	}
+	
 	var debug = true;
 	function debugInfo(s)
 	{
@@ -20,29 +27,41 @@ function Fob(name)
         }
         return a>b?1:-1;
     }
-	function _call(obj,fn)
+	function _call(pipe, obj,fn)
     {
         this._call = function()
         {
-            fn.apply(obj,arguments);
+   	 	    var args = Array.prototype.slice.call(arguments);
+			args.unshift(pipe);
+            fn.apply(obj,args);
         }
     }
-	
-	this._name = name;
-	this._type="Fob";
-	this._it = 0;
-	this._children = {};
-	this._previous = null;
-	this._setprevious = function(previous)
-	{
-		this._previous = previous;
+	function clone(src) {
+	  return Object.assign({}, src);
 	}
-    this._add=function()
+	
+	self._name = name;
+	self._type="Fob";
+	self._it = 0;
+	self._children = {};
+	self._owner = null;
+	self._set_owner = function(owner)
+	{
+		self._owner = owner;
+	}
+	/*
+	self._previous = null;
+	self._setprevious = function(previous)
+	{
+		self._previous = previous;
+	}
+	*/
+    self._add=function()
 	{
         var args = Array.prototype.slice.call(arguments);
-		var owner = this;
+		var owner = self;
         args.forEach(function(child) {
-			child._setprevious(owner);
+			child._set_owner(owner);
 			var name = "";
 			if (child._name)
 				name = child._name;
@@ -50,14 +69,20 @@ function Fob(name)
 				name = "Ix" + owner._it++;
 			owner._children[name] = child;
         });
-		return this;
+		return self;
 	}
-	this._lookup = function(identifier)
+	self._lookup = function(identifier)
 	{
+        if (identifier == self._name) return self;
+
+	    if (identifier.indexOf(self._name + ".") == 0)
+		  identifier = identifier.substring(self._name.length+1);
+   
+   
         // first remove own reference if needed
-    	debugInfo("lookup(" + identifier +")");
+    	debugInfo(self._name + ".lookup(" + identifier +")");
 		
-        var keys = Object.keys(this._children);
+        var keys = Object.keys(self._children);
         keys.sort(dawnSort);        
         
         for(id in keys)
@@ -66,26 +91,49 @@ function Fob(name)
 			if (identifier.indexOf(keys[id]) == 0)
 			{
         		debugInfo("offering "+identifier+" to " + keys[id]);
-				offerResult = this._children[keys[id]]._lookup(identifier);
+				offerResult = self._children[keys[id]]._lookup(identifier);
 				if (offerResult)
 					return offerResult;
 			}
 		}
+		
+		if (self._previous)
+		{
+		    debugInfo("lookup failed - offering parent " + self._previous.name);
+			return self.previous(identifier);
+		}
+		
 		throw "id not found: "+identifier;
 	    return new Fob(identifier);
 	}
-	this._bind = function(bindee)
+	self._offer_bind = function(match,pipe)
 	{
-		var id = this._type;
-		if (typeof(this._value) != "undefined")
-			id+=this._value;
+		for(b in self)
+		{
+			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
+			{
+				if ((b.indexOf("_$")==(b.length-2)) || typeof(self[b+"@"]) == "undefined")
+				{
+					self[b+"@"] = true;
+					return new _call(pipe,self,self[b]);
+					break;
+				}
+			}
+		}
+	}
+	/*
+	self._bind = function(bindee)
+	{
+		var id = self._type;
+		if (typeof(self._value) != "undefined")
+			id+=self._value;
 		debugInfo(id + " binds("+bindee._type+")");
-		bindee._setprevious(this);
-		this.bindee = bindee;
+		bindee._setprevious(self);
+		self.bindee = bindee;
 		
 
         // bind outputs
-		for(a in this)
+		for(a in self)
 		{
 			if (a.indexOf("_out_") == 0)
 			{
@@ -102,42 +150,43 @@ function Fob(name)
 						{
                      		debugInfo("  " + a + " connects to"+b);
 							bindee[b+"@"] = true;
-							this[a] = new _call(bindee,bindee[b]);
+							self[a] = new _call(bindee,bindee[b]);
 							break;
 						}
 					}
 				}
 			}
 		}
-
 		// bind children
-		for(child in this._children)
-		{
-	        this._children[child]._setprevious(this);
-			this._children[child]._bind(bindee);
-		}
+//		for(child in self._children)
+//		{
+//	        self._children[child]._setprevious(self);
+//			self._children[child]._bind(bindee);
+//		}
 		
 		return bindee;
 	}
-	this._in_go = function()
+*/
+	self._in_go = function()
 	{
     	debugInfo("fob go called");
-		for(element in this._elements)
+		for(child in self._children)
 		{
-			debugInfo("running element in list");
-			this._elements[element]._go();
+			debugInfo("running child in list");
+			self._children[child]._go();
 		}
-		if (this.bindee)
-			this.bindee._go();
+		if (self.bindee)
+			self.bindee._go();
 	}
-	this._go_from_start = function()
+/*
+	self._go_from_start = function()
 	{
-		debugInfo("fob " + this._type+ " go_from_start called");
-		if (this._previous)
+		debugInfo("fob " + self._type+ " go_from_start called");
+		if (self._previous)
 		{
             var a=1;
 			debugInfo(a);
-			var first = this._previous;
+			var first = self._previous;
 			
 			var loopTest = [first];
 			
@@ -158,12 +207,13 @@ function Fob(name)
 		{
 		}
 	}
-    this._get_qualified_name = function()
+*/
+    self._get_qualified_name = function()
     {
-        if (this._previous)
-            return this._previous._get_qualified_name() + "." + this._name;
-        return this._name;
+        if (self._previous)
+            return self._previous._get_qualified_name() + "." + self._name;
+        return self._name;
     }
-	return this;
+	return self;
 }
 module.exports = Fob;
