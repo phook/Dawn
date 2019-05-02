@@ -29,6 +29,7 @@ function Fob(name)
     }
 	function _call(pipe, obj,fn)
     {
+		this.reference = obj;
         this._call = function()
         {
    	 	    var args = Array.prototype.slice.call(arguments);
@@ -45,6 +46,7 @@ function Fob(name)
 	self._it = 0;
 	self._children = {};
 	self._owner = null;
+	self._out_go = null;
 	self._set_owner = function(owner)
 	{
 		self._owner = owner;
@@ -97,15 +99,15 @@ function Fob(name)
 			}
 		}
 		
-		if (self._previous)
+		if (self._owner)
 		{
-		    debugInfo("lookup failed - offering parent " + self._previous.name);
-			return self.previous(identifier);
+		    debugInfo("lookup failed - offering parent " + self._owner.name);
+			return self._owner._lookup(identifier);
 		}
 		
-		throw "id not found: "+identifier;
-	    return new Fob(identifier);
+		return Object.assign({}, this); // CLONE MYSELF
 	}
+
 	self._offer_bind = function(match,pipe)
 	{
 		for(b in self)
@@ -121,62 +123,16 @@ function Fob(name)
 			}
 		}
 	}
-	/*
-	self._bind = function(bindee)
-	{
-		var id = self._type;
-		if (typeof(self._value) != "undefined")
-			id+=self._value;
-		debugInfo(id + " binds("+bindee._type+")");
-		bindee._setprevious(self);
-		self.bindee = bindee;
-		
-
-        // bind outputs
-		for(a in self)
-		{
-			if (a.indexOf("_out_") == 0)
-			{
-				match = a.substr(5);
-				if (match.indexOf("_") != -1)
-					match = match.substr(0,match.indexOf("_"));
-				//debugInfo("trying to bind "+match);
-				for(b in bindee)
-				{
-					//debugInfo("checking "+b+" = _in_" + match);
-					if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
-					{
-						if ((b.indexOf("_$")==(b.length-2)) || typeof(bindee[b+"@"]) == "undefined")
-						{
-                     		debugInfo("  " + a + " connects to"+b);
-							bindee[b+"@"] = true;
-							self[a] = new _call(bindee,bindee[b]);
-							break;
-						}
-					}
-				}
-			}
-		}
-		// bind children
-//		for(child in self._children)
-//		{
-//	        self._children[child]._setprevious(self);
-//			self._children[child]._bind(bindee);
-//		}
-		
-		return bindee;
-	}
-*/
 	self._in_go = function()
 	{
     	debugInfo("fob go called");
 		for(child in self._children)
 		{
 			debugInfo("running child in list");
-			self._children[child]._go();
+			self._children[child]._in_go();
 		}
 		if (self.bindee)
-			self.bindee._go();
+			self.bindee._in_go();
 	}
 /*
 	self._go_from_start = function()

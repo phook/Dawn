@@ -5,10 +5,6 @@ function Concatenate(name)
 	Fob.call(self,name);
 	self._type="Concatenate";
     self._value = "";
-	self._lookup = function()
-	{
-		return new Concatenate();
-	}
     self._string_in_go = self._in_go;
 	self._in_go = function(pipe)
 	{

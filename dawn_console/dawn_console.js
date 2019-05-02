@@ -36,16 +36,15 @@ function dawnSort(a,b)
     return a>b?1:-1;
 }
 
+Fob.fileToString = function(filename)
+{
+    return fs.readFileSync(filename, {option:'utf8', function(err, source) {console.log("error reading "+filename);throw err;}}).toString();
+}
+
+Fob.bnft = bnft;
 Fob.parser = null;
-fs.readFile("dawn.bnft", 'utf8', function(err, source) {
-  if (err) 
-  {
-	  console.log("error reading dawn.bnft");
-	  throw err;
-  }
-  Fob.parser = new bnft(source, console.log);
-  console.log("dawn parser loaded");
-});
+Fob.parser = new Fob.bnft(Fob.fileToString("dawn/Flavors/dawn.bnft"), console.log);
+console.log("dawn parser loaded");
 
 var debug = true;
 function debugInfo(s)
@@ -155,10 +154,12 @@ Fob.root._add(new If("If"));
         }
     }
 
-Reference = function (resource)
+Reference = function (resource, parent)
 {
 	Fob.call(this,"");
+	this._name = "Reference to " + resource;
     var previous = null;
+	this._set_owner(parent);
     this.resource = resource;
     this._set_previous= function(_previous)
     {

@@ -7,6 +7,7 @@ _Input = function (name)
 	if (name)
     {
     	self._input_name=name.substring(6);
+        self._input_name_clean=self._input_name.replace("_$","");
 	}
     else
 		self._input_name="";
@@ -20,9 +21,12 @@ _Input = function (name)
         self._bindee = bindee;
         return bindee;
 	}
-    self._in_pipe = function(pipe)
+    self._in_pipe = function(pipe,data)
     {
-        self._bindee["_in_"+self._input_name] = pipe._function;
+        //pipe.bindee.resource["_in_"+self._input_name] = data._function;
+        var function_source = "[function(pipe," + self._input_name_clean + "){" + data._source + "}][0]";
+        console.log(function_source);
+        pipe.bindee.resource["_in_"+self._input_name] = eval(function_source);
     }
 }
 module.exports=_Input;

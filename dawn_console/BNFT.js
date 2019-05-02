@@ -7,12 +7,26 @@
   var previous_BNFT = root.BNFT;
 
 
-  var BNFT = function (source,alert) {
+  var BNFT = function (source,options) {
+
+      if (options && typeof(options.fileToString) == "function")
+      {
+          this.fileToString = options.fileToString;
+      }
+
+      if (options && typeof(options.path) =="string")
+      {
+          this.path = options.path;
+      }
+      else
+          this.path = "";
+
     // SIGNIFICANT WHITESPACE VARIABLES
     this.outputblockbegin = "";
     this.outputblockend = "";
 
     this.Tokenizer = function (source) {
+
       this.source = source;
       this.position = 0; // current position (or current peekposition if peeking)
 
@@ -483,7 +497,10 @@
                         fileToInclude = result.find(nextEntry);
                         fileToInclude = fileToInclude.replace("\"", "");
                         fileToInclude = fileToInclude.replace("\'", "");
-                        this.owner.tokenizer.insertFrom(mark, this.owner.fileToString(fileToInclude));
+                        if (this.owner.fileToString)
+                            this.owner.tokenizer.insertFrom(mark, this.owner.fileToString(this.owner.path+fileToInclude));
+                        else
+                            this.error("#include needs options.fileToString definition");
                         i = i + 1;
                       }
                     } else {
@@ -575,8 +592,8 @@
         }
 
         if (result === null) {
-          if (typeof(alert) == "function")
-            alert("Missing identifier: " + this.identifier); /// REPORT ERRORS?
+          if (typeof(options.alert) == "function")
+            options.alert("Missing identifier: " + this.identifier); /// REPORT ERRORS?
           return null;
         }
 
@@ -644,7 +661,7 @@
       return false;
     };
 
-    this._any_char = function () {
+    this._any_char = function (report_error) {
       var i;
       this.lastChar = this.tokenizer.nextChar();
       if (this.lastChar === "\\") {
@@ -678,7 +695,7 @@
           for (i = 0; i < 4; i++) {
             result = this._hexadecimal_char();
             if (!result) {
-              return this.error("hexadecimal char expected");
+              return report_error || this.error("hexadecimal char expected");
             }
             charValue = charValue * 16 + this.lastValue;
           }
@@ -708,7 +725,7 @@
       return false;
     };
 
-    this._identifier = function () {
+    this._identifier = function (report_error) {
       this.lastIdentifier = "";
       if (this._alpha_char()) {
         this.lastIdentifier = this.lastChar;
@@ -718,7 +735,7 @@
         this._whitespace();
         return true;
       }
-      return this.error("identifier expected");
+      return report_error || this.error("identifier expected");
     };
 
     this._newline = function () {
@@ -773,21 +790,21 @@
       this.tokenizer.peek();
       if (this._definition()) {
         this.tokenizer.unPeek();
-        this._definition();
+        this._definition(true);
         return true;
       }
       this.tokenizer.unPeek();
       return false;
     };
 
-    this._entry = function () {
+    this._entry = function (report_error) {
       if (this._identifier()) {
         var localEntry = new this.OrExpression(this, this.lastIdentifier);
         if (this.tokenizer.nextIs(":")) {
           if (!this._nextline()) {
             return false;
           }
-          if (!this._definition()) {
+          if (!this._definition(true)) {
             return false;
           }
 
@@ -808,7 +825,7 @@
           return true;
         }
         if (this.tokenizer.nextIs("=")) {
-          if (!this._definition()) {
+          if (!this._definition(true)) {
             return false;
           }
           if (this.lastExpression !== null) {
@@ -820,7 +837,7 @@
           return true;
         }
       }
-      return this.error(": or = expected");
+      return report_error || this.error(": or = expected");
     };
 
     this._script = function () {
@@ -832,7 +849,7 @@
 
         this._eat_whitespaces();
 
-        if (!this._output_literal()) {
+        if (!this._output_literal(true)) {
           return false;
         }
 
@@ -840,30 +857,12 @@
           return false;
         }
 
-        this.tokenizer.insertFrom(mark, this.fileToString(this.lastIdentifier));
+        if (this.fileToString)
+            this.tokenizer.insertFrom(mark, this.fileToString(this.path + this.lastIdentifier));
+        else
+            this.error("#include needs options.fileToString definition");
+
       } else {
-        if (this.tokenizer.nextIs("#significantwhitespace")) {
-          if (!this.tokenizer.nextIs(" ")) {
-            return false;
-          }
-
-          this.eat_whitepspaces();
-
-          if (!this._output_literal()) {
-            return this.error("string literal expected");
-          }
-          this.outputblockbegin = this.lastidentifer;
-
-          if (!this._output_literal()) {
-            return this.error("string literal expected");
-          }
-          this.outputblockend = this.lastidentifer;
-
-          if (!this._advanceline()) {
-            return false;
-          }
-          this.significantwhitespace = true;
-        } else {
           if (this.tokenizer.nextIs("#")) {
             while (!this._isnextnewline() && !this.tokenizer.endOfScript()) {
               this.tokenizer.next();
@@ -877,12 +876,11 @@
               return this.tokenizer.endOfScript();
             }
           }
-        }
-      }
+        }      
       return this._script();
     };
 
-    this._literal = function () {
+    this._literal = function (report_error) {
       var literalEnclosing = this.tokenizer.currentChar();
       if (literalEnclosing !== "\"" && literalEnclosing !== "'") {
         return false;
@@ -890,14 +888,14 @@
       this.tokenizer.next();
       var literal = "";
       var enter = this.tokenizer.currentChar() === "\\";
-      this._any_char();
+      this._any_char(true);
       while (this.lastChar !== literalEnclosing || enter) {
         literal += this.lastChar;
         enter = this.tokenizer.currentChar() === "\\";
-        this._any_char();
+        this._any_char(true);
       }
       if (this.lastChar !== literalEnclosing) {
-        return this.error(literalEnclosing + " expected");
+        return report_error || this.error(literalEnclosing + " expected");
       }
       this._eat_whitespaces();
 
@@ -906,18 +904,18 @@
       if (this.tokenizer.nextIs("..")) {
         this._eat_whitespaces();
         if (!this.tokenizer.nextIs(literalEnclosing)) {
-          return this.error(literalEnclosing + " expected");
+          return report_error || this.error(literalEnclosing + " expected");
         }
         var secondLiteral = "";
         enter = this.tokenizer.currentChar() === "\\";
-        this._any_char();
+        this._any_char(true);
         while (this.lastChar !== literalEnclosing || enter) {
           secondLiteral += this.lastChar;
           enter = this.tokenizer.currentChar() === "\\";
-          this._any_char();
+          this._any_char(true);
         }
         if (this.lastChar !== literalEnclosing) {
-          return this.error(literalEnclosing + " expected");
+          return report_error || this.error(literalEnclosing + " expected");
         }
 
         if (!this.tokenizer.peeking()) {
@@ -934,9 +932,9 @@
       return true;
     };
 
-    this._output_literal = function () {
+    this._output_literal = function (report_error) {
       if (!this.tokenizer.nextIs("\"")) {
-        return this.error("\" expected");
+        return report_error || this.error("\" expected");
       }
       this.lastIdentifier = "";
       var enter = this.tokenizer.currentChar() === "\\";
@@ -947,13 +945,13 @@
         this._any_char();
       }
       if (this.lastChar !== "\"") {
-        return this.error("\" expected");
+        return report_error || this.error("\" expected");
       }
       this._eat_whitespaces();
       return true;
     };
 
-    this._definition = function () {
+    this._definition = function (report_error) {
       this._eat_whitespaces();
       if (!this._expression()) {
         return false;
@@ -978,20 +976,20 @@
         }
 
         if (!this._advanceline()) {
-          return this.error("newline expected");
+          return report_error || this.error("newline expected");
         }
 
         result = true;
       }
 
       if (!result) {
-        return this.error("newline expected");
+        return report_error || this.error("newline expected");
       }
 
       return true;
     };
 
-    this._item = function () {
+    this._item = function (report_error) {
 
       if (this._literal()) {
         return true;
@@ -1012,7 +1010,7 @@
         }
 
         if (!this.tokenizer.nextIs("}")) {
-          return this.error(") expected");
+          return report_error || this.error(") expected");
         }
 
         return true;
@@ -1026,7 +1024,7 @@
         }
 
         if (!this.tokenizer.nextIs("]")) {
-          return this.error("] expected");
+          return report_error || this.error("] expected");
         }
 
         return true;
@@ -1036,7 +1034,7 @@
         this._expression();
 
         if (!this.tokenizer.nextIs(")")) {
-          return this.error("} expected");
+          return report_error || this.error("} expected");
         }
 
         return true;
@@ -1047,7 +1045,7 @@
     this._or_expression = function () {
       var orExpression = null;
 
-      if (!this._item()) {
+      if (!this._item(true)) {
         return false;
       }
 
@@ -1060,7 +1058,7 @@
         }
 
         this._eat_whitespaces();
-        this._item();
+        this._item(true);
         this._eat_whitespaces();
 
         if (orExpression !== null && this.lastExpression !== null) {
@@ -1115,7 +1113,7 @@
       return true;
     };
 
-    this._output = function () {
+    this._output = function (report_error) {
       this._eat_whitespaces();
 
       if (this.tokenizer.nextIs("#block")) {
@@ -1148,6 +1146,24 @@
         return true;
       }
 
+      if (this.tokenizer.nextIs("#significantwhitespace")) {
+        this._eat_whitespaces();
+        if (!this._output_literal(report_error))
+            return report_error || this.error("expected blockbegin literal");
+        this.entry.slice(-1)[0].blockBegin = this.lastIdentifier;
+        this._eat_whitespaces();
+        if (!this._output_literal(report_error))
+            return report_error || this.error("expected blockend literal");
+        this.entry.slice(-1)[0].blockEnd = this.lastIdentifier;
+        this._eat_whitespaces();
+        if (this._output_literal())
+            this.entry.slice(-1)[0].indentType = this.lastIdentifier;
+        else
+            this.entry.slice(-1)[0].indentType = "";
+        return true;
+      }
+
+
       if (this._output_literal()) {
         this.lastOutput.push("\"" + this.lastIdentifier);
         this._output();
@@ -1159,7 +1175,7 @@
         this._output();
         return true;
       }
-      return this.error("output definition expected");
+      return report_error || this.error("output definition expected");
     };
 
     this.errorFormatting = function (message) {
@@ -1186,50 +1202,11 @@
     };
 
       if (!this._script()) {
-        if (typeof(alert) == "function")
-			alert(this.errorFormatting("BNFT Source parse fail")); // ERROR REPORTING
+        if (typeof(options.alert) == "function")
+			options.alert(this.errorFormatting("BNFT Source parse fail")); // ERROR REPORTING
         return "ERROR";
       }
 
-
-    this.parse = function (source, options) {
-      this.tokenizer = new this.Tokenizer(source);
-      if (this.lastExpression !== null) {
-        this.errorPosition = -1;
-        this.lastExpression.fold();
-        var start_non_terminal = this.lastExpression;
-        if (typeof(options.nonterminal) == "string")
-        {
-              for(var i in this.entry)
-              {
-                  if (this.entry[i].nonterminal == options.nonterminal)
-                  {
-                      start_non_terminal = this.entry[i];
-                      break;
-                  }
-              }
-        }            
-        var result = start_non_terminal.parse();
-        if (result !== null) {
-          return result.result();
-        }
-        if (typeof(options.alert) == "function")
-          options.alert(this.errorFormatting("BNFT parse fail"));
-        return "ERROR";
-      }
-        if (typeof(options.alert) == "function")
-          options.alert(this.errorFormatting("BNFT parse fail"));
-      return "ERROR";
-    };
-/*
-    this.fileToString = function (filePath) {
-    // some xmlhttp magic
-    }
-
-    this.stringToFile = function (filePath, string) {
-    // more magic
-    }
-*/
     this.significantWhitespace = function (source, blockbegin, blockend, noindents) {
       this.noindents = noindents;
       var indents = function (size) {
@@ -1292,6 +1269,50 @@
       }
       return newsource;
     };
+
+    this.parse = function (source, options) {
+      if (this.lastExpression !== null) {
+        this.errorPosition = -1;
+        this.lastExpression.fold();
+        var start_non_terminal = this.lastExpression;
+        if (options && typeof(options.fileToString) == "function")
+        {
+            this.fileToString = options.fileToString;
+        }
+        if (options && typeof(options.nonterminal) == "string")
+        {
+            start_non_terminal = null;
+              for(var i in this.entry)
+              {
+                  if (this.entry[i].nonterminal === options.nonterminal)
+                  {
+                      start_non_terminal = this.entry[i];
+                      break;
+                  }
+              }
+        }
+        if (!start_non_terminal)
+        {
+            if (options && typeof(options.alert) == "function")
+              options.alert("nonterminal "+options.nonterminal+" not found");
+            return "ERROR";
+        }
+        if (start_non_terminal.blockBegin)
+            source = this.significantWhitespace(source, start_non_terminal.blockBegin, start_non_terminal.blockEnd, start_non_terminal.indentType);
+        this.tokenizer = new this.Tokenizer(source);
+        var result = start_non_terminal.parse();
+        if (result !== null) {
+          return result.result();
+        }
+        if (options && typeof(options.alert) == "function")
+          options.alert(this.errorFormatting("BNFT parse fail"));
+        return "ERROR";
+      }
+        if (options &&typeof(options.alert) == "function")
+          options.alert(this.errorFormatting("BNFT parse fail"));
+      return "ERROR";
+    };
+
   };
 
 /* SIMPLE TEST

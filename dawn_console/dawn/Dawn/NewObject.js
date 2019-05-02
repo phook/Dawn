@@ -20,11 +20,16 @@ _NewObject = function (name)
         self._bindee = bindee;
         return bindee;
 	}
-    self._in_go = function()
+    self._in_go = function(pipe)
     {
-        if (self._bindee)
+        /*if (pipe._out_go && pipe._out_go.resource)
         {
-            self._bindee._add(new Fob(self._object_name));
+            console.log("here2");    
+            pipe._out_go.resource._add(new Fob(self._object_name));
+        }*/
+        if (pipe.bindee && pipe.bindee.resource)
+        {
+            pipe.bindee.resource._add(new Fob(self._object_name));
         }
         else
         {

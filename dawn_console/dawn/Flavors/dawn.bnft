@@ -1,3 +1,6 @@
+ANY_CHAR:
+ "\0x0000".."\0xFFFF"
+
 ALPHA:
  "a".."z"
  "A".."Z"
@@ -16,9 +19,15 @@ NEWLINE:
  "\r" { OPTWHITESPACE NEWLINE }
  "\n" { OPTWHITESPACE NEWLINE }
 
+OPTNEWLINE:
+ { NEWLINE }
+
 SEPARATOR:
  NEWLINE
  WHITESPACE 
+
+OPTSEPARATOR:
+ { SEPARATOR }
 
 SAFE:
  "$" | "-" | "_" | "@" | "." | "&" | ":"
@@ -75,13 +84,17 @@ PIPELIST:
  "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
 
 PIPE:
- URILIST  PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" URILIST  PIPEEND "))"
- PIPELIST PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" PIPELIST PIPEEND "))"
+ URILIST  PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" URILIST  PIPEEND "),this)"
+ PIPELIST PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" PIPELIST PIPEEND "),this)"
  URILIST
 
-COMMMAND_LINE:
+COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
- OPTWHITESPACE PIPE OPTWHITESPACE NEWLINE -> PIPE "._in_go()"
+ OPTWHITESPACE PIPE OPTWHITESPACE -> PIPE "._in_go();"
+
+PROGRAMLINE:
+ "REMARK BEGIN" { ANY_CHAR } "REMARK END"    -> "..."
+ PIPE -> PIPE "._in_go();"
 
 PROGRAM:
- INNER_PIPELIST -> INNER_PIPELIST "._in_go()"
+ { PROGRAMLINE SEPARATOR }

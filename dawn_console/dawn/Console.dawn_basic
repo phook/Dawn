@@ -1,0 +1,5 @@
+define Console
+  input all string
+    native javascript
+        Fob.server.clients.eval("print('" + string._value + "')");
+    endnative

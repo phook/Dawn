@@ -7,20 +7,20 @@ function _Javascript(name)
     self._out_pipe=null;
     if (!name)
         name="";
-    var decoded = decodeURIComponent(name.substring(11));
-    console.log(decoded);
-    self._function = eval("[" + decoded + "][0]");
+    self._source = decodeURIComponent(name.substring(11));;
+    console.log(self._source);
+    //self._function = eval("[" + self._source + "][0]");
     self._lookup=function(name)
     {
         return new _Javascript(name);
     }
-    self._in_go = function()
+    self._in_go = function(pipe)
     {
-        if (self._out_pipe)
-            self._out_pipe._call(self);
+        if (pipe._out_pipe)
+            pipe._out_pipe._call(self);
         else
-        if (self._function)
-            self._function();
+        if (pipe._function)
+            pipe._function();
     }
 } 
 module.exports = _Javascript;

@@ -27,10 +27,12 @@ function Pipe(name)
 		self._element=element;
 		return self;
 	}
+    /*
 	self._lookup = function()
 	{
 		return new Pipe();
 	}
+    */
 	self._in_go = function(pipe)
 	{
         if (pipe.out_pipe)

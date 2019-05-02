@@ -41,10 +41,12 @@ Dawn Console
 	font-style:
 	normal; 
   }
-  textarea 
+  #console, textarea 
   {
-    margin:0;
+    display:block;
 	padding:0;
+	 padding-left: 1px;
+    margin:0;
     background-color: transparent;
 	border-style: none; 
     border-color: transparent;   
@@ -63,30 +65,128 @@ Dawn Console
 <script src="require.js"></script>
 <body onload="autoFocus()">
 <form method="post" action="query.php">
-<textarea id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
-</textarea>
+<!--<textarea id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
+</textarea>-->
+
+<div contentEditable id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
+</div>
+
+
 </form>
  <script>
   Hub = require("hubclient");
   var hub = Hub.createClient();
 
+  String.prototype.html_worthy = function()
+  {
+	return this.replace(/ /g, "&nbsp;").replace(/\n/g, "<br/>");
+  }
+  String.prototype.html_unworthy = function()
+  {
+	return this.replace(/&nbsp;/g, " ").replace(/<br\/>/g, "\n");
+  }
+  String.prototype.html_newline_gone = function()
+  {
+	return this.replace(/\n/g, "");
+  }
+
+function getTextNodesIn(node) 
+{
+    var textNodes = [];
+    if (node.nodeType == 3) 
+	{
+        textNodes.push(node);
+    } 
+	else 
+	{
+        var children = node.childNodes;
+        for (var i = 0, len = children.length; i < len; ++i) 
+		{
+            textNodes.push.apply(textNodes, getTextNodesIn(children[i]));
+        }
+    }
+    return textNodes;
+}
+function setSelectionRange(el, start, end) 
+{
+    if (document.createRange && window.getSelection) 
+	{
+        var range = document.createRange();
+        range.selectNodeContents(el);
+        var textNodes = getTextNodesIn(el);
+        var foundStart = false;
+        var charCount = 0, endCharCount;
+
+        var bothSet  = false;
+        for (var i = 0, textNode; textNode = textNodes[i++]; ) 
+		{
+            endCharCount = charCount + textNode.length;
+            if (!foundStart && start >= charCount && 
+			      (start < endCharCount ||
+                    (start == endCharCount && i <= textNodes.length))) 
+			{
+                range.setStart(textNode, start - charCount);
+                foundStart = true;
+            }
+            if (foundStart && end <= endCharCount) {
+                range.setEnd(textNode, end - charCount);
+                bothSet = true;
+				break;
+            }
+            charCount = endCharCount;
+        }
+		if (!bothSet)
+		{
+			lastNode = textNodes.slice(-1)[0];
+			if (lastNode.length < charCount)
+				charCount = lastNode.length;
+		    if (!foundStart)
+				range.setStart(lastNode, charCount);
+            range.setEnd(lastNode, charCount);
+		}
+
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    } 
+	else 
+	if (document.selection && document.body.createTextRange) 
+	{
+        var textRange = document.body.createTextRange();
+        textRange.moveToElementText(el);
+        textRange.collapse(true);
+        textRange.moveEnd("character", end);
+        textRange.moveStart("character", start);
+        textRange.select();
+    }
+}
+
 function updateConsole()
 {
     if (!console_element)
 	   console_element  = document.getElementById('console');
-	console_element.value = console_history + console_prefix + console_command;
-	console_element.selectionStart = console_history.length + console_prefix.length + console_cursor_position; // consider allowing shift selections and cut copy paste
-	console_element.selectionEnd   = console_history.length + console_prefix.length + console_cursor_position;
+	console_element.innerHTML = (console_history + console_prefix + console_command).html_worthy();
+    var cursor_position = console_history.html_newline_gone().length + console_prefix.length + console_cursor_position;
+    var selection_start_position = console_history.html_newline_gone().length + console_prefix.length + console_selection_start_position;
+	//console_element.selectionStart = cursor_position; // consider allowing shift selections and cut copy paste
+	//console_element.selectionEnd   = cursor_position;
+ 
+	if (selection_start_position < cursor_position)
+		setSelectionRange(console_element,selection_start_position,cursor_position);
+	else
+		setSelectionRange(console_element,cursor_position,selection_start_position);
 }
 
-
 var console_element = null;
-var console_history = "";
+var console_history = new String("");
+var console_selection_start_position = 0;
 var console_cursor_position = 0;
 var console_prefix = "#> ";
-var console_command = "";
+var console_command = new String("");
 var console_command_history = [];
 var console_command_history_position = -1;
+var newline = "\n";
+
 updateConsole();
 
 function processKey(e) {
@@ -96,16 +196,21 @@ function processKey(e) {
 	{
 	    console_cursor_position -=1;
  		console_command = console_command.substring(0,console_cursor_position) + console_command.substring(console_cursor_position+1);
-    }
+        console_selection_start_position = console_cursor_position;
+	}
 	else
     if (code == 37 && console_cursor_position > 0) // left
 	{
-	    console_cursor_position -=1;
+		console_cursor_position -=1;
+	    if (!e.shiftKey)
+			console_selection_start_position = console_cursor_position;
     }
 	else
     if (code == 39 && console_cursor_position < console_command.length) // right
 	{
-	    console_cursor_position +=1;
+		console_cursor_position +=1;
+	    if (!e.shiftKey)
+			console_selection_start_position = console_cursor_position;
     }
 	else
     if (code == 38 || (code == 9 && !e.shiftKey)) // up or unshifted tab
@@ -114,6 +219,7 @@ function processKey(e) {
 			console_command_history_position = 0;
 		if (console_command_history.length > 0)
 			console_command = console_command_history[console_command_history_position];
+        console_selection_start_position = console_cursor_position;
     }
 	else
     if (code == 40 || (code == 9 && e.shiftKey)) // down or shifted tab
@@ -122,6 +228,7 @@ function processKey(e) {
 			console_command_history_position = console_command_history.length-1;
 		if (console_command_history.length > 0)
 			console_command = console_command_history[console_command_history_position];
+        console_selection_start_position = console_cursor_position;
     }
 	else
 	if (code == 13) // return 
@@ -129,29 +236,38 @@ function processKey(e) {
 	    var eval_command = console_command.replace(/\"/g,"\\\""); // escape double quotes
 		console.log(eval_command);
 		hub.server.eval("dawnCommand(\"" + eval_command + "\")");
-		console_history += console_prefix + console_command + "\r";
+		console_history += console_prefix + console_command + newline;
         if (console_command_history.length == 0 || console_command != console_command_history[0])
 			console_command_history.unshift(console_command);
         console_command_history_position = -1;		
-		console_command = "";
+		console_command = new String("");;
 		console_cursor_position = 0;
 		console.log(console_command);
+        console_selection_start_position = console_cursor_position;
 	}
 	else
 	if (e.key == "v" && e.ctrlKey)
 	{
+		if (console_selection_start_position > console_cursor_position)
+			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
 		navigator.clipboard.readText()
 		  .then(text => {
-				console_command = console_command.substring(0,console_cursor_position) + text + console_command.substring(console_cursor_position);
+				console_command = console_command.substring(0,console_selection_start_position) + text + console_command.substring(console_cursor_position);
 				console_cursor_position += text.length;
                 updateConsole();
 		  })
+        console_cursor_position = console_selection_start_position;
 	}
 	else
-	if (e.key.length === 1)
+	if (e.key.length === 1 && !e.ctrlKey)
 	{
-		console_command = console_command.substring(0,console_cursor_position) + e.key + console_command.substring(console_cursor_position);
-		console_cursor_position += 1;
+		if (console_selection_start_position > console_cursor_position)
+			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
+			
+		console_command = console_command.substring(0,console_selection_start_position) + e.key + console_command.substring(console_cursor_position);
+        //console_cursor_position += 1;
+		console_cursor_position = console_selection_start_position + 1 ;
+		console_selection_start_position = console_cursor_position;
 	}
 	else
 	  console.log(code);
@@ -172,7 +288,7 @@ function processPaste(e)
 
 function print(s)
 {
-  console_history += s + "\n"; 	
+  console_history += s + newline; 	
   updateConsole();
   console.log("print called");
 }

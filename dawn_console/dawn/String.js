@@ -11,11 +11,6 @@ DawnString = function (name)
 	}
     else
 		self._value="";
-	self._lookup = function(value)
-	{
-        if (value == self.name) return self;
-		return new DawnString(value);
-	}
 	self._in_string = function(pipe,s)
 	{
 		self._value = s._value;
