@@ -19,9 +19,10 @@ function File(name)
             return self._owner._get_qualified_name() + "/" + full_name;
         return self._name;
     }
-    self._parent_lookup = self._lookup;
-	self._lookup = function(identifier)
+    self._parent_lookup = self._in_lookup;
+	self._in_lookup = function(pipe)
 	{
+        var identifier = pipe.resource;
         if (identifier.indexOf(self._name) == 0)
         {
             if (dawnFile)
@@ -47,7 +48,8 @@ function File(name)
                 {
                     console.log(jsSource);
                     // Save cached compile - and require it?
-                    Fob.passedEval.call(this,jsSource);
+                    // eval in owners scope
+                    Fob.passedEval.call(this._get_owner(),jsSource);
                     return self._owner._lookup(identifier); // a little hacky
                 }
                 throw "error in dawn file: " + identifier + " " + jsSource;
@@ -66,7 +68,7 @@ function File(name)
             }
         }
         else
-            return self._parent_lookup(identifier);
+            return self._parent_lookup(pipe);
     }
 }
 

@@ -1,5 +1,8 @@
+
+var id = 1;
 function Fob(name)
 {
+	this.id = id++;
     var self = this;
     Fob.reference = function(reference)
 	{
@@ -41,15 +44,20 @@ function Fob(name)
 	  return Object.assign({}, src);
 	}
 	
+    self._clone = function(){return clone(this);}
 	self._name = name;
 	self._type="Fob";
 	self._it = 0;
 	self._children = {};
 	self._owner = null;
-	self._out_go = null;
+//	self._out_go = null;
 	self._set_owner = function(owner)
 	{
 		self._owner = owner;
+	}
+	self._get_owner = function(owner)
+	{
+		return self._owner?self._owner:this;
 	}
 	/*
 	self._previous = null;
@@ -58,6 +66,7 @@ function Fob(name)
 		self._previous = previous;
 	}
 	*/
+    self._is_reference = function(){return false;}
     self._add=function()
 	{
         var args = Array.prototype.slice.call(arguments);
@@ -73,13 +82,25 @@ function Fob(name)
         });
 		return self;
 	}
-	self._lookup = function(identifier)
+    // javascript wrapper version for dawn defined function
+    self._lookup = function(identifier)
+    {
+      var ref = new Reference(identifier);
+      // later set up output in ref and return the result of the output
+      // ref._out_fob = new call(self,self.result) - ish
+      return self._in_lookup(ref);
+    }
+	self._in_lookup = function(pipe,from_owner)
 	{
+//        console.log(pipe.resource);
+        var identifier = pipe.resource;
+        
         if (identifier == self._name) return self;
 
 	    if (identifier.indexOf(self._name + ".") == 0)
 		  identifier = identifier.substring(self._name.length+1);
-   
+
+		pipe.resource = identifier;   
    
         // first remove own reference if needed
     	debugInfo(self._name + ".lookup(" + identifier +")");
@@ -89,20 +110,19 @@ function Fob(name)
         
         for(id in keys)
         {
-     		debugInfo("looking at " + keys[id]);
 			if (identifier.indexOf(keys[id]) == 0)
 			{
-        		debugInfo("offering "+identifier+" to " + keys[id]);
-				offerResult = self._children[keys[id]]._lookup(identifier);
+//        		debugInfo("offering "+identifier+" to " + keys[id]);
+				offerResult = self._children[keys[id]]._in_lookup(pipe,true);
 				if (offerResult)
 					return offerResult;
 			}
 		}
 		
-		if (self._owner)
+		if (self._owner && !from_owner)
 		{
-		    debugInfo("lookup failed - offering parent " + self._owner.name);
-			return self._owner._lookup(identifier);
+//		    debugInfo("lookup failed - offering parent " + self._owner.name);
+			return self._owner._in_lookup(pipe);
 		}
 		
 		return Object.assign({}, this); // CLONE MYSELF
@@ -123,16 +143,25 @@ function Fob(name)
 			}
 		}
 	}
+    self._in_native_$ = function(pipe,data)
+    {
+        // this is the input used for defining fobs natively
+    }
 	self._in_go = function()
 	{
+        /*
     	debugInfo("fob go called");
 		for(child in self._children)
 		{
 			debugInfo("running child in list");
-			self._children[child]._in_go();
+			self._children[child]._in_go(new Reference(this));
+            //self._children[child]._out_go._call(self);
 		}
+        */
+        /*
 		if (self.bindee)
-			self.bindee._in_go();
+			self.bindee._in_go();*/
+			//self.bindee._out_go._call(self);
 	}
 /*
 	self._go_from_start = function()

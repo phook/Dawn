@@ -3,42 +3,42 @@ function Pipe(name)
     var self = this;
     var Fob = require("./Fob.js");
     
+   if (!name)
+      name = "Pipe";
 	// THE POINT OF PIPE IS TO BREAK THE BACKCHAIN, SO GO EXECUTES FROM START OF PIPE
 	Fob.call(self,name);
 	self._type="Pipe";
-	self._element=null;
+	self._first=null;
+	self._last=null;
     self._bound = false;
 	self._out_pipe=null;
-    self._bind = function(bindee)
+	self._in_lookup = function(pipe,from_owner)
 	{
-        self._bound = true;
-		if (self._element)
-			self._element._bind(bindee);
+			return new Pipe();
+	}
+	self._pass_bind = function(pipe, bindee)
+	{
+		if (self._last)
+            self._last._bind(bindee);
 		return bindee;
 	}
-	self._sub_bind = function(pipe, bindee)
+	self._add = function(last)
 	{
-		self._element._bind(bindee);
-		self._bindee = bindee;
-		return bindee;
-	}
-	self._add = function(element)
-	{
-		self._element=element;
+		self._last = last;
+		self._first = last._first();
+        self._first["_in_go@"] = true; // occupy _go
 		return self;
 	}
     /*
-	self._lookup = function()
+	self._in_lookup = function()
 	{
 		return new Pipe();
 	}
     */
 	self._in_go = function(pipe)
 	{
-        if (pipe.out_pipe)
-            pipe.out_pipe(self);
-		if (self._element /*&& self._bound*/)
-			self._element._go_from_start(pipe);
+		if (self._first /*&& self._bound*/)
+			self._first._in_go(pipe);
 	}
 }
 module.exports = Pipe;

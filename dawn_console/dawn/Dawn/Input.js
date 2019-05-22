@@ -3,6 +3,7 @@ _Input = function (name)
     var self = this;
     var Fob = require("../Fob.js");
 	Fob.call(self,name);
+	self._out_native=null;
 	self._type="Input";
 	if (name)
     {
@@ -11,22 +12,17 @@ _Input = function (name)
 	}
     else
 		self._input_name="";
-	self._lookup = function(value)
+	self._in_lookup = function(pipe)
 	{
-		return new _Input(value);
+		return new _Input(pipe.resource);
 	}
-	self._bind = function(bindee)
-	{
-        bindee._setprevious(self);
-        self._bindee = bindee;
-        return bindee;
-	}
-    self._in_pipe = function(pipe,data)
+    self._in_native_$ = function(pipe,data)
     {
         //pipe.bindee.resource["_in_"+self._input_name] = data._function;
         var function_source = "[function(pipe," + self._input_name_clean + "){" + data._source + "}][0]";
-        console.log(function_source);
-        pipe.bindee.resource["_in_"+self._input_name] = eval(function_source);
+        console.log("Adding " + function_source + " to " + pipe._out_native.reference._name + "._in_" + self._input_name);
+        if (pipe._out_native)
+            pipe._out_native.reference["_in_"+self._input_name] = eval(function_source);
     }
 }
 module.exports=_Input;

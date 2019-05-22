@@ -1,0 +1,16 @@
+define String
+  output string
+  input all string
+    native javascript
+      self._value = s._value;
+    endnative
+  input go
+    native javascript
+      if (pipe._out_string)
+        pipe._out_string._call(arguments[0].resource);
+    endnative
+  input lookup
+    native javascript
+      if (pipe.resource.indexOf(this._name + ":") == 0)
+         return Object.assign({_value:pipe.resource.substring(7)},this);
+    endnative

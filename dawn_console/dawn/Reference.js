@@ -1,18 +1,24 @@
 Reference = function (resource, parent)
 {
+    var self = this;
+    var Fob = require("./Fob.js");
 	Fob.call(this,"");
-	this._name = "Reference to " + resource;
-    var previous = null;
+	this._name = "Reference to " + resource._type;
+    this.previous = null;
 	this._set_owner(parent);
     this.resource = resource;
+    if (typeof(resource) !== "string" && resource._is_reference())
+        console.log("ERROR - reference to reference");
     this._set_previous= function(_previous)
     {
-        previous = _previous;
+        this.previous = _previous;
     }
     this._get_previous = function(_previous)
     {
-        return previous;
+        return this.previous;
     }
+    this._is_reference = function(){return true;}
+
     // copy outputs
     for(a in resource)
     {
@@ -20,72 +26,70 @@ Reference = function (resource, parent)
         if (a.indexOf("_in_") == 0)
         {
 		    let output=a;
-            this[a] = function(...args)
+            self[a] = function(...args)
             {
-                resource[output](this,...args);
+                resource[output](self,...args);
             }
         }
         else
         if (a.indexOf("_out_") == 0)
         {
-            this[a] = null;
+            self[a] = null;
         }
     }
 	this._offer_bind = function(match)
 	{
-		return resource._offer_bind(match,this);
+		return resource._offer_bind(match,self);
 	}
 	this._bind = function(bindee)
 	{
-		var id = this._type;
-		if (typeof(this._value) != "undefined")
-			id+=this._value;
-		debugInfo(id + " binds("+bindee._type+")");
-		bindee._set_previous(this);
-		this.bindee = bindee;		
+        if (!bindee._is_reference())
+              console.log("ERROR not binding to reference");
+        
+		var id = self._type;
+		if (typeof(self._value) != "undefined")
+			id+=self._value;
 
-        if (resource._sub_bind)
-			resource._sub_bind(this,bindee);
+		bindee._set_previous(self);
+		self.bindee = bindee;		
 
-        // bind outputs
-		for(a in this)
+        console.log("trying to bind " + self.resource._name + " to " +  bindee.resource._name);
+
+        if (resource._pass_bind)
+        {
+			let input_bound = resource._pass_bind(self,bindee);
+            //return input_bound;
+        }
+
+		for(a in self)
 		{
 			if (a.indexOf("_out_") == 0)
 			{
 				match = a.substr(5);
 				if (match.indexOf("_") != -1)
 					match = match.substr(0,match.indexOf("_"));
-				//debugInfo("trying to bind "+match);
-
-                var input_bound = bindee._offer_bind(match,this)
+                
+                let input_bound = bindee._offer_bind(match,self)
                 
 				if (input_bound)
-					this[a] = input_bound;
-				/*
-				for(b in bindee)
-				{
-					//debugInfo("checking "+b+" = _in_" + match);
-					if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
-					{
-						if ((b.indexOf("_$")==(b.length-2)) || typeof(bindee[b+"@"]) == "undefined")
-						{
-                     		debugInfo("  " + a + " connects to"+b);
-							bindee[b+"@"] = true;
-							this[a] = new _call(bindee,bindee[b]);
-							break;
-						}
-					}
-				}
-				*/
+                {
+                    console.log("binding " + self.resource._name + " to " +  bindee.resource._name);
+					self[a] = input_bound;
+                }
 			}
 		}
 		return bindee;
 	}
-    this._go_from_start = function(pipe)
+    this._in_go = function()
+    {
+        this.resource._in_go(this);
+    }
+    this._first = function(pipe)
 	{
-		if (previous)
+        
+		if (this.previous)
 		{
-			var first = previous;
+			var first = this.previous;
 			
 			var loopTest = [first];
 			
@@ -98,11 +102,11 @@ Reference = function (resource, parent)
 				});
 				loopTest.push(first);
 			}
-			first._in_go(this);
+			return first;
 		}
 		else
 		{
-            
+          return this;   
 		}
 	}
 

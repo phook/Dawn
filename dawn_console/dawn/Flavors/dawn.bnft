@@ -59,10 +59,10 @@ URIDECODE:
  XALPHADECODE { XALPHADECODE }
 
 URILOOKUP:
- URI -> "._lookup(\"" URI "\")" 
+ URI -> "._in_lookup(\"" URI "\")" 
 
 URILIST:
- URI { "|" URILOOKUP } -> "new Reference(this._lookup(\"" URI "\"))" 
+ URI { "|" URILOOKUP } -> "new Reference(this._lookup(\"" URI "\"),this)" 
 
 EOT:
  "\0x0004"
@@ -78,7 +78,7 @@ PIPELISTEND:
  { SEPARATOR PIPELISTELEMENTS } 
 
 INNER_PIPELIST:
- PIPE PIPELISTEND -> "new Reference(this._lookup(\"List\")._add(" PIPE PIPELISTEND "))"
+ PIPE PIPELISTEND -> "new Reference(this._lookup(\"List\")._add(" PIPE PIPELISTEND "),this)"
 
 PIPELIST:
  "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
