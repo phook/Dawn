@@ -219,6 +219,7 @@ function processKey(e) {
 			console_command_history_position = 0;
 		if (console_command_history.length > 0)
 			console_command = console_command_history[console_command_history_position];
+		console_cursor_position = console_command.length;
         console_selection_start_position = console_cursor_position;
     }
 	else
@@ -228,6 +229,7 @@ function processKey(e) {
 			console_command_history_position = console_command_history.length-1;
 		if (console_command_history.length > 0)
 			console_command = console_command_history[console_command_history_position];
+		console_cursor_position = console_command.length;
         console_selection_start_position = console_cursor_position;
     }
 	else
@@ -246,6 +248,20 @@ function processKey(e) {
         console_selection_start_position = console_cursor_position;
 	}
 	else
+	if (code == 36) // home 
+	{
+		console_cursor_position = 0;
+		if (!e.shiftKey)
+			console_selection_start_position = console_cursor_position;
+	}
+	else
+	if (code == 35) // end 
+	{ 
+		console_cursor_position = console_command.length;
+		if (!e.shiftKey)
+			console_selection_start_position = console_cursor_position;
+	}
+	else
 	if (e.key == "v" && e.ctrlKey)
 	{
 		if (console_selection_start_position > console_cursor_position)
@@ -257,6 +273,19 @@ function processKey(e) {
                 updateConsole();
 		  })
         console_cursor_position = console_selection_start_position;
+	}
+	else
+	if ((e.key == "c" || e.key == "x") && e.ctrlKey)
+	{
+		if (console_selection_start_position > console_cursor_position)
+			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
+        let textToCopy = console_command.substring(console_selection_start_position,console_cursor_position);
+		if (e.key == "x")
+		{
+			console_command = console_command.substring(0,console_selection_start_position) + console_command.substring(console_cursor_position);
+			console_cursor_position = console_selection_start_position;
+		}
+		navigator.clipboard.writeText(textToCopy);
 	}
 	else
 	if (e.key.length === 1 && !e.ctrlKey)

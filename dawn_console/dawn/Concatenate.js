@@ -1,19 +1,21 @@
 function Concatenate(name)
 {
     var self = this;
-    var Fob = require("./String.js");
+    var Fob = require("./Fob.js");
 	Fob.call(self,name);
 	self._type="Concatenate";
     self._value = "";
-    self._string_in_go = self._in_go;
+	self._out_string = null;
 	self._in_go = function(pipe)
 	{
-        self._string_in_go(pipe);
-    	self._value = "";
-	}
+		if (pipe._out_string)
+		{
+			pipe._out_string._call(self);
+		}
+    }
 	self._in_string_$ = function(pipe, s)
 	{
-        console.log("concatting "+s._value);
+        console.log("concattenating "+s._value);
 		self._value += s._value;
 	}
 }

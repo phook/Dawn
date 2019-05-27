@@ -7,6 +7,7 @@ function DawnList(name)
 	self._type="List";
 	self._pass_bind = function(pipe, bindee)
 	{
+		self._bindee = bindee;
 		for(element in self._elements)
 		{
 	        self._elements[element]._set_previous(pipe);
