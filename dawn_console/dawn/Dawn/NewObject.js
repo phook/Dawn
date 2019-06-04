@@ -4,6 +4,7 @@ _NewObject = function (name)
     var Fob = require("../Fob.js");
 	Fob.call(self,name);
 	self._type="NewObject";
+    self._stored_body=null;
     var reserved = ["String","Array"]
 	if (name)
     {
@@ -28,21 +29,21 @@ _NewObject = function (name)
         else
         {
           newFob = new Fob(self._object_name);
+          if (self._stored_body)
+		  {
+			var result = function(str){
+			  return eval(str);
+			}.call(newFob,self._stored_body);
+            //  eval.call(newFob,self._stored_body);
+		  }
         }
 
-        // MUST BE CREATED IN CURRENT SCOPE
-        // AFTERWARDS CHANGE SCOPE TO THE NEW CREATION - is this possible?!?
-        //if (pipe.bindee && pipe.bindee.resource)
-        //{
-        //    pipe.bindee.resource._add(newFob);
-        //}
-        //else
-        {
-            // owner of the pipe should be the current scope
-            console.log("Adding object " + self._object_name + " to " + pipe._get_owner()._name);
-            pipe._get_owner()._add(newFob);
-            // create in current scope
-        }
+        console.log("Adding object " + self._object_name + " to " + pipe._get_owner()._name);
+        pipe._get_owner()._add(newFob);
+    }
+    self._in_native_$ = function(pipe,data)
+    {
+        self._stored_body = data._source;
     }
 }
 module.exports=_NewObject;

@@ -5,6 +5,7 @@ function _Javascript(name)
     Fob.call(self,name);
     self._type="Javascript";
     self._out_native=null;
+    self._out_go=null;
     if (!name)
         name="";
     self._source = decodeURIComponent(name.substring(11));;
@@ -18,6 +19,8 @@ function _Javascript(name)
     {
         if (pipe._out_native)
             pipe._out_native._call(self);
+        if (pipe._out_go)
+            pipe._out_go._call(self);
     }
 } 
 module.exports = _Javascript;
