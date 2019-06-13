@@ -1,26 +1,18 @@
-_Output = function (name)
+_Output = function ()
 {
-    var self = this;
     var Fob = require("../Fob.js");
-	Fob.call(self,name);
-	self._type="Input";
-	self._out_native=null;
-	if (name)
-    {
-    	self._name_of_output=name.substring(7);
-	}
-    else
-		self._name_of_output="";
-	self._in_lookup = function(pipe)
+	Fob.call(this,"Output");
+	this._out_native=null;
+	this._in_lookup_child = function(pipe)
 	{
-		return new _Output(pipe.resource);
+       return Object.assign({_output_name:pipe.resource},new _Output());
 	}
-    self._in_go = function(pipe,data)
+    this._in_go = function(pipe,data)
     {
         if (pipe._out_native)
         {
-            console.log("Adding output _out_"+self._name_of_output + " to " +  pipe._out_native.reference._name);
-            pipe._out_native.reference["_out_"+self._name_of_output] = null;
+            console.log("Adding output _out_"+this._output_name + " to " +  pipe._out_native.reference._name);
+            pipe._out_native.reference["_out_"+this._output_name] = null;
         }
         //else in current scope
     }

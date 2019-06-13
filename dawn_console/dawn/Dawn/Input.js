@@ -1,28 +1,21 @@
-_Input = function (name)
+_Input = function ()
 {
-    var self = this;
     var Fob = require("../Fob.js");
-	Fob.call(self,name);
-	self._out_native=null;
-	self._type="Input";
-	if (name)
-    {
-    	self._input_name=name.substring(6);
-        self._input_name_clean=self._input_name.replace("_$","");
-	}
-    else
-		self._input_name="";
-	self._in_lookup = function(pipe)
+	Fob.call(this,"Input");
+	this._out_native=null;
+	this._in_lookup_child = function(pipe)
 	{
-		return new _Input(pipe.resource);
+       return Object.assign({_input_name:pipe.resource},new _Input());
 	}
-    self._in_native_$ = function(pipe,data)
+    this._in_native_$ = function(pipe,data)
     {
-        //pipe.bindee.resource["_in_"+self._input_name] = data._function;
-        var function_source = "[function(pipe," + self._input_name_clean + "){" + data._source + "}][0]";
-        console.log("Adding " + function_source + " to " + pipe._out_native.reference._name + "._in_" + self._input_name);
+	    var clean_name = this._input_name.replace("_$","");
+        var function_source = "[function(pipe," + clean_name + "){" + data._source + "}][0]";
+        console.log("Adding " + function_source + " to " + pipe._out_native.reference._name + "._in_" + this._input_name);
+
+        // consider moving to _input_go (or _input_end) for clarity
         if (pipe._out_native)
-            pipe._out_native.reference["_in_"+self._input_name] = eval(function_source);
+            pipe._out_native.reference["_in_"+this._input_name] = eval(function_source);
     }
 }
 module.exports=_Input;

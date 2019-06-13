@@ -1,71 +1,70 @@
-function DawnList(name)
+function DawnList()
 {
-    var self = this;
     var Fob = require("./Fob.js");
-	Fob.call(self,name);
-	self._elements=[];
-	self._type="List";
-	self._pass_bind = function(pipe, bindee)
+	Fob.call(this,"List");
+	this._elements=[];
+	this._pass_bind = function(pipe, bindee)
 	{
-		self._bindee = bindee;
-		for(element in self._elements)
+		this._bindee = bindee;
+		for(element in this._elements)
 		{
-	        self._elements[element]._set_previous(pipe);
-			self._elements[element]._bind(bindee);
+	        this._elements[element]._set_previous(pipe);
+			this._elements[element]._bind(bindee);
 		}
 		bindee._set_previous(pipe);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
 		return bindee;
 	}
-	self._offer_bind = function(match)
+	this._offer_bind = function(match)
 	{
-		for(b in self)
+		for(b in this)
 		{
 			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(self[b+"@"]) == "undefined")
+				if ((b.indexOf("_$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
 				{
-					self[b+"@"] = true;
-					return new _call(pipe,self,self[b]);
+					this[b+"@"] = true;
+					return new _call(pipe,this,this[b]);
 					break;
 				}
 			}
 		}
 
-		for(element in self._elements)
+		for(element in this._elements)
 		{
-			var input_bound = self._elements[element]._offer_bind(match);
+			var input_bound = this._elements[element]._offer_bind(match);
             
             // binding single output to multiple inputs?
             if (input_bound)
                 return input_bound;
 		}
 	}
-	self._add = function()
+	this._add = function()
 	{
 		var inputs="";
         var args = Array.prototype.slice.call(arguments);
         console.log("list adding "+args.length+ " elements");
+        var self = this;
         args.forEach(function(element) {
 			element._set_owner(self);
             element["_in_go@"] = true; // occupy _go
             self._elements.push(element);
         });
-		return self;
+		return this;
 	}
-	self._in_lookup = function()
+	this._in_lookup = function()
 	{
 		return new DawnList();
 	}
-	self._in_go = function(pipe)
+	this._in_go = function(pipe)
 	{
         console.log("list going");
-		for(element in self._elements)
+		for(element in this._elements)
 		{
-			if (self._elements[element])
-				self._elements[element]._in_go(pipe);
+			if (this._elements[element])
+				this._elements[element]._in_go(pipe);
 		}
-		if (self._bindee)
-			self._bindee._in_go(pipe);
+		if (this._bindee)
+			this._bindee._in_go(pipe);
 	}
 }
 module.exports=DawnList;

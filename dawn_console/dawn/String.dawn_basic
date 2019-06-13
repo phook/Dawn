@@ -9,8 +9,7 @@ define String
       if (pipe._out_string)
         pipe._out_string._call(arguments[0].resource);
     endnative
-  input lookup
+  input lookup_child
     native javascript
-      if (pipe.resource.indexOf(this._name + ":") == 0)
-         return Object.assign({_value:pipe.resource.substring(7)},this);
+         return Object.assign({_value:pipe.resource},this);
     endnative

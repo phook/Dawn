@@ -1,6 +1,5 @@
 function File(name)
 {
-    var self = this;
     var Fob = require("./Fob.js");
     var fs = require('fs');
     var path = require('path');
@@ -11,23 +10,22 @@ function File(name)
     
     name = name.replace(".js","");
     name = name.replace(/.dawn.*/,"");
-    Fob.call(self,name);
-    self._type="File";
-    self._get_qualified_name = function()
+    Fob.call(this,name);
+    this._get_qualified_name = function()
     {
-        if (self._owner)
-            return self._owner._get_qualified_name() + "/" + full_name;
-        return self._name;
+        if (this._owner)
+            return this._owner._get_qualified_name() + "/" + full_name;
+        return this._name;
     }
-    self._parent_lookup = self._in_lookup;
-	self._in_lookup = function(pipe)
+    this._parent_lookup = this._in_lookup;
+	this._in_lookup = function(pipe)
 	{
         var identifier = pipe.resource;
-        if (identifier.indexOf(self._name) == 0)
+        if (identifier.indexOf(this._name) == 0)
         {
             if (dawnFile)
             {
-                var dawnSource = Fob.fileToString(self._get_qualified_name());
+                var dawnSource = Fob.fileToString(this._get_qualified_name());
                 if (flavoredFile)
                 {
                     var flavor = full_name.substring(full_name.indexOf(".dawn_")+6);
@@ -50,25 +48,23 @@ function File(name)
                     // Save cached compile - and require it?
                     // eval in owners scope
                     Fob.passedEval.call(this._get_owner(),jsSource);
-                    return self._owner._lookup(identifier); // a little hacky
+                    return this._owner._lookup(identifier); // a little hacky
                 }
                 throw "error in dawn file: " + identifier + " " + jsSource;
             }
             else
             {
                 // load, add to pool, call _lookup and return if result
-                var loaded_object_constructor = require(self._get_qualified_name());
+                var loaded_object_constructor = require(this._get_qualified_name());
                 var loaded_object = new loaded_object_constructor(); // create initial instance
-                loaded_object     = new loaded_object_constructor(loaded_object._type);  // then create real named for the typename
-                loaded_object._name = loaded_object._type;//or is it _type - they should merge into the same at some stage
-                Fob.root._add(loaded_object); // and register - replace FileObject - should it do self
+                this._owner._children[loaded_object._name]=loaded_object; // and register - replace FileObject - should it do this
     //            if (name === identifier)
     //                   return loaded_object; // do not return the original prototype - allow it to instance (possible use lookup)
-                return new loaded_object_constructor(identifier);
+                return this._owner._lookup(identifier)
             }
         }
         else
-            return self._parent_lookup(pipe);
+            return this._parent_lookup(pipe);
     }
 }
 

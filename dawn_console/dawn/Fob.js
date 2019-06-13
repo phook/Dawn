@@ -3,11 +3,11 @@ var id = 1;
 function Fob(name)
 {
 	this.id = id++;
-    var self = this;
+    this.path = [""];
     Fob.reference = function(reference)
 	{
-	    // self should hold previous, output bindings etc.. pass to object, scopet!!! det er den piperne er bygget op af...
-		self.reference = reference;
+	    // this should hold previous, output bindings etc.. pass to object, scopet!!! det er den piperne er bygget op af...
+		this.reference = reference;
 	}
 	
 	var debug = true;
@@ -44,134 +44,149 @@ function Fob(name)
 	  return Object.assign({}, src);
 	}
 	
-    self._clone = function(){return clone(this);}
-	self._name = name;
-	self._type="Fob";
-	self._it = 0;
-	self._children = {};
-	self._owner = null;
-//	self._out_go = null;
-	self._set_owner = function(owner)
+    this._clone = function(){return clone(this);}
+	this._name = name;
+	this._type="Fob";
+	this._it = 0;
+	this._children = {};
+	this._owner = null;
+//	this._out_go = null;
+	this._set_owner = function(owner)
 	{
-		self._owner = owner;
+		this._owner = owner;
 	}
-	self._get_owner = function(owner)
+	this._get_owner = function(owner)
 	{
-		return self._owner?self._owner:this;
+		return this._owner?this._owner:this;
 	}
 	/*
-	self._previous = null;
-	self._setprevious = function(previous)
+	this._previous = null;
+	this._setprevious = function(previous)
 	{
-		self._previous = previous;
+		this._previous = previous;
 	}
 	*/
-    self._is_reference = function(){return false;}
-    self._add=function()
+    this._is_reference = function(){return false;}
+    this._add=function()
 	{
         var args = Array.prototype.slice.call(arguments);
-		var owner = self;
+        var self = this;
         args.forEach(function(child) {
-			child._set_owner(owner);
+			child._set_owner(self);
 			var name = "";
 			if (child._name)
 				name = child._name;
 			else
-				name = "Ix" + owner._it++;
-			owner._children[name] = child;
+				name = "Ix" + self._it++;
+			self._children[name] = child;
         });
-		return self;
+		return this;
 	}
     // javascript wrapper version for dawn defined function
-    self._lookup = function(identifier)
+    this._lookup = function(identifier)
     {
       var ref = new Reference(identifier);
       // later set up output in ref and return the result of the output
-      // ref._out_fob = new call(self,self.result) - ish
-      return self._in_lookup(ref);
+      // ref._out_fob = new call(this,this.result) - ish
+      return this._in_lookup(ref);
     }
-	self._in_lookup = function(pipe,from_owner)
+	this._in_lookup = function(pipe,from_owner)
 	{
-//        console.log(pipe.resource);
         var identifier = pipe.resource;
         
-        if (identifier == self._name) return self;
+        if (identifier == this._name) return this;
 
-	    if (identifier.indexOf(self._name + ".") == 0)
-		  identifier = identifier.substring(self._name.length+1);
+        // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
+	    if (identifier.indexOf(this._name + ".") == 0)
+		  identifier = identifier.substring(this._name.length+1);
+		else
+	    if (identifier.indexOf(this._name + ":") == 0)
+		  identifier = identifier.substring(this._name.length+1);
 
-		pipe.resource = identifier;   
-   
-        // first remove own reference if needed
-    	debugInfo(self._name + ".lookup(" + identifier +")");
-		
-        var keys = Object.keys(self._children);
-        keys.sort(dawnSort);        
+        let result = this._lookup_child(identifier);
+		if (result)
+            return result;
         
-        for(id in keys)
-        {
-			if (identifier.indexOf(keys[id]) == 0)
-			{
-//        		debugInfo("offering "+identifier+" to " + keys[id]);
-				offerResult = self._children[keys[id]]._in_lookup(pipe,true);
-				if (offerResult)
-					return offerResult;
-			}
-		}
-		
-		if (self._owner && !from_owner)
+		if (this._owner && !from_owner)
 		{
-//		    debugInfo("lookup failed - offering parent " + self._owner.name);
-			return self._owner._in_lookup(pipe);
+			return this._owner._in_lookup(pipe);
 		}
 		
-		return Object.assign({}, this); // CLONE MYSELF
+		return Object.assign({}, this); // CLONE MYthis
 	}
-
-	self._offer_bind = function(match,pipe)
+    this._lookup_child = function(identifier)
+    {
+      var ref = new Reference(identifier);
+      return this._in_lookup_child(ref);
+    }
+	this._in_lookup_child = function(pipe,from_owner)
 	{
-		for(b in self)
+        var identifier = pipe.resource;
+           
+        var keys = Object.keys(this._children);
+        keys.sort(dawnSort);        
+
+        for(testPath in this.path) // needs the first element to be ""
+        {
+            var identifierToCheck = this.path[testPath] + identifier;
+  		    pipe.resource = identifierToCheck;
+            for(id in keys)
+            {
+                if (identifierToCheck.indexOf(keys[id]) == 0)
+                {
+                    offerResult = this._children[keys[id]]._in_lookup(pipe,true);
+                    if (offerResult)
+                        return offerResult;
+                }
+            }
+        }
+        return null;
+	}
+    
+	this._offer_bind = function(match,pipe)
+	{
+		for(b in this)
 		{
 			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(self[b+"@"]) == "undefined")
+				if ((b.indexOf("_$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
 				{
-					self[b+"@"] = true;
-					return new _call(pipe,self,self[b]);
+					this[b+"@"] = true;
+					return new _call(pipe,this,this[b]);
 					break;
 				}
 			}
 		}
 	}
-    self._in_native_$ = function(pipe,data)
+    this._in_native_$ = function(pipe,data)
     {
         // this is the input used for defining fobs natively
     }
-	self._in_go = function()
+	this._in_go = function()
 	{
         /*
     	debugInfo("fob go called");
-		for(child in self._children)
+		for(child in this._children)
 		{
 			debugInfo("running child in list");
-			self._children[child]._in_go(new Reference(this));
-            //self._children[child]._out_go._call(self);
+			this._children[child]._in_go(new Reference(this));
+            //this._children[child]._out_go._call(this);
 		}
         */
         /*
-		if (self.bindee)
-			self.bindee._in_go();*/
-			//self.bindee._out_go._call(self);
+		if (this.bindee)
+			this.bindee._in_go();*/
+			//this.bindee._out_go._call(this);
 	}
 /*
-	self._go_from_start = function()
+	this._go_from_start = function()
 	{
-		debugInfo("fob " + self._type+ " go_from_start called");
-		if (self._previous)
+		debugInfo("fob " + this._type+ " go_from_start called");
+		if (this._previous)
 		{
             var a=1;
 			debugInfo(a);
-			var first = self._previous;
+			var first = this._previous;
 			
 			var loopTest = [first];
 			
@@ -193,12 +208,12 @@ function Fob(name)
 		}
 	}
 */
-    self._get_qualified_name = function()
+    this._get_qualified_name = function()
     {
-        if (self._previous)
-            return self._previous._get_qualified_name() + "." + self._name;
-        return self._name;
+        if (this._previous)
+            return this._previous._get_qualified_name() + "." + this._name;
+        return this._name;
     }
-	return self;
+	return this;
 }
 module.exports = Fob;

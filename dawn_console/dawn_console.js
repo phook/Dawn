@@ -140,6 +140,7 @@ Fob.root = new Directory("Root",path.join(__dirname,"dawn"));
 Fob.root._add(new Boolean("Boolean"));
 Fob.root._add(new If("If"));
 
+Fob.root.path.push("Dawn.");
 
 
 
@@ -155,7 +156,6 @@ Fob.root._add(new If("If"));
             fn.apply(obj,args);
         }
     }
-
 
 
 
