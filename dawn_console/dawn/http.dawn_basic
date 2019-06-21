@@ -1,0 +1,21 @@
+define http
+  native javascript
+    var self = this;
+    var http = require('http');  
+    this._in_go = function(pipe)
+      http.get("http:" + this._url, function(resp)
+        let data = '';
+        resp.on('data', function(chunk)
+          data += chunk;
+        );
+        resp.on('end', function()
+            // late binding example - here the received is treated as a string and bound to next during run - mime type should be detected
+            var dataAsString = pipe._get_owner()._lookup("String:"+encodeURIComponent(data));
+            var ref = new Reference(dataAsString);
+            ref._bind(pipe.bindee);
+            ref._in_go();
+        );
+      );
+    this._in_lookup_child = function(pipe)
+      return Object.assign({_url:decodeURIComponent(pipe.resource)},this);
+  endnative

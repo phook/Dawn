@@ -11,5 +11,5 @@ define String
     endnative
   input lookup_child
     native javascript
-         return Object.assign({_value:pipe.resource},this);
+         return Object.assign({_value:decodeURIComponent(pipe.resource)},this);
     endnative

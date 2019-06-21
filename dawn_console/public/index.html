@@ -79,7 +79,8 @@ Dawn Console
 
   String.prototype.html_worthy = function()
   {
-	return this.replace(/ /g, "&nbsp;").replace(/\n/g, "<br/>");
+	return this.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/ /g, "&nbsp;").replace(/\n/g, "<br\/>");
+
   }
   String.prototype.html_unworthy = function()
   {
@@ -107,6 +108,7 @@ function getTextNodesIn(node)
     }
     return textNodes;
 }
+/*
 function setSelectionRange(el, start, end) 
 {
     if (document.createRange && window.getSelection) 
@@ -160,21 +162,52 @@ function setSelectionRange(el, start, end)
         textRange.select();
     }
 }
+*/
+
+// Simplified because last text node is always where the range can be set
+function setSelectionRange(el, start, end, fullLength)
+{
+    if (document.createRange && window.getSelection) 
+	{
+        var range = document.createRange();
+        //range.selectNodeContents(el);
+        var foundStart = false;
+        var charCount = 0, endCharCount;
+
+        var lastTextNode  =  getTextNodesIn(el).slice(-1)[0]
+
+        var ref = fullLength - lastTextNode.length;
+        range.setStart(lastTextNode, start - ref);
+        range.setEnd(lastTextNode,     end - ref);
+
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    } 
+}
+
+
+function scrollToBottom()
+{
+	console_element.scrollTop = console_element.scrollHeight - console_element.clientHeight;
+}
 
 function updateConsole()
 {
     if (!console_element)
 	   console_element  = document.getElementById('console');
 	console_element.innerHTML = (console_history + console_prefix + console_command).html_worthy();
+    var full_length = console_history.html_newline_gone().length + console_prefix.length + console_command.length;
     var cursor_position = console_history.html_newline_gone().length + console_prefix.length + console_cursor_position;
     var selection_start_position = console_history.html_newline_gone().length + console_prefix.length + console_selection_start_position;
 	//console_element.selectionStart = cursor_position; // consider allowing shift selections and cut copy paste
 	//console_element.selectionEnd   = cursor_position;
  
 	if (selection_start_position < cursor_position)
-		setSelectionRange(console_element,selection_start_position,cursor_position);
+		setSelectionRange(console_element,selection_start_position,cursor_position,full_length, console_command);
 	else
-		setSelectionRange(console_element,cursor_position,selection_start_position);
+		setSelectionRange(console_element,cursor_position,selection_start_position,full_length, console_command);
+    scrollToBottom();
 }
 
 var console_element = null;
@@ -242,9 +275,8 @@ function processKey(e) {
         if (console_command_history.length == 0 || console_command != console_command_history[0])
 			console_command_history.unshift(console_command);
         console_command_history_position = -1;		
-		console_command = new String("");;
+		console_command = new String("");
 		console_cursor_position = 0;
-		console.log(console_command);
         console_selection_start_position = console_cursor_position;
 	}
 	else
@@ -317,7 +349,8 @@ function processPaste(e)
 
 function print(s)
 {
-  console_history += s + newline; 	
+ s =  decodeURIComponent(s);
+ console_history += s + newline; 	
   updateConsole();
   console.log("print called");
 }
