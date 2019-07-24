@@ -3,7 +3,7 @@ Dawn Programming Language
 
 The Dawn programming language is primarily a playground for myself to tryout different ideas about programming languages, that I have had during my 30+ year career. That said it is also meant as being the most powerful scripting language to automate different types of functionality, again mostly for my own benefit.
 
-However, I have had some problems *conveying* to other people what I have been talking about, so I have decided to change to project to public even though its just in a 0.0.1 fase.
+However, I have had some problems *conveying* to other people what I have been talking about, so I have decided to change to project to public even though its just in a 0.0.1 fase, so its very much work in progress.
 
 Basic Ideas
 -----------
