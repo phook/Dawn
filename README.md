@@ -36,10 +36,11 @@ https://mysite.dk/greek.jpg >> file://localcopy.jpg
 Running the source
 ------------------
 
-In order to run Dawn you have to install NodeJS. Chrome is also needed to host the terminal.
+Install NodeJS (needed for server) 
+Install Chrome (needed for terminal)
 
-
-You might have to npm install some additions, based on the resources used (sorry). Later versions is planned to npm install automatically.
+npm install express
+npm install socket.io
 
 To run the server and display the terminal, you call launch.bat (windows only for the moment, but should be easy enouch to port - only simple stuff).
 
@@ -48,6 +49,7 @@ Library
 
 Not a lot of resources have been added as of yet, since the list is big of whishes:
 
+- terminal needs a lot of work
 - bootstrap
 - run in browser
 - numbers
