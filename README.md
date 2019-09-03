@@ -8,7 +8,7 @@ However, I have had some problems *conveying* to other people what I have been t
 Basic Ideas
 -----------
 
-Dawn is closely related to flow based programming. If you are familiar with Unix pipes, the way of programming will seem somewhat like that (although it is not implmemented like Unix pipes).
+Dawn is closely related to flow based programming. If you are familiar with Unix pipes, the way of programming will seem somewhat like that (although it is not implemented like Unix pipes).
 
 A primary idea is that there are no traditional functions (where you *call* a functions with parameters and it *returns* a value). In Dawn you call the function with parameters, and the function calls the result forward to another function with the result as parameters. The function or resource thus have inputs and outputs, which can be coupled together.
 
