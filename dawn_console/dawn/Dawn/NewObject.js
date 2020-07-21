@@ -15,6 +15,7 @@ _NewObject = function()
 		if (this._stored_body)
 		{
 			var result = function(str){
+			  Fob.debugInfo("EVAL:"+str);
 			  return eval(str);
 			}.call(newFob,this._stored_body);
 		}

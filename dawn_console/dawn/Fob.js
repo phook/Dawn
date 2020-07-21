@@ -50,7 +50,10 @@ function Fob(name)
 	this._it = 0;
 	this._children = {};
 	this._owner = null;
-//	this._out_go = null;
+	
+	this._out_begin = null;
+	this._out_end = null;
+	
 	this._set_owner = function(owner)
 	{
 		this._owner = owner;
@@ -143,16 +146,16 @@ function Fob(name)
         return null;
 	}
     
-	this._offer_bind = function(match,pipe)
+	this._offer_bind = function(match,reference)
 	{
 		for(b in this)
 		{
-			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
+			if ((b.indexOf('@') == -1) && (b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
+				if ((b.indexOf("_$")==(b.length-2)) || typeof(reference.inputs_bound[b]) == "undefined")
 				{
-					this[b+"@"] = true;
-					return new _call(pipe,this,this[b]);
+					reference.inputs_bound[b] = true;
+					return new _call(reference,this,this[b]);
 					break;
 				}
 			}
@@ -160,54 +163,20 @@ function Fob(name)
 	}
     this._in_native_$ = function(pipe,data)
     {
-        // this is the input used for defining fobs natively
     }
+	this._in_begin = function()
+	{
+		if (this._out_begin)
+			this._out_begin();
+	}
+	this._in_end = function()
+	{
+		if (this._out_end)
+			this._out_end();
+	}
 	this._in_go = function()
 	{
-        /*
-    	debugInfo("fob go called");
-		for(child in this._children)
-		{
-			debugInfo("running child in list");
-			this._children[child]._in_go(new Reference(this));
-            //this._children[child]._out_go._call(this);
-		}
-        */
-        /*
-		if (this.bindee)
-			this.bindee._in_go();*/
-			//this.bindee._out_go._call(this);
 	}
-/*
-	this._go_from_start = function()
-	{
-		debugInfo("fob " + this._type+ " go_from_start called");
-		if (this._previous)
-		{
-            var a=1;
-			debugInfo(a);
-			var first = this._previous;
-			
-			var loopTest = [first];
-			
-			while (first._previous)
-			{
-				first = first._previous;
-				debugInfo(++a + " - " + first._type);	
-			    loopTest.forEach(function(element){
-				  if (first == element)
-					  throw "circular ref error";
-				});
-				loopTest.push(first);
-			}
-			debugInfo(JSON.stringify(first,function( key, value) {if (key == "_previous") return ""; return value;}));
-			first._in_go();
-		}
-		else
-		{
-		}
-	}
-*/
     this._get_qualified_name = function()
     {
         if (this._previous)

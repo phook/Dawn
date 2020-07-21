@@ -12,9 +12,12 @@ var Fob = require("./dawn/Fob.js");
 var Directory = require("./dawn/Directory.js");
 var Reference = require("./dawn/Reference.js");
 
+var bigRat = require("big-rational");
+
 //var oldEval = eval;
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
 
+Fob.bigRat = bigRat;
 Fob.passedEval = globalEval;
 hub.createServer(server,globalEval);
 
@@ -48,12 +51,16 @@ Fob.parser = new Fob.bnft(Fob.fileToString("dawn/Flavors/dawn.bnft"), console.lo
 console.log("dawn parser loaded");
 
 var debug = true;
+
+if (debug)
+	fs.writeFile('log.txt', '', function(){});
+
 function debugInfo(s)
 {
-	  if (debug)
-		  console.log(s);
+	if (debug)
+		fs.appendFile('log.txt', s+"\n", function(){});
 }
-
+Fob.debugInfo = debugInfo;
 
 /// Explicitly load Fob from dawn_root
 /// Explicitly load Dir from dawn_root and make it Root
@@ -170,9 +177,9 @@ function dawnCommand(command)
 	}
     if (Fob.parser)
 	{
-		debugInfo(command);
+		debugInfo("COMMAND:" + command);
 	    var source = Fob.parser.parse(command + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
-		debugInfo(source);
+		debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{
 			globalEval.call(Fob.root,source);

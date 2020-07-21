@@ -18,6 +18,11 @@ function File(name)
         return this._name;
     }
     this._parent_lookup = this._in_lookup;
+	function reportError(err)
+	{
+		console.log(err);
+		Fob.debugInfo(err);
+	}
 	this._in_lookup = function(pipe)
 	{
         var identifier = pipe.resource;
@@ -26,25 +31,26 @@ function File(name)
             if (dawnFile)
             {
                 var dawnSource = Fob.fileToString(this._get_qualified_name());
+				Fob.debugInfo("SOURCE<"+this._get_qualified_name()+">:"+dawnSource);
                 if (flavoredFile)
                 {
                     var flavor = full_name.substring(full_name.indexOf(".dawn_")+6);
                     if (!Fob.flavor_parser)
                     {
                         var source = Fob.fileToString("dawn/Flavors/" + flavor + ".bnft");
-                        Fob.flavor_parser = new Fob.bnft(source, {alert:console.log, fileToString: Fob.fileToString, path:"dawn/Flavors/"});
+                        Fob.flavor_parser = new Fob.bnft(source, {alert:reportError, fileToString: Fob.fileToString, path:"dawn/Flavors/"});
                     }
-                    dawnSource = Fob.flavor_parser.parse(dawnSource,{alert:console.log, fileToString: Fob.fileToString,nonterminal:"TO_DAWN_BASE"});
+                    dawnSource = Fob.flavor_parser.parse(dawnSource,{alert:reportError, fileToString: Fob.fileToString,nonterminal:"TO_DAWN_BASE"});
+					Fob.debugInfo("FLAVOR_PARSE:"+dawnSource);
                     if (dawnSource == "ERROR")
                     {
                         throw "error in flavored dawn file: " + identifier + " ";
                     }
                 }
-                console.log(dawnSource);
-                var jsSource = Fob.parser.parse(dawnSource,{alert:console.log,nonterminal:"PROGRAM"});
+                var jsSource = Fob.parser.parse(dawnSource,{alert:reportError,nonterminal:"PROGRAM"});
+				Fob.debugInfo("DAWN_PARSE:"+jsSource);
                 if (jsSource != "ERROR")
                 {
-                    console.log(jsSource);
                     // Save cached compile - and require it?
                     // eval in owners scope
                     Fob.passedEval.call(this._get_owner(),jsSource);

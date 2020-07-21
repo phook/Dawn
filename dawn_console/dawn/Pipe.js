@@ -21,19 +21,22 @@ function Pipe()
 	{
 		this._last = last;
 		this._first = last._first();
-        this._first["_in_go@"] = true; // occupy _go
+        this._first["_in_begin@"] = true; // occupy _begin
+        this._first["_in_go@"]    = true; // occupy _go
+        this._first["_in_end@"]   = true; // occupy _end
 		return this;
 	}
-    /*
-	this._in_lookup = function()
-	{
-		return new Pipe();
-	}
-    */
 	this._in_go = function(pipe)
 	{
-		if (this._first /*&& this._bound*/)
-			this._first._in_go(pipe);
+		if (this._first)
+		{
+			if (this._first._in_begin)
+				this._first._in_begin(pipe);
+			if (this._first._in_go)
+				this._first._in_go(pipe);
+			if (this._first._in_end)
+				this._first._in_end(pipe);
+		}
 	}
 }
 module.exports = Pipe;

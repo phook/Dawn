@@ -6,6 +6,7 @@ Reference = function (resource, parent)
     this.previous = null;
 	this._set_owner(parent);
     this.resource = resource;
+	this.inputs_bound = {};
     if (typeof(resource) !== "string" && resource._is_reference())
         console.log("ERROR - reference to reference");
     this._set_previous= function(_previous)
@@ -79,6 +80,14 @@ Reference = function (resource, parent)
 		}
 		return bindee;
 	}
+    this._in_begin = function()
+    {
+        this.resource._in_begin(this);
+    }
+    this._in_end = function()
+    {
+        this.resource._in_end(this);
+    }
     this._in_go = function()
     {
         this.resource._in_go(this);

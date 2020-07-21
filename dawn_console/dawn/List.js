@@ -55,6 +55,26 @@ function DawnList()
 	{
 		return new DawnList();
 	}
+	this._in_begin = function(pipe)
+	{
+		for(element in this._elements)
+		{
+			if (this._elements[element])
+				this._elements[element]._in_begin(pipe);
+		}
+		if (this._bindee)
+			this._bindee._in_begin(pipe);
+	}
+	this._in_end = function(pipe)
+	{
+		for(element in this._elements)
+		{
+			if (this._elements[element])
+				this._elements[element]._in_begin(pipe);
+		}
+		if (this._bindee)
+			this._bindee._in_end(pipe);
+	}
 	this._in_go = function(pipe)
 	{
         console.log("list going");

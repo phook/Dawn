@@ -1,0 +1,12 @@
+define Multiply
+  native javascript
+    var self = this
+    self._out_number = null
+    self._in_begin = function(pipe)
+      self._value = new Fob.bigRat();
+    self._in_go = function(pipe)
+      if (pipe._out_number)
+        pipe._out_number._call(self)
+    self._in_number_$ = function(pipe, number)
+      self._value = self._value.multiply(number._value)
+  endnative

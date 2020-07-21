@@ -1,0 +1,15 @@
+define Number
+  output number
+  input all number
+    native javascript
+      self._value = s._value;
+    endnative
+  input go
+    native javascript
+      if (pipe._out_number)
+        pipe._out_number._call(arguments[0].resource);
+    endnative
+  input lookup_child
+    native javascript
+         return Object.assign({_value:new Fob.bigRat(pipe.resource)},this);
+    endnative

@@ -1,8 +1,9 @@
 define Concatenate
   native javascript
     var self = this
-    self._value = ""
     self._out_string = null
+    self._in_begin = function(pipe)
+      self._value = ""
     self._in_go = function(pipe)
       if (pipe._out_string)
         pipe._out_string._call(self)

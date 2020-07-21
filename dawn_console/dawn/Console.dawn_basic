@@ -1,5 +1,9 @@
 define Console
   input all string
     native javascript
-        Fob.server.clients.eval("print('" + encodeURIComponent(string._value).replace(/'/g, "%27") + "')");
+        Fob.server.clients.eval("print('" + encodeURIComponent(string._value).replace(/'/g, "%27") + "')")
+    endnative
+  input all number
+    native javascript
+        Fob.server.clients.eval("print('" + encodeURIComponent(number._value.toDecimal()) + "')")
     endnative
