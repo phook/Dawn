@@ -90,7 +90,7 @@
       this.peekNextIs = function (s, caseSensitive) {
 
         caseSensitive = (caseSensitive === undefined) ? true : caseSensitive;
-
+ 
         if (this.position + s.length > this.source.length) {
           return false;
         }
@@ -120,36 +120,40 @@
       this.next = null;
 
       this.add = function (item) {
-        if (this.next) {
-          this.next.add(item);
-        } else {
-          this.next = item;
+        var nextChain = this;
+        while (nextChain.next)
+        {
+            nextChain = nextChain.next;
         }
+        nextChain.next = item;
       };
+	    
+      this.find = function (identifier) {
 
-      this.find = function (identifier, number) {
-        number = number === undefined ? -1 : number;
-
-        if (this.identifier === identifier) {
-          if (number === 0 || this.next === null) {
-            return this.myresult;
-          }
-          return this.myresult + this.next.find(identifier, number--);
-        }
-
-        if (this.next) {
-          return this.next.find(identifier, number);
-        }
-
-        return "";
-      };
-
-      this.result = function () {
-        if (this.next) {
-          return this.myresult + this.next.result();
+        var nextChain = this;
+        var result = "";
+	      
+        while (nextChain)
+        {
+            if (nextChain.identifier === identifier) {
+                result += nextChain.myresult;
+            }
+            nextChain = nextChain.next;
         }
         return result;
       };
+	    
+      this.result = function() {
+        var nextChain = this;
+        var result = "";
+	      
+        while (nextChain)
+        {
+            result += nextChain.myresult;
+            nextChain = nextChain.next;
+        }
+        return result;
+      }
     };
 
     // Interface Expression
@@ -1182,7 +1186,7 @@
       message += "\n";
       if (this.errorPosition === -1) {
         this.errorPosition = this.tokenizer.position;
-        this.errorMessage = "Unknown error";
+        this.errorMessage = "Unknown error " + message;
       }
       var pos1 = this.errorPosition;
       while (pos1 > 0 && this.tokenizer.source[pos1] !== '\n') {
@@ -1290,12 +1294,12 @@
                       break;
                   }
               }
-        }
-        if (!start_non_terminal)
-        {
-            if (options && typeof(options.alert) == "function")
-              options.alert("nonterminal "+options.nonterminal+" not found");
-            return "ERROR";
+            if (!start_non_terminal)
+            {
+                if (typeof(options.alert) == "function")
+                  options.alert("nonterminal "+options.nonterminal+" not found");
+                return "ERROR";
+            }
         }
         if (start_non_terminal.blockBegin)
             source = this.significantWhitespace(source, start_non_terminal.blockBegin, start_non_terminal.blockEnd, start_non_terminal.indentType);
