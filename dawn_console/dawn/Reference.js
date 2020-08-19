@@ -8,7 +8,7 @@ Reference = function (resource, parent)
     this.resource = resource;
 	this.inputs_bound = {};
     if (typeof(resource) !== "string" && resource._is_reference())
-        console.log("ERROR - reference to reference");
+        Fob.debugInfo("ERROR - reference to reference");
     this._set_previous= function(_previous)
     {
         this.previous = _previous;
@@ -44,7 +44,7 @@ Reference = function (resource, parent)
 	this._bind = function(bindee)
 	{
         if (!bindee._is_reference())
-              console.log("ERROR not binding to reference");
+              Fob.debugInfo("ERROR not binding to reference");
         
 		var id = this._type;
 		if (typeof(this._value) != "undefined")
@@ -53,7 +53,7 @@ Reference = function (resource, parent)
 		bindee._set_previous(this);
 		this.bindee = bindee;		
 
-        console.log("trying to bind " + this.resource._name + " to " +  bindee.resource._name);
+        Fob.debugInfo("trying to bind " + this.resource._name + " to " +  bindee.resource._name);
 
         if (resource._pass_bind)
         {
@@ -73,7 +73,7 @@ Reference = function (resource, parent)
                 
 				if (input_bound)
                 {
-                    console.log("binding " + this.resource._name + " to " +  bindee.resource._name);
+                    Fob.debugInfo("binding " + this.resource._name + " to " +  bindee.resource._name);
 					this[a] = input_bound;
                 }
 			}

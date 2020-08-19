@@ -10,13 +10,6 @@ function Fob(name)
 		this.reference = reference;
 	}
 	
-	var debug = true;
-	function debugInfo(s)
-	{
-		  if (debug)
-			  console.log(s);
-	}
-
     // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
     function dawnSort(a,b)
     { 

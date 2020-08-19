@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>Editor</title>
+  <style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+    }
+    
+    #project {
+      width:300px;
+      overflow: auto;
+    }
+
+    #editor {
+      flex-grow:5;
+    }
+
+    #console {
+      height: 200px;
+    }    
+  
+    .row {
+        display: flex;
+        flex-direction: row;
+        flex-grow:1;
+    }
+    .column {
+        display: flex;
+        flex-direction: column;
+        height:100vh;
+    }
+
+ul, li {
+  list-style-type: none;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.caret {
+  cursor: pointer;
+  user-select: none; /* Prevent text selection */
+}
+
+.caret::before {
+  content: "\25B6";
+  color: black;
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.indent {
+  padding-left: 10px;
+}
+
+.indent::before {
+  content:"  ";
+  display: inline-block;
+  margin-right: 6px;
+}
+
+.caret-down::before {
+  transform: rotate(90deg);
+}
+
+.nested {
+  display: none;
+  list-style-type: none;
+}
+
+.active {
+  display: block;
+  list-style-type: none;
+}
+
+.btn {
+   float:right;
+   position: relative; 
+   display: block; 
+   padding: 0; 
+   overflow: hidden; 
+   border-width: 0; 
+   outline: none; 
+   border-radius: 2px; 
+   box-shadow: 0 1px 4px rgba(0, 0, 0, .6); 
+   background-color: white; 
+   color: #ecf0f1; 
+  transition: background-color .3s;
+  width:50px;
+}
+
+.btn:hover, .btn:focus {
+  background-color: #27ae60;
+}
+
+.btn > * {
+  position: relative;
+}
+
+.btn span {
+  display: block;
+}
+
+.btn:before {
+   content: ""; 
+   position: absolute; 
+   display: block; 
+   width: 0; 
+   padding-top: 0; 
+   border-radius: 100%; 
+   background-color: rgba(236, 240, 241, .3); 
+   -webkit-transform: translate(-50%, -50%); 
+  -moz-transform: translate(-50%, -50%);
+  -ms-transform: translate(-50%, -50%);
+  -o-transform: translate(-50%, -50%);
+   transform: translate(-50%, -50%); 
+}
+
+.btn:active:before {
+  transition: width .2s ease-out, padding-top .2s ease-out;
+}
+
+
+  </style>
+</head>
+<body>
+
+<div class="column">
+     <div><button class="btn" type="button" style="float: right;"><img src="favicon/baseline_save_alt_black_18dp.png" width="30px"/></button></div>
+    <div class="row">
+        <div id="project">
+        </div>
+        <pre id="editor">
+        </pre>
+    </div>
+    <embed id="console" src="index.html">
+    </embed>
+</div>
+<script src="ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    function Do(method,url,json,callback)
+    {
+      //console.log(url);
+      if (typeof(json) === "function")
+      {
+        callback = json;
+        json = "";
+      }
+      else
+      if (typeof(json) === "object")
+      {
+        json = JSON.stringify(json);
+      }
+      else
+      if (typeof(json) === "undefined")
+      {
+        json = "";
+      }
+      var http = new XMLHttpRequest();
+      http.open(method, url, true);
+
+      http.setRequestHeader("Content-type", "application/json");
+
+      http.onreadystatechange = function()
+      {
+        if(http.readyState == 4 && http.status == 200) 
+        {
+          callback(http.responseText);
+        }
+      }
+      http.send(json);
+    }
+
+    function GET(url,json,callback)    {Do("GET",url,json,callback); return "returnValueInCallback";}
+    function POST(url,json,callback)   {Do("POST",url,json,callback); return "returnValueInCallback";}
+    function PUT(url,json,callback)    {Do("PUT",url,json,callback); return "returnValueInCallback";}
+    function DELETE(url,json,callback) {Do("DELETE",url,json,callback); return "returnValueInCallback";}
+
+
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/dawn");
+    //editor.session.setMode("ace/mode/javascript");
+
+    
+    function createMarkup(tree)
+    {
+        var markup="";
+        for(var i in tree)
+        {
+            if (typeof(tree[i]) == "string")
+            {
+                markup += "<li><span class='indent'>" + i + "<span></li>";
+            }
+            else
+            {
+                markup += "<li><span class='caret'>" + i + "<span><ul class='nested'>";
+                markup += createMarkup(tree[i]);
+                markup += "</ul></li>";
+            }
+        }
+        return markup;
+    }
+    
+
+    var project = GET("/_dir?dir=file:///C:/Users/pohak/Documents/Custom%20Office%20Templates/Special/dawn/dawn_console&recursive=true", function(project)
+    {
+        document.getElementById("project").innerHTML = createMarkup(JSON.parse(project));
+        var toggler = document.getElementsByClassName("caret");
+        var i;
+
+        for (i = 0; i < toggler.length; i++) {
+          toggler[i].addEventListener("click", function() {
+            this.parentElement.querySelector(".nested").classList.toggle("active");
+            this.classList.toggle("caret-down");
+          });
+        }
+    });
+</script>
+
+</body>
+</html>

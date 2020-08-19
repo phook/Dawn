@@ -24,6 +24,20 @@ exports.createClient = function(optionalClientName)
 			socket.emit('evaluate',packet);
 			//console.log("sending " + packet);		  
     }
+    async function evalOnAsync(client, whatToEvaluate)
+    {
+		var promise = new Promise(function(resolve, reject) { 
+		  returnMap["#" + client + "#" + whatToEvaluate] = resolve;
+		});
+		  var packet =  JSON.stringify(
+			{
+				target      : client,
+				source      : clientName,
+				evaluate    : whatToEvaluate
+			});
+			socket.emit('evaluate',packet);
+		return promise;
+    }
 
     var clientType = function(remoteClientName)
     {
@@ -41,7 +55,11 @@ exports.createClient = function(optionalClientName)
 	    this.eval = function(whatToEvaluate,callback)
 	    {
 	      evalOn("server",whatToEvaluate,callback);
-		  }
+		}
+	    this.evalAsync = async function(whatToEvaluate)
+	    {
+	      return evalOnAsync("server",whatToEvaluate);
+		}
 	  }();
 
     this.getName = function()
@@ -74,7 +92,8 @@ exports.createClient = function(optionalClientName)
 		{
 			returnValue = JSON.parse(packet);
 			//console.log("got result " + packet);
-			if (typeof(returnMap["#" + returnValue.source + "#" +returnValue.evaluate]) != "undefined")
+			returnType = typeof(returnMap["#" + returnValue.source + "#" +returnValue.evaluate]);
+			if (returnType == "function")
 			{
 				returnMap["#" + returnValue.source + "#" +returnValue.evaluate](returnValue.returnValue);
 				returnMap[returnValue.evaluate] = undefined;

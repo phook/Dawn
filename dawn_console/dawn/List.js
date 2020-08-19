@@ -42,7 +42,7 @@ function DawnList()
 	{
 		var inputs="";
         var args = Array.prototype.slice.call(arguments);
-        console.log("list adding "+args.length+ " elements");
+        Fob.debugInfo("list adding "+args.length+ " elements");
         var self = this;
         args.forEach(function(element) {
 			element._set_owner(self);
@@ -77,7 +77,7 @@ function DawnList()
 	}
 	this._in_go = function(pipe)
 	{
-        console.log("list going");
+        Fob.debugInfo("list going");
 		for(element in this._elements)
 		{
 			if (this._elements[element])

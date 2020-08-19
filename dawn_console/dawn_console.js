@@ -2,6 +2,7 @@ var express = require('express');
 var http = require('http');
 var path = require('path')
 var fs = require('fs')
+var fileUpload = require('express-fileupload');
 
 var hub     = require('./hubserver.js');
 var app = express();
@@ -22,6 +23,121 @@ Fob.passedEval = globalEval;
 hub.createServer(server,globalEval);
 
 app.use(express.static('public'));
+app.use(fileUpload());
+
+
+// CAN BE USED FOR MONITORING CHANGES - FILES HAS TIMESTAMP - 
+function read_dir(dirpath,recursion,hidden)
+{
+   var jsdir = {};
+   files = fs.readdirSync(dirpath)
+   files.forEach(function (file) {
+        filepath = path.resolve(dirpath, file);
+        if(! /^\./.test(file) || hidden)
+        try {
+            var stat = fs.statSync(filepath);
+            if (stat && stat.isDirectory())
+            {
+                if (recursion)
+                    jsdir[file] = read_dir(filepath,{});
+                else
+                    jsdir[file] = {};
+            }
+            else
+            {
+                jsdir[file] = stat.mtime;
+            }
+        } catch (e) {
+        }
+    });
+    return jsdir;
+}
+/* Set Time or file - use to sync .dawn with .dawn_flavors (.flavor files should only be saved when errors are in them)
+var fs = require('fs')
+function setFileTime(filePath, atime, mtime) {
+    fs.utimesSync(filePath, atime, mtime);
+}
+var date = new Date('Thu Aug 20 2015 15:10:36 GMT+0800 (CST)');
+setFileTime('/tmp/scache/fdf/admin.log', date, date);
+*/
+/*
+function read_dir(dirpath,jsdir)
+{
+   files = fs.readdirSync(dirpath);
+   files.forEach(function (file) {
+        var filepath = path.resolve(dirpath, file); 
+        var stat = fs.statSync(filepath);
+        if (stat && stat.isDirectory())
+        {
+            jsdir[file] = read_dir(filepath,{});
+        }
+    });
+   files.forEach(function (file) {
+        var filepath = path.resolve(dirpath, file); 
+        var stat = fs.statSync(filepath);
+        if (stat && !stat.isDirectory())
+        {
+            jsdir[file] = "file";
+        }
+    });
+    return jsdir;
+}
+
+*/
+
+// dir command service - parameters: dir = directory in uri:fileformat, hidden - show hidden files, recursive - recursive directory
+app.get('*/_dir', function(request, result) {
+    // test for file beginning
+    var dir = request.query.dir.replace("file:///","");
+    result.send(JSON.stringify(read_dir(dir,request.query.recursive,request.query.hidden)));
+});
+
+// file service - get = load, put = save, parameters: file = path to file in uri:fileformat 
+app.get('/_file', async (request, result) => {
+    try {
+        var file = request.query.file;
+        // test for file beginning
+        file = file.replace("file:///","");
+        fs.readFile(file, function (err,data) {
+            if (err) {
+              result.writeHead(404);
+              result.end(JSON.stringify(err));
+              return;
+            }
+            result.writeHead(200);
+            result.end(data);
+        });        
+    } catch (err) {
+        result.status(500).send(err);
+    }
+});
+
+app.put('/_file', async (request, result) => {
+    try {
+        var file = request.query.file;
+        // test for file beginning
+        file = file.replace("file:///","");
+        if(!request.files) {
+            result.send({
+                status: false,
+                message: 'No file'
+            });
+        } else {
+            let file = request.files.file;
+            
+            // delete the one there?
+            file.mv(file);
+
+            result.send({
+                status: true,
+                message: 'File is saved',
+            });
+        }
+    } catch (err) {
+        result.status(500).send(err);
+    }
+});
+
 
 server.listen(5000, function () {
 })
@@ -60,113 +176,12 @@ function debugInfo(s)
 	if (debug)
 		fs.appendFile('log.txt', s+"\n", function(){});
 }
+
+
 Fob.debugInfo = debugInfo;
-
-/// Explicitly load Fob from dawn_root
-/// Explicitly load Dir from dawn_root and make it Root
-/// 'replace' Fob with reloaded value if needed
-/// how to boot from svn etc. - need local system to bootstrap remote func (optional local_dawn_root?) 
-/// unless its possible to get a precompiled loader from remote dawn installation?
-
-// var pwd = __dirname
-
-
-
-
-
-
-
-
-function BooleanValue(string)
-{
-	if (string == "1" ||
-	    string.toLowerCase() == "true" ||
- 	    string.toLowerCase() == "on")
-		return true;
-	return false;
-}
-
-function Boolean(name)
-{
-	Fob.call(this,name);
-	this._type="Boolean";
-	this._out_boolean = null;
-	if (name)
-    	this._value=BooleanValue(name.substring(8));
-	else
-		this._value=false;
-	this._in_lookup = function(pipe)
-	{
-        var value = pipe.resource;
-		debugInfo("returning new Boolean");
-		var newBoolean = new Boolean();
-		newBoolean._value = BooleanValue(value.substring(8));
-     	debugInfo("bool is value "+ newBoolean._value);
-		return newBoolean;
-	}
-	this._in_go = function()
-	{
-		debugInfo("boolean go called out="+this._value);
-		if (this._out_boolean)
-		{
-			this._out_boolean._call(this);
-		}
-	}
-}
-
-function If(name)
-{
-	Fob.call(this,name);
-	this._type="If";
-	this._out_go_true = null;
-	this._out_go_false = null;
-	this._in_lookup = function()
-	{
-		debugInfo("returning new If");
-		return new If();
-	}
-	this._in_boolean = function(b)
-	{
-		// NATIVE BEGIN
-		debugInfo("If " + b._value);
-		if (b._value)
-		{
-			if (this._out_go_true)
-				this._out_go_true._call();
-		}
-		else
-			if (this._out_go_false)
-				this._out_go_false._call()
-	    // NATIVE END
-	}
-}
-
 Fob.server = server;
 Fob.root = new Directory("Root",path.join(__dirname,"dawn"));
-
-Fob.root._add(new Boolean("Boolean"));
-Fob.root._add(new If("If"));
-
 Fob.root.path.push("Dawn.");
-
-
-
-
-
-//// Scope lookup should pack the normal lookups in this - for the pipe. (so previous methodics go out of Fob - including go from first);
-	function _call(pipe, obj,fn)
-    {
-        this._call = function()
-        {
-   	 	    var args = Array.prototype.slice.call(arguments);
-			args.unshift(pipe);
-            fn.apply(obj,args);
-        }
-    }
-
-
-
-
 
 function dawnCommand(command)
 {
@@ -178,20 +193,14 @@ function dawnCommand(command)
     if (Fob.parser)
 	{
 		debugInfo("COMMAND:" + command);
+		if (command.indexOf("Console") == -1)
+			command += ">>Console";
 	    var source = Fob.parser.parse(command + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
 		debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{
 			globalEval.call(Fob.root,source);
-			console.log(Object.keys(Fob.root._children));
+			Fob.debugInfo(Object.keys(Fob.root._children));
 		}
 	}
 }
-
-
-// String:A>>Console
-// [String:A String:B]>>Concatenate>>Console
-// ((String:A String:B)>>Concatenate String:C)>>Concatenate>>Console
-// Boolean:true>>If>>String:A>>Console
-// this._pipe(this._list(this._pipe(this._list(this._in_lookup("String:A") ,this._in_lookup("String:B"))._bind(this._in_lookup("Concatenate"))) ,this._in_lookup("String:C"))._bind(this._in_lookup("Concatenate"))._bind(this._in_lookup("Console")))._go()
-//{"_string":"List","_start":"","_elements":[{"_string":"Concatenate","_start":"","_out_string":{},"_value":"","_in_string_$@":true},{"_string":"String","_start":"","_out_string":{},"_value":"C"}],"bindee":{"_string":"Concatenate","_start":"","_out_string":{},"_value":"","_in_string_$@":true}}

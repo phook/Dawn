@@ -11,7 +11,7 @@ _Output = function ()
     {
         if (pipe._out_native)
         {
-            console.log("Adding output _out_"+this._output_name + " to " +  pipe._out_native.reference._name);
+            Fob.debugInfo("Adding output _out_"+this._output_name + " to " +  pipe._out_native.reference._name);
             pipe._out_native.reference["_out_"+this._output_name] = null;
         }
         //else in current scope

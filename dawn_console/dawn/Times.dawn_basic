@@ -1,0 +1,10 @@
+define Times
+  native javascript
+    var self = this
+    self._out_go = null
+    self._in_number_$ = function(pipe, number)
+       if (pipe._out_go)
+            while (number._value.greater(0,1))
+                number._value = number._value.subtract(1,1)
+                pipe._out_go._call(pipe)        
+  endnative

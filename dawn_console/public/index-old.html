@@ -69,8 +69,6 @@ Dawn Console
 </textarea>-->
 
 <div contentEditable id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
-<div contentEditable id="history"></div>
-<div contentEditable id="commandline"></div>
 </div>
 
 
@@ -188,80 +186,35 @@ function setSelectionRange(el, start, end, fullLength)
     } 
 }
 
-function checkCursorPosition(el)
-{
-        var sel = window.getSelection();
-        
-        if (sel.toString() == "") // cursor - must be on commandline
-        {
-            if (!sel.containsNode(el,true)) // is cursor on the line
-                updateSelection();     // no, move it back
-            else
-            {
-                console_cursor_position = sel.focusOffset - console_prefix.length;
-                console_selection_start_position = sel.focusOffset - console_prefix.length;
-            }
-        }
-}
-
-
 
 function scrollToBottom()
 {
 	console_element.scrollTop = console_element.scrollHeight - console_element.clientHeight;
 }
 
-var lastHistoryLength = 0;
-function updateHistory()
+function updateConsole()
 {
-    if (lastHistoryLength != console_history.length)
-        console_history_element.insertAdjacentHTML('beforeend', console_history.slice(lastHistoryLength-console_history.length).html_worthy());
-    lastHistoryLength = console_history.length;
-    console_commandline_element.innerHTML = "";
-}
-
-function updateSelection()
-{
-   var full_length = console_history.html_newline_gone().length + console_prefix.length + console_command.length;
+    if (!console_element)
+	   console_element  = document.getElementById('console');
+	console_element.innerHTML = (console_history + console_prefix + console_command).html_worthy();
+    var full_length = console_history.html_newline_gone().length + console_prefix.length + console_command.length;
     var cursor_position = console_history.html_newline_gone().length + console_prefix.length + console_cursor_position;
     var selection_start_position = console_history.html_newline_gone().length + console_prefix.length + console_selection_start_position;
 	//console_element.selectionStart = cursor_position; // consider allowing shift selections and cut copy paste
 	//console_element.selectionEnd   = cursor_position;
  
 	if (selection_start_position < cursor_position)
-		setSelectionRange(console_commandline_element,selection_start_position,cursor_position,full_length, console_command);
+		setSelectionRange(console_element,selection_start_position,cursor_position,full_length, console_command);
 	else
-		setSelectionRange(console_commandline_element,cursor_position,selection_start_position,full_length, console_command);
- }
-
-function updateConsole()
-{
-
-    if (!console_element)
-	   console_element  = document.getElementById('console');
-
-    if (!console_history_element)
-	   console_history_element = document.getElementById('history');
-
-    if (!console_commandline_element)
-	   console_commandline_element  = document.getElementById('commandline');
-
-    updateHistory();
-	
-    console_commandline_element.innerHTML = (console_prefix + console_command).html_worthy();
-
-    updateSelection();
-
+		setSelectionRange(console_element,cursor_position,selection_start_position,full_length, console_command);
     scrollToBottom();
 }
 
 var console_element = null;
 var console_history = new String("");
-var console_history_element = null;
 var console_selection_start_position = 0;
 var console_cursor_position = 0;
 var console_prefix = "#> ";
-var console_commandline_element = null;
 var console_command = new String("");
 var console_command_history = [];
 var console_command_history_position = -1;
@@ -272,11 +225,6 @@ updateConsole();
 async function processKey(e) {
     var code = (e.keyCode ? e.keyCode : e.which);
 	      e.preventDefault();
-    
-    if (!console_commandline_element)
-	   console_commandline_element  = document.getElementById('commandline');
-    checkCursorPosition(console_commandline_element);
-    
     if (code == 8 && console_cursor_position > 0) // backspace
 	{
 	    console_cursor_position -=1;
@@ -323,7 +271,6 @@ async function processKey(e) {
 	    var eval_command = console_command.replace(/\"/g,"\\\""); // escape double quotes
 		console.log(eval_command);
 		console_history += console_prefix + console_command + newline;
-        updateHistory();
         if (console_command_history.length == 0 || console_command != console_command_history[0])
 			console_command_history.unshift(console_command);
         console_command_history_position = -1;		

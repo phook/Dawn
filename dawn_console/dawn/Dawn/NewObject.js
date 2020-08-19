@@ -20,7 +20,7 @@ _NewObject = function()
 			}.call(newFob,this._stored_body);
 		}
 
-        console.log("Adding object " + this._name + " to " + pipe._get_owner()._name);
+        Fob.debugInfo("Adding object " + this._name + " to " + pipe._get_owner()._name);
         pipe._get_owner()._add(newFob);
     }
     this._in_native_$ = function(pipe,data)
