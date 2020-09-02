@@ -1,0 +1,3 @@
+[submodule "BNFT"]
+	path = BNFT
+	url = https://github.com/phook/BNFT
