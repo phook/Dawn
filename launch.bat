@@ -1,4 +1,2 @@
-cd dawn_console
-start launch.bat
-cd ..
-start chrome --app="http://localhost:5000"
+node --inspect dawn_console.js
+REM node dawn_console.js
