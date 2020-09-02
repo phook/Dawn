@@ -7,7 +7,7 @@ var fileUpload = require('express-fileupload');
 var hub     = require('./hubserver.js');
 var app = express();
 var server = http.createServer(app);
-var bnft = require("./bnft/BNFT.js");
+var bnft = require("./BNFT/BNFT.js");
 
 var Fob = require("./dawn/Fob.js");
 var Directory = require("./dawn/Directory.js");
