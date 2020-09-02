@@ -1,3 +1,6 @@
 [submodule "BNFT"]
 	path = BNFT
 	url = https://github.com/phook/BNFT
+[submodule "public/ace/ace-builds"]
+	path = public/ace/ace-builds
+	url = https://github.com/ajaxorg/ace-builds.git
