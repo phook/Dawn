@@ -139,7 +139,7 @@ app.put('/_file', async (request, result) => {
 });
 
 
-server.listen(5000, function () {
+server.listen(process.env.PORT || 5000, function () {
 })
 
 // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
