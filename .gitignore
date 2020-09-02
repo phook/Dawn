@@ -1,4 +1,8 @@
 **/bnft.old/
 **/uil/
 **/node_modules/
-**/ace/
+**/ace.old/
+**/ace/src
+**/ace/src-min
+**/ace/src-noconflict
+**/ace/demo
