@@ -1,0 +1,30 @@
+{
+  "name": "dawn",
+  "version": "0.99.0",
+  "description": "computer language",
+  "main": "dawn_console.js",
+  "dependencies": {
+    "big-rational": "^0.10.9",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.7-alpha.4",
+    "express-upload": "^0.1.0",
+    "socket.io": "^2.3.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phook/Dawn.git"
+  },
+  "author": "P. H. A. Krogh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/phook/Dawn/issues"
+  },
+  "engines": {
+    "node": "12.x"
+  },
+  "homepage": "https://github.com/phook/Dawn#readme"
+}
