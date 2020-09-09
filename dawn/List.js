@@ -1,7 +1,7 @@
 function DawnList()
 {
-    var Fob = require("./Fob.js");
-	Fob.call(this,"List");
+    var Dawn = require("../Dawn.js");
+	Dawn.Fob.call(this,"List");
 	this._elements=[];
 	this._pass_bind = function(pipe, bindee)
 	{
@@ -42,7 +42,7 @@ function DawnList()
 	{
 		var inputs="";
         var args = Array.prototype.slice.call(arguments);
-        Fob.debugInfo("list adding "+args.length+ " elements");
+        Dawn.debugInfo("list adding "+args.length+ " elements");
         var self = this;
         args.forEach(function(element) {
 			element._set_owner(self);
@@ -77,7 +77,7 @@ function DawnList()
 	}
 	this._in_go = function(pipe)
 	{
-        Fob.debugInfo("list going");
+        Dawn.debugInfo("list going");
 		for(element in this._elements)
 		{
 			if (this._elements[element])

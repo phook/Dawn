@@ -1,6 +1,6 @@
 function File(name)
 {
-    var Fob = require("./Fob.js");
+    var Dawn = require("../Dawn.js");
     var fs = require('fs');
     var path = require('path');
 
@@ -10,7 +10,7 @@ function File(name)
     
     name = name.replace(".js","");
     name = name.replace(/.dawn.*/,"");
-    Fob.call(this,name);
+    Dawn.Fob.call(this,name);
     this._get_qualified_name = function()
     {
         if (this._owner)
@@ -21,7 +21,7 @@ function File(name)
 	function reportError(err)
 	{
 		console.log(err);
-		Fob.debugInfo(err);
+		Dawn.debugInfo(err);
 	}
 	this._in_lookup = function(pipe)
 	{
@@ -30,30 +30,30 @@ function File(name)
         {
             if (dawnFile)
             {
-                var dawnSource = Fob.fileToString(this._get_qualified_name());
-				Fob.debugInfo("SOURCE<"+this._get_qualified_name()+">:"+dawnSource);
+                var dawnSource = Dawn.fileToString(this._get_qualified_name());
+				Dawn.debugInfo("SOURCE<"+this._get_qualified_name()+">:"+dawnSource);
                 if (flavoredFile)
                 {
                     var flavor = full_name.substring(full_name.indexOf(".dawn_")+6);
-                    if (!Fob.flavor_parser)
+                    if (!Dawn.flavor_parser)
                     {
-                        var source = Fob.fileToString("dawn/Flavors/" + flavor + ".bnft");
-                        Fob.flavor_parser = new Fob.bnft(source, {alert:reportError, fileToString: Fob.fileToString, path:"dawn/Flavors/"});
+                        var source = Dawn.fileToString("dawn/Flavors/" + flavor + ".bnft");
+                        Dawn.flavor_parser = new Dawn.bnft(source, {alert:reportError, fileToString: Dawn.fileToString, path:"dawn/Flavors/"});
                     }
-                    dawnSource = Fob.flavor_parser.parse(dawnSource,{alert:reportError, fileToString: Fob.fileToString,nonterminal:"TO_DAWN_BASE"});
-					Fob.debugInfo("FLAVOR_PARSE:"+dawnSource);
+                    dawnSource = Dawn.flavor_parser.parse(dawnSource,{alert:reportError, fileToString: Dawn.fileToString,nonterminal:"TO_DAWN_BASE"});
+					Dawn.debugInfo("FLAVOR_PARSE:"+dawnSource);
                     if (dawnSource == "ERROR")
                     {
                         throw "error in flavored dawn file: " + identifier + " ";
                     }
                 }
-                var jsSource = Fob.parser.parse(dawnSource,{alert:reportError,nonterminal:"PROGRAM"});
-				Fob.debugInfo("DAWN_PARSE:"+jsSource);
+                var jsSource = Dawn.parser.parse(dawnSource,{alert:reportError,nonterminal:"PROGRAM"});
+				Dawn.debugInfo("DAWN_PARSE:"+jsSource);
                 if (jsSource != "ERROR")
                 {
                     // Save cached compile - and require it?
                     // eval in owners scope
-                    Fob.passedEval.call(this._get_owner(),jsSource);
+                    Dawn.passedEval.call(this._get_owner(),jsSource);
                     return this._owner._lookup(identifier); // a little hacky
                 }
                 throw "error in dawn file: " + identifier + " " + jsSource;
@@ -61,7 +61,8 @@ function File(name)
             else
             {
                 // load, add to pool, call _lookup and return if result
-                var loaded_object_constructor = require(this._get_qualified_name());
+                var qualified_name = this._get_qualified_name();
+                var loaded_object_constructor = require(qualified_name);
                 var loaded_object = new loaded_object_constructor(); // create initial instance
                 this._owner._children[loaded_object._name]=loaded_object; // and register - replace FileObject - should it do this
     //            if (name === identifier)

@@ -1,30 +1,25 @@
 var express = require('express');
 var http = require('http');
-var path = require('path')
+//var path = require('path')
 var fs = require('fs')
 var fileUpload = require('express-fileupload');
 
 var hub     = require('./hubserver.js');
 var app = express();
 var server = http.createServer(app);
-var bnft = require("./BNFT/BNFT.js");
 
-var Fob = require("./dawn/Fob.js");
-var Directory = require("./dawn/Directory.js");
-var Reference = require("./dawn/Reference.js");
+var Dawn = require("./Dawn.js");
 
-var bigRat = require("big-rational");
-
-//var oldEval = eval;
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
+Dawn.initialize(__dirname,server,globalEval);
 
-Fob.bigRat = bigRat;
-Fob.passedEval = globalEval;
-hub.createServer(server,globalEval);
+
+
+
+hub.createServer(server, Dawn.passedEval);
 
 app.use(express.static('public'));
 app.use(fileUpload());
-
 
 // CAN BE USED FOR MONITORING CHANGES - FILES HAS TIMESTAMP - 
 function read_dir(dirpath,recursion,hidden)
@@ -60,30 +55,7 @@ function setFileTime(filePath, atime, mtime) {
 var date = new Date('Thu Aug 20 2015 15:10:36 GMT+0800 (CST)');
 setFileTime('/tmp/scache/fdf/admin.log', date, date);
 */
-/*
-function read_dir(dirpath,jsdir)
-{
-   files = fs.readdirSync(dirpath);
-   files.forEach(function (file) {
-        var filepath = path.resolve(dirpath, file); 
-        var stat = fs.statSync(filepath);
-        if (stat && stat.isDirectory())
-        {
-            jsdir[file] = read_dir(filepath,{});
-        }
-    });
-   files.forEach(function (file) {
-        var filepath = path.resolve(dirpath, file); 
-        var stat = fs.statSync(filepath);
-        if (stat && !stat.isDirectory())
-        {
-            jsdir[file] = "file";
-        }
-    });
-    return jsdir;
-}
 
-*/
 
 // dir command service - parameters: dir = directory in uri:fileformat, hidden - show hidden files, recursive - recursive directory
 app.get('*/_dir', function(request, result) {
@@ -111,7 +83,7 @@ app.get('/_file', async (request, result) => {
         result.status(500).send(err);
     }
 });
-
+/*
 app.put('/_file', async (request, result) => {
     try {
         var file = request.query.file;
@@ -137,70 +109,37 @@ app.put('/_file', async (request, result) => {
         result.status(500).send(err);
     }
 });
-
+*/
 
 server.listen(process.env.PORT || 5000, function () {
 })
 
-// Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
-function dawnSort(a,b)
-{ 
-    if (b.indexOf(a) == 0)
-    {
-        return 1;
-    }
-    if (a.indexOf(b) == 0)
-    {
-        return -1;
-    }
-    return a>b?1:-1;
-}
-
-Fob.fileToString = function(filename)
-{
-    return fs.readFileSync(filename, {option:'utf8', function(err, source) {console.log("error reading "+filename);throw err;}}).toString();
-}
-
-Fob.bnft = bnft;
-Fob.parser = null;
-Fob.parser = new Fob.bnft(Fob.fileToString("dawn/Flavors/dawn.bnft"), console.log);
 console.log("dawn parser loaded");
 
-var debug = true;
-
-if (debug)
-	fs.writeFile('log.txt', '', function(){});
-
-function debugInfo(s)
-{
-	if (debug)
-		fs.appendFile('log.txt', s+"\n", function(){});
-}
 
 
-Fob.debugInfo = debugInfo;
-Fob.server = server;
-Fob.root = new Directory("Root",path.join(__dirname,"dawn"));
-Fob.root.path.push("Dawn.");
 
 function dawnCommand(command)
 {
+    Dawn.returnResult = null;
     if (command == "exit")
     {
 		server.clients.eval("window.close();");
         process.exit(-1);
 	}
-    if (Fob.parser)
+    if (Dawn.parser)
 	{
-		debugInfo("COMMAND:" + command);
+		Dawn.debugInfo("COMMAND:" + command);
 		if (command.indexOf("Console") == -1)
 			command += ">>Console";
-	    var source = Fob.parser.parse(command + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
-		debugInfo("COMMAND PARSED:" + source);
+	    var source = Dawn.parser.parse(command + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
+		Dawn.debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{
-			globalEval.call(Fob.root,source);
-			Fob.debugInfo(Object.keys(Fob.root._children));
+			globalEval.call(Dawn.root,source);
+			Dawn.debugInfo(Object.keys(Dawn.root._children));
 		}
 	}
+    if (Dawn.returnResult)
+        return Dawn.returnResult;
 }

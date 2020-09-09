@@ -1,7 +1,7 @@
 _Input = function ()
 {
-    var Fob = require("../Fob.js");
-	Fob.call(this,"Input");
+    var Dawn = require("../../Dawn.js");
+	Dawn.Fob.call(this,"Input");
 	this._out_native=null;
 	this._in_lookup_child = function(pipe)
 	{
@@ -11,7 +11,7 @@ _Input = function ()
     {
 	    var clean_name = this._input_name.replace("_$","");
         var function_source = "[function(pipe," + clean_name + "){" + data._source + "}][0]";
-        Fob.debugInfo("Adding " + function_source + " to " + pipe._out_native.reference._name + "._in_" + this._input_name);
+        Dawn.debugInfo("Adding " + function_source + " to " + pipe._out_native.reference._name + "._in_" + this._input_name);
 
         // consider moving to _input_go (or _input_end) for clarity
         if (pipe._out_native)

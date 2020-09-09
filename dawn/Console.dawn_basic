@@ -1,9 +1,11 @@
 define Console
   input all string
     native javascript
-        Fob.server.clients.eval("print('" + encodeURIComponent(string._value).replace(/'/g, "%27") + "')")
+        /*Dawn.server.clients.eval("print('" + encodeURIComponent(string._value).replace(/'/g, "%27") + "')")*/
+        Dawn.returnResult = "print('" + encodeURIComponent(string._value).replace(/'/g, "%27") + "')"
     endnative
   input all number
     native javascript
-        Fob.server.clients.eval("print('" + encodeURIComponent(number._value.toDecimal()) + "')")
+        /*Dawn.server.clients.eval("print('" + encodeURIComponent(number._value.toDecimal()) + "')")*/
+        Dawn.returnResult = "print('" + encodeURIComponent(number._value.toDecimal()) + "')"
     endnative

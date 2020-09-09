@@ -1,10 +1,11 @@
 function _Directory(name, path_to_directory)
 {
-    var Fob = require("./Fob.js");
+    var Dawn = require("../Dawn.js");
     var File = require("./File.js");
+    var Reference = require("./Reference.js");
     var fs = require('fs');
     var path = require('path');
-    Fob.call(this,name);
+    Dawn.Fob.call(this,name); 
     this._type="Directory";
     var self = this;
     fs.readdir(path_to_directory, function (err, files) {

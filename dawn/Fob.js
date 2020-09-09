@@ -1,10 +1,9 @@
-
 var id = 1;
 function Fob(name)
 {
 	this.id = id++;
     this.path = [""];
-    Fob.reference = function(reference)
+    this.reference = function(reference)
 	{
 	    // this should hold previous, output bindings etc.. pass to object, scopet!!! det er den piperne er bygget op af...
 		this.reference = reference;
@@ -178,4 +177,6 @@ function Fob(name)
     }
 	return this;
 }
+
+
 module.exports = Fob;
