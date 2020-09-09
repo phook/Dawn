@@ -11,5 +11,5 @@ define Number
     endnative
   input lookup_child
     native javascript
-         return Object.assign({_value:new Fob.bigRat(pipe.resource)},this);
+         return Object.assign({_value:new Dawn.bigRat(pipe.resource)},this);
     endnative
