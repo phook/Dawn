@@ -1,0 +1,152 @@
+<html>
+<link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-icon-60x60.png">
+<link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-icon-72x72.png">
+<link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-icon-76x76.png">
+<link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-icon-114x114.png">
+<link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-icon-120x120.png">
+<link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-icon-152x152.png">
+<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-icon-180x180.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="/favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
+<link rel="manifest" href="/favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="/favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+
+
+      <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+      <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+      <link rel="stylesheet" href="css/material.css">
+
+<head>
+<title>
+Dawn Demo Console
+</title>
+</head>
+<style>
+  body,html
+  {
+    background-color: #FFFEF9;
+    margin:0;
+	padding:0;
+  }
+  @font-face { 
+	font-family: 'Inconsolata'; 
+	src: url('/font/Inconsolata.eot?#iefix') 
+	format('embedded-opentype'), url('/font/Inconsolata.otf') 
+	format('opentype'), url('/font/Inconsolata.woff') 
+	format('woff'), url('/font/Inconsolata.ttf') 
+	format('truetype'), url('/font/Inconsolata.svg#Inconsolata') 
+	format('svg'); 
+	font-weight: 
+	normal; 
+	font-style:
+	normal; 
+  }
+  #console, textarea 
+  {
+    display:block;
+	padding:0;
+	 padding-left: 1px;
+    margin:0;
+    background-color: transparent;
+	border-style: none; 
+    border-color: transparent;   
+	resize: none;
+    outline: none;
+	color: gray;
+	font-family: Inconsolata;
+	font-size: 12pt;
+    position:absolute; 
+    width:100%;
+    top:0; 
+	bottom:0;
+	caret-color: gray;
+  }
+</style>
+<body onload="autoFocus()">
+<div class="mdc-select mdc-select--filled demo-width-class small-select" style="right:10; top:10; position:absolute;">
+  <div class="mdc-select__anchor"
+       role="button"
+       aria-haspopup="listbox"
+       aria-expanded="false"
+       aria-labelledby="demo-label demo-selected-text">
+    <span class="mdc-select__ripple"></span>
+    <span id="demo-label" class="mdc-floating-label">Flavor</span>
+    <span id="demo-selected-text" class="mdc-select__selected-text"></span>
+    <span class="mdc-select__dropdown-icon">
+      <svg
+          class="mdc-select__dropdown-icon-graphic"
+          viewBox="7 10 10 5" focusable="false">
+        <polygon
+            class="mdc-select__dropdown-icon-inactive"
+            stroke="none"
+            fill-rule="evenodd"
+            points="7 10 12 15 17 10">
+        </polygon>
+        <polygon
+            class="mdc-select__dropdown-icon-active"
+            stroke="none"
+            fill-rule="evenodd"
+            points="7 15 12 10 17 15">
+        </polygon>
+      </svg>
+    </span>
+    <span class="mdc-line-ripple"></span>
+  </div>
+
+  <div class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth">
+    <ul class="mdc-list" role="listbox" aria-label="Food picker listbox">
+      <li class="mdc-list-item mdc-list-item--selected" aria-selected="true" data-value="pure" role="option">
+        <span class="mdc-list-item__ripple"></span>
+        <span class="mdc-list-item__text">
+          Pure
+        </span>
+      </li>
+      <li class="mdc-list-item" aria-selected="false" data-value="basic_pretty" role="option">
+        <span class="mdc-list-item__ripple"></span>
+        <span class="mdc-list-item__text">
+          Basic Pretty
+        </span>
+      </li>
+      <li class="mdc-list-item" aria-selected="false" data-value="basic_keyboard" role="option">
+        <span class="mdc-list-item__ripple"></span>
+        <span class="mdc-list-item__text">
+          Basic Keyboard
+        </span>
+      </li>
+    </ul>
+  </div>
+</div>
+
+
+<!--
+<div contentEditable id="console"></div>
+-->
+<button class="mdc-button mdc-button--raised small-button" style="right:10; bottom:10; position:absolute;">
+  <div class="mdc-button__ripple"></div>
+  <span class="mdc-button__label">Run</span>
+</button>
+
+
+<script>
+
+mdc.select.MDCSelect.attachTo(document.querySelector('.mdc-select'));
+//mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
+
+function processKey(event, src)
+{
+}
+function processPaste(event, src)
+{
+}
+function autoFocus()
+{
+}
+</script>
+</body>
+</html>

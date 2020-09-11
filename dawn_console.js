@@ -1,8 +1,10 @@
 var express = require('express');
 var http = require('http');
+var transformMiddleware = require('express-transform-bare-module-specifiers').default;
 //var path = require('path')
 var fs = require('fs')
 var fileUpload = require('express-fileupload');
+var checkForLocalHost = require('./checkForLocalHost.js');
 
 var hub     = require('./hubserver.js');
 var app = express();
@@ -18,8 +20,11 @@ Dawn.initialize(__dirname,server,globalEval);
 
 hub.createServer(server, Dawn.passedEval);
 
+app.use(transformMiddleware());
 app.use(express.static('public'));
+app.use("/node_modules",express.static('node_modules'));
 app.use(fileUpload());
+
 
 // CAN BE USED FOR MONITORING CHANGES - FILES HAS TIMESTAMP - 
 function read_dir(dirpath,recursion,hidden)
@@ -83,9 +88,14 @@ app.get('/_file', async (request, result) => {
         result.status(500).send(err);
     }
 });
-/*
+
 app.put('/_file', async (request, result) => {
     try {
+        if (!checkForLocalHost(request.headers.host))
+        {
+            result.status(403).send(err);
+            return;
+        }            
         var file = request.query.file;
         // test for file beginning
         file = file.replace("file:///","");
@@ -109,7 +119,7 @@ app.put('/_file', async (request, result) => {
         result.status(500).send(err);
     }
 });
-*/
+
 
 server.listen(process.env.PORT || 5000, function () {
 })
