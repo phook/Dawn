@@ -1,37 +1,41 @@
-var Fob = require("./dawn/Fob.js");
-var fs = require('fs')
+var Fob  = require("./dawn/Fob.js");
 Dawn = {Fob:Fob};
-function initialize(rootDir,server,evaluate)
-{
-    var Directory = require("./dawn/Directory.js");
-    var bnft = require("./BNFT/BNFT.js");
-    var bigRat = require("big-rational");
-    var path = require('path')
 
-    this.root = new Directory("Root",path.join(__dirname,"/dawn"));
-    this.root.path.push("Dawn.");
+// root should be protocol based - so directory does not have to be instanced.....Dawn js must resolve by itself somehow...
+function initialize(root,evaluate)
+{
+    var isBrowser=new Function("try {return this===window;}catch(e){ return false;}");
+    this.root = root;
+
+    var bnft = require("./BNFT/BNFT.js");
+    
+    var bigRat = null;
+    if (isBrowser)
+        document.body.innnerHTML += '<script type="module">import bigRat from "https://jspm.dev/big-rational;Dawn.bigRat=bigRat";</script>';
+    else
+        bigRat = require("big-rational");
+
     this.bigRat = bigRat;
     this.passedEval = evaluate ? evaluate : eval;
-    this.server = server;
 
     this.fileToString = function(filename)
     {
-        return fs.readFileSync(filename, {option:'utf8', function(err, source) {console.log("error reading "+filename);throw err;}}).toString();
+        return root.fileToString(filename);
     }
 
     this.bnft = bnft;
     this.parser = null;
-    this.parser = new this.bnft(this.fileToString("dawn/Flavors/dawn.bnft"), console.log);
+    this.parser = new this.bnft(this.fileToString(root._get_qualified_name() + "/Flavors/dawn.bnft"), console.log);
 
     var debug = true;
 
     if (debug)
-        fs.writeFile('log.txt', '', function(){});
+        root.writeFile('log.txt', '', function(){});
 
     function debugInfo(s)
     {
         if (debug)
-            fs.appendFile('log.txt', s+"\n", function(){});
+            root.appendFile('log.txt', s+"\n", function(){});
     }
 
     this.debugInfo = debugInfo;

@@ -5,6 +5,8 @@ function _Directory(name, path_to_directory)
     var Reference = require("./Reference.js");
     var fs = require('fs');
     var path = require('path');
+    if (!Dawn.Fob) // HACK FOR Dawn not initialized when root is passed -> fix will be protocol in root - i.e. not object
+        Dawn.Fob = require("./Fob.js");
     Dawn.Fob.call(this,name); 
     this._type="Directory";
     var self = this;
@@ -29,6 +31,21 @@ function _Directory(name, path_to_directory)
             }
         });
     });
+
+    this.fileToString = function(qualified_filename)
+    {
+        return fs.readFileSync(qualified_filename, {option:'utf8', function(err, source) {console.log("error reading "+qualified_filename);throw err;}}).toString();
+    }
+
+    this.writeFile = function(filename,string,func)
+    {
+        return fs.writeFile(filename,string,func);
+    }
+
+    this.appendFile = function(filename,string,func)
+    {
+        return fs.appendFile(filename,string,func);
+    }
 
     this._get_qualified_name = function()
     {

@@ -50,26 +50,42 @@ Dawn Demo Console
   #console, textarea 
   {
     display:block;
-	padding:0;
-	 padding-left: 1px;
+	padding:5px;
     margin:0;
     background-color: transparent;
 	border-style: none; 
     border-color: transparent;   
 	resize: none;
     outline: none;
-	color: gray;
+	color: #369;
 	font-family: Inconsolata;
-	font-size: 12pt;
+	font-size: 10pt;
     position:absolute; 
-    width:100%;
+    width:98%;
     top:0; 
 	bottom:0;
 	caret-color: gray;
   }
+  .dawn_class
+  {
+  }
+  .dawn_operator
+  {
+  }
+  .dawn_number
+  {
+  }
+  .dawn_function
+  {
+  }
+  .dawn_string
+  {
+  }
+
+
 </style>
 <body onload="autoFocus()">
-<div class="mdc-select mdc-select--filled demo-width-class small-select" style="right:10; top:10; position:absolute;">
+<div class="mdc-select mdc-select--filled demo-width-class small-select" style="right:10; top:10; position:absolute; z-index:1;">
   <div class="mdc-select__anchor"
        role="button"
        aria-haspopup="listbox"
@@ -100,7 +116,8 @@ Dawn Demo Console
   </div>
 
   <div class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth">
-    <ul class="mdc-list" role="listbox" aria-label="Food picker listbox">
+    <ul id="flavors" class="mdc-list" role="listbox" aria-label="Flavor picker listbox">
+    <!--
       <li class="mdc-list-item mdc-list-item--selected" aria-selected="true" data-value="pure" role="option">
         <span class="mdc-list-item__ripple"></span>
         <span class="mdc-list-item__text">
@@ -119,24 +136,178 @@ Dawn Demo Console
           Basic Keyboard
         </span>
       </li>
+      -->
     </ul>
   </div>
 </div>
 
 
-<!--
-<div contentEditable id="console"></div>
--->
-<button class="mdc-button mdc-button--raised small-button" style="right:10; bottom:10; position:absolute;">
+
+
+<button class="mdc-button mdc-button--raised small-button" style="right:10; bottom:10; position:absolute; z-index:1;">
   <div class="mdc-button__ripple"></div>
   <span class="mdc-button__label">Run</span>
 </button>
 
-
+<div id="console"></div>
+<script src="require.js"></script>
 <script>
 
+
+var getParams = function (url) {
+	var params = {};
+	var parser = document.createElement('a');
+	parser.href = url;
+	var query = parser.search.substring(1);
+	var vars = query.split('&');
+	for (var i = 0; i < vars.length; i++) {
+		var pair = vars[i].split('=');
+		params[pair[0]] = decodeURIComponent(pair[1]);
+	}
+	return params;
+};
+
+var parameters = getParams(window.location.href);
+
 mdc.select.MDCSelect.attachTo(document.querySelector('.mdc-select'));
-//mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
+mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
+
+
+function Do(method, url, json) {
+      if (typeof(json) === "object")
+      {
+        json = JSON.stringify(json);
+      }
+      else
+      if (typeof(json) === "undefined")
+      {
+        json = "";
+      }
+    return new Promise(function (resolve, reject) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+                resolve(xhr.responseText);
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+        xhr.send(json);
+    });
+}
+/*
+    function Do(method,url,json,callback)
+    {
+      //console.log(url);
+      if (typeof(json) === "function")
+      {
+        callback = json;
+        json = "";
+      }
+      else
+      if (typeof(json) === "object")
+      {
+        json = JSON.stringify(json);
+      }
+      else
+      if (typeof(json) === "undefined")
+      {
+        json = "";
+      }
+      var http = new XMLHttpRequest();
+      http.open(method, url, true);
+
+      http.setRequestHeader("Content-type", "application/json");
+
+      http.onreadystatechange = function()
+      {
+        if(http.readyState == 4 && http.status == 200) 
+        {
+          callback(http.responseText);
+        }
+      }
+      http.send(json);
+    }
+*/
+
+function GET(url,json,callback)    {return Do("GET",url,json);}
+function POST(url,json,callback)   {return Do("POST",url,json);}
+function PUT(url,json,callback)    {return Do("PUT",url,json);}
+function DELETE(url,json,callback) {return Do("DELETE",url,json);}
+
+
+
+function colorize(data)
+{
+  // USE THE FLAVOR TO COLORIZE - TO_HTML, TO_DAWN, TO_LATEX?!?
+/*
+
+    data = data.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    data = data.replace(/(&gt;|&lt;|=|\*|\+|-)/g,"<span class='dawn_operator'>$1</span>");
+    data = data.replace(/( |^)[A-Z][A-Za-z0-9!-_]|:*( |$)/g,"<span class='dawn_class'>$1</span>");
+    //data = data.replace(/(\s|^)[a-z][A-Za-z0-9!-_]+(\s|$)/g,"<span class='dawn_function'>$1</span>");
+    //data = data.replace(/&quot;[A-Za-z0-9!-_]*&quot;/g,"<span class='dawn_string'>$1</span>");
+    //data = data.replace(/(\s|^)[0-9][0-9]*\.[0-9]*"/g,"<span class='dawn_number'>$1</span>");
+    console.log(data);
+    */
+    return data;
+}
+
+console_element  = document.getElementById('console');
+flavor_list      = document.getElementById('flavors');
+
+var flavors = {};
+
+async function initialize()
+{
+    var Dawn = await require('./Dawn.js');
+    Dawn.initialize();
+    if (parameters.flavors)
+    {
+        parameters.flavors = JSON.parse(parameters.flavors);
+        var noneSelected = true;
+        for(var i in parameters.flavors)
+        {
+            entry = "";
+            if (i.indexOf(" ")!=0)
+                entry = i.substring(i.indexOf(" ")+1).toUpperCase();
+            flavors[i] = {source:await GET(parameters.flavors[i],""),entry:entry};
+
+            var elementsToAdd;
+            if (noneSelected)
+            {
+                elementsToAdd = '<li id="first" class="mdc-list-item mdc-list-item--selected" aria-selected="true" ';
+                noneSelected = false;
+            }
+            else
+                elementsToAdd = '<li class="mdc-list-item" aria-selected="false" ';
+            elementsToAdd += 'data-value="'+ i.replace(" ","_").toLowerCase() +'" role="option"><span class="mdc-list-item__ripple"></span>'
+            elementsToAdd += '<span class="mdc-list-item__text">'+i+'</span></li>';
+
+            flavor_list.innerHTML += elementsToAdd;
+        }
+        document.getElementById('first').click();
+
+    }
+    if (parameters.src)
+    {
+       let data = await GET(parameters.src,"")
+       console_element.innerHTML = colorize(data);
+    }
+}
+
+initialize();
 
 function processKey(event, src)
 {

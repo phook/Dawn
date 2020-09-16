@@ -1,7 +1,7 @@
 var express = require('express');
 var http = require('http');
 var transformMiddleware = require('express-transform-bare-module-specifiers').default;
-//var path = require('path')
+var path = require('path')
 var fs = require('fs')
 var fileUpload = require('express-fileupload');
 var checkForLocalHost = require('./checkForLocalHost.js');
@@ -13,16 +13,23 @@ var server = http.createServer(app);
 var Dawn = require("./Dawn.js");
 
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
-Dawn.initialize(__dirname,server,globalEval);
 
 
+var Directory = require("./dawn/Directory.js");
+var root = new Directory("Root",path.join(__dirname,"/dawn"));
+root.path.push("Dawn.");
+Dawn.initialize(root,globalEval);
+Dawn.server = server;
 
 
-hub.createServer(server, Dawn.passedEval);
+hub.createServer(server, globalEval);
 
 app.use(transformMiddleware());
 app.use(express.static('public'));
 app.use("/node_modules",express.static('node_modules'));
+app.use("/dawn",express.static('dawn'));
+app.use("/Dawn.js",express.static('Dawn.js'));
+app.use("/BNFT",express.static('BNFT'));
 app.use(fileUpload());
 
 
