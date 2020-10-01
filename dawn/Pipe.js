@@ -1,8 +1,8 @@
+const Fob  = Dawn.require("./dawn/Fob.js");
 function Pipe()
 {
-    var Dawn = require("../Dawn.js");    
 	// THE POINT OF PIPE IS TO BREAK THE BACKCHAIN, SO GO EXECUTES FROM START OF PIPE
-	Dawn.Fob.call(this,"Pipe");
+	Fob.call(this,"Pipe");
 	this._first=null;
 	this._last=null;
     this._bound = false;

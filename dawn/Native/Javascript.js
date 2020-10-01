@@ -1,6 +1,6 @@
+const Fob = Dawn.require("./dawn/Fob.js");
 function _Javascript()
 {
-    var Fob = require("../Fob.js");
     Fob.call(this,"Javascript");
     this._out_native=null;
     this._out_go=null;

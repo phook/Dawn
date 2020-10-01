@@ -80,30 +80,31 @@ function Fob(name)
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier)
     {
-      var ref = new Reference(identifier);
+      var ref = new Dawn.Reference(identifier);
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       return this._in_lookup(ref);
     }
 	this._in_lookup = function(pipe,from_owner)
 	{
-        var identifier = pipe.resource;
+        if (pipe.resource == this._name) return this;
         
-        if (identifier == this._name) return this;
+        var originalResource = pipe.resource;
 
         // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
-	    if (identifier.indexOf(this._name + ".") == 0)
-		  identifier = identifier.substring(this._name.length+1);
+	    if (pipe.resource.indexOf(this._name + ".") == 0)
+		  pipe.resource = pipe.resource.substring(this._name.length+1);
 		else
-	    if (identifier.indexOf(this._name + ":") == 0)
-		  identifier = identifier.substring(this._name.length+1);
+	    if (pipe.resource.indexOf(this._name + ":") == 0)
+		  pipe.resource = pipe.resource.substring(this._name.length+1);
 
-        let result = this._lookup_child(identifier);
+        let result = this._in_lookup_child(pipe);
 		if (result)
             return result;
         
 		if (this._owner && !from_owner)
 		{
+            pipe.resource = originalResource;
 			return this._owner._in_lookup(pipe);
 		}
 		
@@ -111,7 +112,7 @@ function Fob(name)
 	}
     this._lookup_child = function(identifier)
     {
-      var ref = new Reference(identifier);
+      var ref = new Dawn.Reference(identifier);
       return this._in_lookup_child(ref);
     }
 	this._in_lookup_child = function(pipe,from_owner)

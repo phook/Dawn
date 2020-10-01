@@ -15,11 +15,11 @@ var Dawn = require("./Dawn.js");
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
 
 
-var Directory = require("./dawn/Directory.js");
-var root = new Directory("Root",path.join(__dirname,"/dawn"));
-root.path.push("Dawn.");
-Dawn.initialize(root,globalEval);
-Dawn.server = server;
+//var Directory = require("./dawn/Directory.js");
+//var root = new Directory("Root",path.join(__dirname,"/dawn"));
+//root.path.push("Dawn.");
+Dawn.initialize("./dawn",globalEval);
+Dawn.server = server; // NOT SERVER BUT OUTPUT FUNCTION - SO IT CAN WORK IN BROWSER AS WELL - MAYBE IN INIT
 
 
 hub.createServer(server, globalEval);
@@ -29,6 +29,7 @@ app.use(express.static('public'));
 app.use("/node_modules",express.static('node_modules'));
 app.use("/dawn",express.static('dawn'));
 app.use("/Dawn.js",express.static('Dawn.js'));
+app.use("/BigInt_BigRat.min.js",express.static('BigInt_BigRat.min.js'));
 app.use("/BNFT",express.static('BNFT'));
 app.use(fileUpload());
 

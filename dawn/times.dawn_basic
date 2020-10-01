@@ -1,4 +1,4 @@
-define Times
+define times
   native javascript
     var self = this
     self._out_go = null

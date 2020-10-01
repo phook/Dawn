@@ -58,14 +58,14 @@ URI:
 URIDECODE:
  XALPHADECODE { XALPHADECODE }
 
-URILOOKUP:
- URI -> "._in_lookup(\"" URI "\")" 
-
-URILIST:
- URI { "|" URILOOKUP } -> "new Reference(this._lookup(\"" URI "\"),this)" 
-
 EOT:
  "\0x0004"
+
+URILOOKUP:
+ URI -> "._lookup(\"" URI "\")" 
+
+URILIST:
+ URI { "|" URILOOKUP } -> "(new Dawn.Reference(scope._lookup(\"" URI "\"),scope))" 
 
 PIPEEND:
   OPTWHITESPACE ">>" OPTWHITESPACE URILIST  [ PIPEEND ] -> "._bind(" URILIST ")" PIPEEND
@@ -78,23 +78,23 @@ PIPELISTEND:
  { SEPARATOR PIPELISTELEMENTS } 
 
 INNER_PIPELIST:
- PIPE PIPELISTEND -> "new Reference(this._lookup(\"List\")._add(" PIPE PIPELISTEND "),this)"
+ PIPE PIPELISTEND -> "(new Dawn.Reference(scope._lookup(\"List\")._add(" PIPE PIPELISTEND "),scope))"
 
 PIPELIST:
  "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
 
 PIPE:
- URILIST  PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" URILIST  PIPEEND "),this)"
- PIPELIST PIPEEND -> "new Reference(this._lookup(\"Pipe\")._add(" PIPELIST PIPEEND "),this)"
+ URILIST  PIPEEND -> "(new Dawn.Reference(scope._lookup(\"Pipe\")._add(" URILIST  PIPEEND "),scope))"
+ PIPELIST PIPEEND -> "(new Dawn.Reference(scope._lookup(\"Pipe\")._add(" PIPELIST PIPEEND "),scope))"
  URILIST
 
 COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
- OPTWHITESPACE PIPE OPTWHITESPACE -> PIPE "._in_go();"
+ OPTWHITESPACE PIPE OPTWHITESPACE -> "scope=this; (" PIPE ")._in_go();"
 
 PROGRAMLINE:
  "REMARK BEGIN" { ANY_CHAR } "REMARK END"    -> "..."
- PIPE -> PIPE "._in_go();"
+ PIPE -> "scope=this;" PIPE "._in_go();"
 
 PROGRAM:
  { OPTWHITESPACE PROGRAMLINE SEPARATOR }

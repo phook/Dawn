@@ -4,7 +4,7 @@ define Concatenate
     self._out_string = null
     self._in_begin = function(pipe)
       self._value = ""
-    self._in_go = function(pipe)
+    self._in_go = async function(pipe)
       if (pipe._out_string)
         pipe._out_string._call(self)
     self._in_string_$ = function(pipe, s)

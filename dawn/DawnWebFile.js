@@ -1,6 +1,4 @@
 const Fob  = Dawn.require("./dawn/Fob.js");
-const fs   = Dawn.require('fs');
-const path = Dawn.require('path');
 const bnft = Dawn.require("./BNFT/BNFT.js");
 currentIdentifiers = new Array();
 currentIdentifiers.remove = function(){
@@ -13,7 +11,17 @@ currentIdentifiers.remove = function(){
     }
     return this;
 }
-function File(name)
+
+/*
+
+THE WEBFILE SHOULD REMOVE ITSELF - AND LET THE DEFINE ALTER THE TREE, SO THE CONFLICT DOESNT EXITS
+ALSO FOR FILE!!!
+AND AT INSTANCIATION PUT FLAVOR->COMPILE TO WEB WORKER (ON BROWSER)
+
+*/
+
+
+function DawnWebFile(name)
 {
     var dawnFile = name.indexOf(".dawn") != -1;
     var flavoredFile = name.indexOf(".dawn_") != -1;
@@ -99,4 +107,4 @@ function File(name)
     }
 }
 
-module.exports = File;
+module.exports = DawnWebFile;

@@ -1,7 +1,7 @@
+const Fob = Dawn.require("./dawn/Fob.js");
 function DawnList()
 {
-    var Dawn = require("../Dawn.js");
-	Dawn.Fob.call(this,"List");
+	Fob.call(this,"List");
 	this._elements=[];
 	this._pass_bind = function(pipe, bindee)
 	{

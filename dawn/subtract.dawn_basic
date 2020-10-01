@@ -4,7 +4,7 @@ define Subtract
     self._out_number = null
     self._in_begin = function(pipe)
       self._value = new Dawn.bigRat();
-    self._in_go = function(pipe)
+    self._in_go = async function(pipe)
       if (pipe._out_number)
         pipe._out_number._call(self)
     self._in_number_minuend = function(pipe, number)

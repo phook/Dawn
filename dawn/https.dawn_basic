@@ -2,7 +2,7 @@ define https
   native javascript
     var self = this;
     var https = require('https');  
-    this._in_go = function(pipe)
+    this._in_go = async function(pipe)
       https.get("https:" + this._url, function(resp)
         let data = '';
         resp.on('data', function(chunk)
@@ -17,5 +17,5 @@ define https
         );
       );
     this._in_lookup_child = function(pipe)
-      return Object.assign({_url:decodeURIComponent(pipe.resource)},this);
+      return Object.assign({_url:decodeURIComponent(pipe.resource)},this);      
   endnative

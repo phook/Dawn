@@ -1,7 +1,7 @@
+const Fob = Dawn.require("./dawn/Fob.js");
 _Input = function ()
 {
-    var Dawn = require("../../Dawn.js");
-	Dawn.Fob.call(this,"Input");
+	Fob.call(this,"Input");
 	this._out_native=null;
 	this._in_lookup_child = function(pipe)
 	{

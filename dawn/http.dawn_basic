@@ -2,7 +2,7 @@ define http
   native javascript
     var self = this;
     var http = require('http');  
-    this._in_go = function(pipe)
+    this._in_go = async function(pipe)
       http.get("http:" + this._url, function(resp)
         let data = '';
         resp.on('data', function(chunk)

@@ -35,13 +35,8 @@ Dawn Demo Console
 	padding:0;
   }
   @font-face { 
-	font-family: 'Inconsolata'; 
-	src: url('/font/Inconsolata.eot?#iefix') 
-	format('embedded-opentype'), url('/font/Inconsolata.otf') 
-	format('opentype'), url('/font/Inconsolata.woff') 
-	format('woff'), url('/font/Inconsolata.ttf') 
-	format('truetype'), url('/font/Inconsolata.svg#Inconsolata') 
-	format('svg'); 
+	font-family: 'Consolas'; 
+	format('woff'), url('/font/consolas.woff') 
 	font-weight: 
 	normal; 
 	font-style:
@@ -144,7 +139,7 @@ Dawn Demo Console
 
 
 
-<button class="mdc-button mdc-button--raised small-button" style="right:10; bottom:10; position:absolute; z-index:1;">
+<button class="mdc-button mdc-button--raised small-button" style="right:10; bottom:10; position:absolute; z-index:1;" onClick="doRun()">
   <div class="mdc-button__ripple"></div>
   <span class="mdc-button__label">Run</span>
 </button>
@@ -173,40 +168,6 @@ mdc.select.MDCSelect.attachTo(document.querySelector('.mdc-select'));
 mdc.ripple.MDCRipple.attachTo(document.querySelector('.mdc-button'));
 
 
-function Do(method, url, json) {
-      if (typeof(json) === "object")
-      {
-        json = JSON.stringify(json);
-      }
-      else
-      if (typeof(json) === "undefined")
-      {
-        json = "";
-      }
-    return new Promise(function (resolve, reject) {
-        let xhr = new XMLHttpRequest();
-        xhr.open(method, url);
-        xhr.setRequestHeader("Content-type", "application/json");
-        xhr.onload = function () {
-            if (this.status >= 200 && this.status < 300) {
-                resolve(xhr.responseText);
-            } else {
-                reject({
-                    status: this.status,
-                    statusText: xhr.statusText
-                });
-            }
-        };
-        xhr.onerror = function () {
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
-        };
-        xhr.send(json);
-    });
-}
-/*
     function Do(method,url,json,callback)
     {
       //console.log(url);
@@ -226,20 +187,13 @@ function Do(method, url, json) {
         json = "";
       }
       var http = new XMLHttpRequest();
-      http.open(method, url, true);
+      http.open(method, url, false);
 
       http.setRequestHeader("Content-type", "application/json");
 
-      http.onreadystatechange = function()
-      {
-        if(http.readyState == 4 && http.status == 200) 
-        {
-          callback(http.responseText);
-        }
-      }
       http.send(json);
+      return http.responseText;
     }
-*/
 
 function GET(url,json,callback)    {return Do("GET",url,json);}
 function POST(url,json,callback)   {return Do("POST",url,json);}
@@ -261,6 +215,7 @@ function colorize(data)
     //data = data.replace(/(\s|^)[0-9][0-9]*\.[0-9]*"/g,"<span class='dawn_number'>$1</span>");
     console.log(data);
     */
+    data = data.replace(/\n/g,"<br>");
     return data;
 }
 
@@ -268,27 +223,33 @@ console_element  = document.getElementById('console');
 flavor_list      = document.getElementById('flavors');
 
 var flavors = {};
-
-async function initialize()
+var exampleSource = "";
+var Dawn = require('./Dawn.js');
+function initialize()
 {
-    var Dawn = await require('./Dawn.js');
-    Dawn.initialize();
     if (parameters.flavors)
     {
         parameters.flavors = JSON.parse(parameters.flavors);
-        var noneSelected = true;
+        var selectOne = false;
         for(var i in parameters.flavors)
         {
             entry = "";
             if (i.indexOf(" ")!=0)
                 entry = i.substring(i.indexOf(" ")+1).toUpperCase();
-            flavors[i] = {source:await GET(parameters.flavors[i],""),entry:entry};
+            flavors[i] = {source:GET(parameters.flavors[i],""),entry:entry};
+
+            var selected=false;
+            if (i.indexOf("*")==0)
+            {
+                selected=true;
+                i=i.replace("*"," ");
+            }
 
             var elementsToAdd;
-            if (noneSelected)
+            if (selected)
             {
-                elementsToAdd = '<li id="first" class="mdc-list-item mdc-list-item--selected" aria-selected="true" ';
-                noneSelected = false;
+                elementsToAdd = '<li id="select" class="mdc-list-item mdc-list-item--selected" aria-selected="true" ';
+                selectOne = true;
             }
             else
                 elementsToAdd = '<li class="mdc-list-item" aria-selected="false" ';
@@ -297,17 +258,52 @@ async function initialize()
 
             flavor_list.innerHTML += elementsToAdd;
         }
-        document.getElementById('first').click();
+        if (selectOne)
+            document.getElementById('select').click();
 
     }
     if (parameters.src)
     {
-       let data = await GET(parameters.src,"")
-       console_element.innerHTML = colorize(data);
+       exampleSource = GET(parameters.src,"");
+       console_element.innerHTML = colorize(exampleSource) + "<br>";
     }
+
+    Dawn.initialize("dawn",undefined,true);
 }
 
 initialize();
+
+function doRun(noOutput)
+{
+    console_element.innerHTML = colorize(exampleSource) + "<br>";
+    var dawnSource = exampleSource;
+    if (Dawn.parser)
+	{
+		Dawn.debugInfo("COMMAND:" + exampleSource);
+        lines = exampleSource.split("\n");
+        for(i in lines)
+        {
+            if (lines[i].indexOf("Console") == -1)
+                lines[i] += ">>Console";
+        }
+        dawnSource = lines.join("\n");
+	    var source = Dawn.parser.parse(dawnSource + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
+		Dawn.debugInfo("COMMAND PARSED:" + source);
+		if (source != "ERROR")
+		{
+            var evalInContext = function(str){
+                return eval(str);
+            };
+            Dawn.print = function(string)
+            {
+                if (!noOutput)
+                    console_element.innerHTML += string + "<br>";
+            }
+			evalInContext.call(Dawn.root,source);
+			Dawn.debugInfo(Object.keys(Dawn.root._children));
+		}
+	}
+}
 
 function processKey(event, src)
 {
@@ -318,6 +314,9 @@ function processPaste(event, src)
 function autoFocus()
 {
 }
+///// PRECOMPILE - SOMEWHAT DO BNFT PARSING IN BACKGROUND WITH WEB WORKER AND PASS JAVASCRIPT SOURCE TO MAIN THREAD FOR EVAL....
+doRun(true);
+
 </script>
 </body>
 </html>

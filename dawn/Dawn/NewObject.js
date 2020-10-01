@@ -1,7 +1,7 @@
+const Fob  = Dawn.require("./dawn/Fob.js");
 _NewObject = function()
 {
-    var Dawn = require("../../Dawn.js");
-	Dawn.Fob.call(this,"NewObject");
+	Fob.call(this,"NewObject");
     this._stored_body=null;
 	this._in_lookup_child = function(pipe)
 	{
@@ -10,7 +10,7 @@ _NewObject = function()
     this._in_go = function(pipe)
     {
         var newFob = null;
-		newFob = new Dawn.Fob();
+		newFob = new Fob();
 		newFob._name = this._object_name;
 		if (this._stored_body)
 		{
