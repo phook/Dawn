@@ -296,7 +296,10 @@ function select(flavor)
     currentFlavor = flavor;
     console.log(flavor);
     
-    console_element.innerHTML = colorize(flavors[flavor].parse(exampleSource+"\n")) + "<br>";        
+    let prettified = "";
+    if (exampleSource != "")
+        prettified = flavors[flavor].parse(exampleSource+"\n");
+    console_element.innerHTML = colorize(prettified) + "<br>";        
        
 }
 
@@ -312,7 +315,7 @@ function doRun(noOutput)
         {
             if (lines[i] != "")
             if (lines[i].indexOf("Console") == -1)
-                lines[i] += " >> Console";
+                lines[i] += ">>Console";
         }
         dawnSource = lines.join("\n");
 	    var source = Dawn.parser.parse(dawnSource + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
