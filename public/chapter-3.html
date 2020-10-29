@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>
-      A Quick (and Hopefully Painless) Introduction to Dawn (with a Cartoon Rabbit)
+      A Quick (and Hopefully Not Too Painful) Introduction to Dawn (with a Cartoon Rabbit)
       ::
       Phook's (Not So Poignant) Dawn Tutorial
     </title>
@@ -32,9 +32,8 @@
     </div>
     <div class="pageTitle">
       <h3>3.</h3>
-      <h1>A Quick (and Hopefully Painless) Introduction to Dawn (with a Cartoon Rabbit)</h1>
-      <p>
-        <img src="images/chapter.poignant.guide-3.jpg" alt="">
+      <h1>A Quick (and Hopefully Not Too Painful) Introduction to Dawn (with a Badly Drawn Rabbit)</h1>
+        <img src="images/cycle.jpg" alt="">
       </p>
     </div>
 
@@ -44,9 +43,9 @@
 <p>So this is the animal that I can draw. No, wait, I remember there were also a 
 couple of Moles on Motorcycles in the book. Maybe they'll show up later.</p>
 
-<p><img src="../images/the.foxes-2.png" alt="Smell from Hell." title="Smell from Hell." /></p>
+<p><img src="images/rabbit-2.png" alt="Smell of Dawn." title="Smell of Dawn." /></p>
 
-<p>Before we get to comfortable, I have to tell you a weird thing about Dawn. Have you ever
+<p>Before we get too comfortable, I have to tell you a weird thing about Dawn. Have you ever
 heard of "Code Smell"?. If yes, please forget all you have heard. While Dawn doesn't smell, Dawn will exhibit a scent whilst using it, 
 and the fragrance is of your choosing. It is an olfactory explosion, it is not just scent it is flavor. Actually Dawn comes
 in different flavors.</p>
@@ -65,11 +64,11 @@ finally realize the gravity of their predicament." /></p>
 
 <p>My conscience won’t let me call Dawn a <em>computer</em> language. That carries the conventions of many years of <em>how you
 are supposed to construct a computer language</em>. If you want you can call the flavors languages, because they follow a somewhat
-similar convention.
+similar convention.</p>
 
-One convention is that a computer language exits in text files, and you can control each and every character of this so called 
+<p>One convention is that a computer language exits in text files, and you can control each and every character of this so called 
 <em>sourcecode</em>. Not so in Dawn. For the sake of flavors, when you edit your source with a particular flavor, this source gets translated
-into the Dawn native form, which is the saved version of source. Then the flavor translates it back to you, prettyfying it on the way.
+into the Dawn native form, which is the saved version of source. Then the flavor translates it back to you, prettyfying it on the way.</p>
 
 <p>You can say that the flavor is the bridge between the human readable domain and the computer readable domain. Actually they are both quite
 readable, so the flavor is more like syntax sugar - but you can control it, should you be a syntax diabetic.</p>
@@ -77,18 +76,45 @@ readable, so the flavor is more like syntax sugar - but you can control it, shou
 <p>The flavor is the color of you bikeshed. Prefer LISP style backets? Roll a flavor that allows that. Pascal BEGIN END? Ditto.
 Python significant whitespace? Consider it done. PASCAL := assignments? Yessir!</p>
 
-<p><strong>Read the following aloud to yourself.</strong></p>
+<p><strong>Read the following aloud to yourself (with Flavor set to "Basic Pretty").</strong></p>
 
-<iframe class="highlight" src='embed_demo.html?src=codeexamples/Test.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/basic.bnft","Basic Keyboard":"dawn/flavors/basic.bnft"}' style="width:768px;height:250px;">
+<!--<iframe class="highlight" src='embed_demo.html?src=codeexamples/Test.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/basic.bnft","Basic Keyboard":"dawn/flavors/basic.bnft"}' style="width:768px;height:250px;">
 </iframe>
 <iframe class="highlight" src='embed_demo.html?src=codeexamples/TheQuestion.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/dawn.bnft","Basic Keyboard":"dawn/flavors/dawn.bnft"}' style="width:768px;height:250px;">
+</iframe>-->
+<iframe class="highlight" src='embed_demo.html?src=codeexamples/BeckAsText.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/basic.bnft","Basic Keyboard":"dawn/flavors/basic.bnft"}' style="width:768px;height:250px;">
 </iframe>
-<iframe class="highlight" src='embed_demo.html?src=codeexamples/BeckAsText.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/dawn.bnft","Basic Keyboard":"dawn/flavors/dawn.bnft"}' style="width:768px;height:250px;">
-</iframe>
-<figure class="highlight"><pre><code class="language-rb" data-lang="rb"><span class="mi">5</span><span class="p"> >> </span><span class="nf">times</span><span class="p"> >> </span> <span class="s2">"Órale!"</span> </code></pre><figcaption style="text-align:center"><small>Human Realm</small></center></figcaption></figure>
 
-<p>In this sentence the ">>" are for the computer. So let’s just ignore it and read the above as: <em>Five times “Órale!”.</em>.
-Press <em>run</em> in the console below to watch Forest run.</p>
+<p>Just read the above as: <em>Five times “Odelay”.</em>.
+Press <em>run</em> in the console below to watch Forest run. Smells pretty good, huh?</p>
+
+<p>Go ahead and try the other flavors - you know you want to.</p>
+
+<p>The Pure flavor is the storage format, the pure form of Dawn. Even though you often use a flavor, you must know about the Pure Dawn.
+So set Flavor to Pure while reading the next part.</p>
+
+<p>Dawns most basic building block is the <em>resource</em>. You snap the resources together with ">>". You find the resources using
+the URI (Universal Resource Identifier) and use the ">>" to bind them together to form your program.</p>
+<p>
+One URI rule for them all,<br>
+&nbsp;&nbsp;&nbsp;one URI to find them,<br>
+One URI to bring them all<br>
+&nbsp;&nbsp;&nbsp;and in the Dawn scope bind them.<br>
+</p>
+<p>"Precious", I mutter to myself while writing this. But yes it is - because you know the URI already, right now your browser is using an URI to
+find this page - it points to "<scan><img src onerror="this.parentElement.innerHTML=window.location"/></scan>" and the resource in this case is a web page, 
+which turns out to be chapter 3 of the <b>Not So Poignant Dawn Tutorial</b>). URI's start with a scheme - browsers usually use the https:// scheme.</p> 
+
+<p>In Dawn everything is a resource that can be fetched by a scheme. An image, a programmatic loop, a number, text, whatever. In the example
+notice how the five is fetched using the scheme called "Number" and the text "Odelay" is fetched using the scheme "String".</p>
+
+<p>So if you really want to say this sentence (you really shouldn't), say Number 5 bound to times bound to the String Odelay.
+You can use bound, tied, connected to, on top of or whatever relational phrase of your preferral. 
+</p>
+<iframe class="highlight" src='embed_demo.html?src=codeexamples/NotBeckSpoken.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/flavors/basic.bnft","Basic Keyboard":"dawn/flavors/basic.bnft"}' style="width:768px;height:250px;">
+</iframe>
+<p>If you get tired of Beck’s <a href="http://whiskeyclone.net/ghost/songinfo.php?songID=175">mutated Spanish</a> you can.
+Crank up your speakers, press run and listen to <em>Three times “Órale!” spoken in Spanish</em>.
 
 <figure class="highlight"><pre><code class="language-rb" data-lang="rb"><span class="mi">#> 5</span><span class="p"> >> </span><span class="nf">times</span><span class="p"> >> </span> <span class="s2">"Órale!"<br/><br/><br/><br/><br/></span> </code></pre><figcaption style="text-align:center"><small>Computer Realm</small><button style="float:right">run</button></figcaption></figure>
 

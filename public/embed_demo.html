@@ -144,7 +144,7 @@ Dawn Demo Console
   <span class="mdc-button__label">Run</span>
 </button>
 
-<div id="console"></div>
+<div id="console" style="width:553px"></div>
 <script src="require.js"></script>
 <script>
 
@@ -225,39 +225,58 @@ flavor_list      = document.getElementById('flavors');
 var flavors = {};
 var exampleSource = "";
 var Dawn = require('./Dawn.js');
+var BNFT = require('./BNFT/BNFT.js');
 function initialize()
 {
+    console.time("init");
+    Dawn.initialize("dawn",undefined,false);
+    console.timeEnd("init");
+
     if (parameters.flavors)
     {
         parameters.flavors = JSON.parse(parameters.flavors);
         var selectOne = false;
+        var elementsToAdd="";
         for(var i in parameters.flavors)
         {
             entry = "";
             if (i.indexOf(" ")!=0)
                 entry = i.substring(i.indexOf(" ")+1).toUpperCase();
-            flavors[i] = {source:GET(parameters.flavors[i],""),entry:entry};
-
+ 
             var selected=false;
+            var oldi=i;
             if (i.indexOf("*")==0)
             {
                 selected=true;
-                i=i.replace("*"," ");
+                i=i.replace("*","");
             }
-
-            var elementsToAdd;
+            
+            var source = "";
+            var parser = null;
+            if (parameters.flavors[oldi] !="")
+            {
+              source= GET(parameters.flavors[oldi],"");
+              var BNFTparser = new BNFT(source,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",useCache:true});
+              
+              parser = function(code) {return BNFTparser.parse(code,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",nonterminal:"FROM_DAWN_TO_PRETTY"});};
+            }
+            else
+                parser = function(code) {return code;};
+            flavors[i] = {source:source,entry:entry,parse:parser};
+            
             if (selected)
             {
-                elementsToAdd = '<li id="select" class="mdc-list-item mdc-list-item--selected" aria-selected="true" ';
+                elementsToAdd += '<li id="select" class="mdc-list-item mdc-list-item--selected" aria-selected="true" ';
                 selectOne = true;
             }
             else
-                elementsToAdd = '<li class="mdc-list-item" aria-selected="false" ';
-            elementsToAdd += 'data-value="'+ i.replace(" ","_").toLowerCase() +'" role="option"><span class="mdc-list-item__ripple"></span>'
+                elementsToAdd += '<li class="mdc-list-item" aria-selected="false" ';
+            var value = i.replace(/ /g,"_").toLowerCase()
+            elementsToAdd += 'data-value="'+ value +'" role="option" onClick="select(\''+i+'\')"><span class="mdc-list-item__ripple"></span>'
             elementsToAdd += '<span class="mdc-list-item__text">'+i+'</span></li>';
 
-            flavor_list.innerHTML += elementsToAdd;
         }
+        flavor_list.innerHTML += elementsToAdd;
         if (selectOne)
             document.getElementById('select').click();
 
@@ -268,14 +287,22 @@ function initialize()
        console_element.innerHTML = colorize(exampleSource) + "<br>";
     }
 
-    Dawn.initialize("dawn",undefined,true);
 }
 
 initialize();
 
+function select(flavor)
+{
+    currentFlavor = flavor;
+    console.log(flavor);
+    
+    console_element.innerHTML = colorize(flavors[flavor].parse(exampleSource+"\n")) + "<br>";        
+       
+}
+
 function doRun(noOutput)
 {
-    console_element.innerHTML = colorize(exampleSource) + "<br>";
+    select(currentFlavor);
     var dawnSource = exampleSource;
     if (Dawn.parser)
 	{
@@ -283,8 +310,9 @@ function doRun(noOutput)
         lines = exampleSource.split("\n");
         for(i in lines)
         {
+            if (lines[i] != "")
             if (lines[i].indexOf("Console") == -1)
-                lines[i] += ">>Console";
+                lines[i] += " >> Console";
         }
         dawnSource = lines.join("\n");
 	    var source = Dawn.parser.parse(dawnSource + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});

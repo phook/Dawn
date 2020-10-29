@@ -332,7 +332,10 @@ async function processKey(e) {
         console_selection_start_position = console_cursor_position;
 		var result = await hub.server.evalAsync("dawnCommand(\"" + eval_command + "\")");
         if (result)
-            eval(result);
+        {
+            console_history += result;
+            updateConsole();	
+        }
  	}
 	else
 	if (code == 36) // home 

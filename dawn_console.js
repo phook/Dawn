@@ -154,9 +154,21 @@ function dawnCommand(command)
 		Dawn.debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{
-			globalEval.call(Dawn.root,source);
+			//globalEval.call(Dawn.root,source);
+            var evalInContext = function(str){
+                return eval(str);
+            };
+            Dawn.print = function(string)
+            {
+                if (!Dawn.returnResult)
+                    Dawn.returnResult = "";
+
+                Dawn.returnResult += string + "\n";
+            }
+			evalInContext.call(Dawn.root,source);
+
 			Dawn.debugInfo(Object.keys(Dawn.root._children));
-		}
+		}        
 	}
     if (Dawn.returnResult)
         return Dawn.returnResult;
