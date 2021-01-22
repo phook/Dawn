@@ -6,7 +6,7 @@ define Subtract
       self._value = new Dawn.bigRat();
     self._in_go = async function(pipe)
       if (pipe._out_number)
-        pipe._out_number._call(self)
+        pipe._out_number(self)
     self._in_number_minuend = function(pipe, number)
       self._value = number._value
     self._in_number_subtrahend = function(pipe, number)

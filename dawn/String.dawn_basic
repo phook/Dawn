@@ -2,14 +2,15 @@ define String
   output string
   input all string
     native javascript
-      self._value = s._value;
+      self._value = string._value;
     endnative
   input go
     native javascript
-      if (pipe._out_string)
-        pipe._out_string._call(arguments[0].resource);
+      if (this._out_string)
+        this._out_string(this);
     endnative
   input lookup_child
     native javascript
-         return Object.assign({_value:decodeURIComponent(pipe.resource)},this);
+         var newObject = this._clone();
+         return Object.assign({_value:decodeURIComponent(lookup_child._value)},newObject);
     endnative

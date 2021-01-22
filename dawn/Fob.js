@@ -3,11 +3,6 @@ function Fob(name)
 {
 	this.id = id++;
     this.path = [""];
-    this.reference = function(reference)
-	{
-	    // this should hold previous, output bindings etc.. pass to object, scopet!!! det er den piperne er bygget op af...
-		this.reference = reference;
-	}
 	
     // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
     function dawnSort(a,b)
@@ -22,19 +17,21 @@ function Fob(name)
         }
         return a>b?1:-1;
     }
-	function _call(pipe, obj,fn)
+	function _call(obj,fn)
     {
-		this.reference = obj;
         this._call = function()
         {
    	 	    var args = Array.prototype.slice.call(arguments);
-			args.unshift(pipe);
+			//args.unshift(pipe);
             fn.apply(obj,args);
         }
     }
 	function clone(src) {
-	  return Object.assign({}, src);
-	}
+	    var clone=Object.assign({}, src);
+        clone.inputs_bound={};
+        clone.previous=null;
+        return clone;
+    }
 	
     this._clone = function(){return clone(this);}
 	this._name = name;
@@ -46,6 +43,35 @@ function Fob(name)
 	this._out_begin = null;
 	this._out_end = null;
 	
+    this.inputs_bound = {};
+    
+    this.previous = null;
+    this._test_previous= function(_new_previous)
+    {
+        if (this == _new_previous)
+        {
+           throw("circular reference");          
+        }
+        if (this.previous)
+        {
+            if (_new_previous == this.previous)
+            {
+                throw("circular reference");
+            }
+            return this.previous._test_previous(_new_previous);
+        }
+        return true;
+    }
+    this._set_previous= function(_previous)
+    {
+        _previous._test_previous(this);
+        this.previous = _previous;
+    }
+    this._get_previous = function(_previous)
+    {
+        return this.previous;
+    }
+
 	this._set_owner = function(owner)
 	{
 		this._owner = owner;
@@ -54,14 +80,6 @@ function Fob(name)
 	{
 		return this._owner?this._owner:this;
 	}
-	/*
-	this._previous = null;
-	this._setprevious = function(previous)
-	{
-		this._previous = previous;
-	}
-	*/
-    this._is_reference = function(){return false;}
     this._add=function()
 	{
         var args = Array.prototype.slice.call(arguments);
@@ -80,44 +98,48 @@ function Fob(name)
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier)
     {
-      var ref = new Dawn.Reference(identifier);
+      var ref = {_value:identifier};
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       return this._in_lookup(ref);
     }
 	this._in_lookup = function(pipe,from_owner)
 	{
-        if (pipe.resource == this._name) return this;
-        
-        var originalResource = pipe.resource;
+        if (pipe._value == this._name)
+            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE PIPE RELATED INFO - BUT VALUE RETAINED IN ORIGINAL FOB
+
+        var originalResource = pipe._value;
 
         // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
-	    if (pipe.resource.indexOf(this._name + ".") == 0)
-		  pipe.resource = pipe.resource.substring(this._name.length+1);
-		else
-	    if (pipe.resource.indexOf(this._name + ":") == 0)
-		  pipe.resource = pipe.resource.substring(this._name.length+1);
-
+        var skip=false;
+        if (this._name.charAt(-1) != "." && pipe._value.indexOf(this._name) == 0)
+        {
+            if (pipe._value.indexOf(this._name + ":") == 0)
+                pipe._value = pipe._value.substring(this._name.length+1);
+            else
+                pipe._value = pipe._value.substring(this._name.length);
+		}
+        
         let result = this._in_lookup_child(pipe);
-		if (result)
+        if (result)
             return result;
         
 		if (this._owner && !from_owner)
 		{
-            pipe.resource = originalResource;
+            pipe._value = originalResource;
 			return this._owner._in_lookup(pipe);
 		}
 		
-		return Object.assign({}, this); // CLONE MYthis
+        return this._clone();
 	}
     this._lookup_child = function(identifier)
     {
-      var ref = new Dawn.Reference(identifier);
+      var ref = {_value:identifier};
       return this._in_lookup_child(ref);
     }
 	this._in_lookup_child = function(pipe,from_owner)
 	{
-        var identifier = pipe.resource;
+        var identifier = pipe._value;
            
         var keys = Object.keys(this._children);
         keys.sort(dawnSort);        
@@ -125,37 +147,76 @@ function Fob(name)
         for(testPath in this.path) // needs the first element to be ""
         {
             var identifierToCheck = this.path[testPath] + identifier;
-  		    pipe.resource = identifierToCheck;
+  		    pipe._value = identifierToCheck;
             for(id in keys)
             {
                 if (identifierToCheck.indexOf(keys[id]) == 0)
                 {
-                    offerResult = this._children[keys[id]]._in_lookup(pipe,true);
-                    if (offerResult)
-                        return offerResult;
+                    var result = this._children[keys[id]]._in_lookup(pipe,true);
+                    if (result)
+                        return result;
                 }
             }
         }
         return null;
 	}
     
-	this._offer_bind = function(match,reference)
+	this._offer_bind = function(match)
 	{
 		for(b in this)
 		{
 			if ((b.indexOf('@') == -1) && (b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(reference.inputs_bound[b]) == "undefined")
+				if ((b.indexOf("_$")==(b.length-2)) || typeof(this.inputs_bound[b]) == "undefined")
 				{
-					reference.inputs_bound[b] = true;
-					return new _call(reference,this,this[b]);
-					break;
+					this.inputs_bound[b] = true;
+					return this[b].bind(this);
+                    break;
 				}
 			}
 		}
 	}
-    this._in_native_$ = function(pipe,data)
+    this._bind = function(bindee)
     {
+        var id = this._type;
+        if (typeof(this._value) != "undefined")
+            id+=this._value;
+
+        bindee._set_previous(this);
+        this.bindee = bindee;		
+
+        Dawn.debugInfo("trying to bind " + this._name + " to " +  bindee._name);
+
+        if (this._pass_bind)
+        {
+            let input_bound = this._pass_bind(bindee);
+            return bindee;
+        }
+
+        for(a in this)
+        {
+            if (a.indexOf("_out_") == 0)
+            {
+                match = a.substr(5);
+                if (match.indexOf("_") != -1)
+                    match = match.substr(0,match.indexOf("_"));
+                
+                let input_bound = bindee._offer_bind(match)
+                
+                if (input_bound)
+                {
+                    Dawn.debugInfo("binding " + this._name + " to " +  bindee._name);
+                    this[a] = input_bound;
+                }
+            }
+        }
+        return bindee;
+    }    
+    this._in_native_$ = function(data)
+    {
+        Function(data._value).call(this);
+        //    eval.call(this, data._value);
+        //Dawn.passedEval.call(this, data._value);
     }
 	this._in_begin = function()
 	{
@@ -166,6 +227,9 @@ function Fob(name)
 	{
 		if (this._out_end)
 			this._out_end();
+        this.inputs_bound={};
+        this.bindee=null;
+        this.previous=null;
 	}
 	this._in_go = function()
 	{
@@ -175,6 +239,33 @@ function Fob(name)
         if (this._previous)
             return this._previous._get_qualified_name() + "." + this._name;
         return this._name;
+    }
+    this._first = function(pipe)
+    {
+        
+        if (this.previous)
+        {
+            var first = this.previous;
+            
+            var loopTest = [first];
+            
+            while (first._get_previous())
+            {
+                first = first._get_previous();
+                loopTest.forEach(function(element){
+                  if (first == element)
+                  {
+                      throw "circular ref error";
+                  }
+                });
+                loopTest.push(first);
+            }
+            return first;
+        }
+        else
+        {
+          return this;   
+        }
     }
 	return this;
 }

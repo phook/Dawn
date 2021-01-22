@@ -1,0 +1,11 @@
+define add
+  native javascript
+    this._out_number = null;
+    this._in_begin = function()
+      this._value = new Dawn.bigRat(0,0);
+    this._in_go = function()
+      if (this._out_number)
+        this._out_number(this);
+    this._in_number_$ = function(number)
+      this._value = this._value.add(number._value);
+  endnative

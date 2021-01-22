@@ -6,7 +6,7 @@ define Multiply
       self._value = new Dawn.bigRat(1);
     self._in_go = async function(pipe)
       if (pipe._out_number)
-        pipe._out_number._call(self)
+        pipe._out_number(self)
     self._in_number_$ = function(pipe, number)
       self._value = self._value.multiply(number._value)
   endnative

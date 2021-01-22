@@ -23,8 +23,8 @@ AND AT INSTANCIATION PUT FLAVOR->COMPILE TO WEB WORKER (ON BROWSER)
 
 function DawnWebFile(name)
 {
-    var dawnFile = name.indexOf(".dawn") != -1;
-    var flavoredFile = name.indexOf(".dawn_") != -1;
+    var dawnFile = false; //name.indexOf(".dawn") != -1;
+    var flavoredFile = false;// name.indexOf(".dawn_") != -1;
     var full_name = name;
     
     name = name.replace(".js","");
@@ -45,7 +45,7 @@ function DawnWebFile(name)
 	}
 	this._in_lookup = function(pipe)
 	{
-        var identifier = pipe.resource;
+        var identifier = pipe._value;
         if (currentIdentifiers.includes(identifier))
             return;
         currentIdentifiers.push(identifier);
@@ -67,7 +67,7 @@ function DawnWebFile(name)
 					Dawn.debugInfo("FLAVOR_PARSE:"+dawnSource);
                     if (dawnSource == "ERROR")
                     {
-                        currentIdentifiers.remove(identifier);
+                        currentIdentifiers = currentIdentifiers.remove(identifier);
                         throw "error in flavored dawn file: " + identifier + " ";
                     }
                 }
@@ -77,11 +77,12 @@ function DawnWebFile(name)
                 {
                     // Save cached compile - and require it?
                     // eval in owners scope
-                    Dawn.passedEval.call(this._get_owner(),jsSource);
-                    currentIdentifiers.remove(identifier);
+                    //Dawn.passedEval.call(this._get_owner(),jsSource);
+                    Function(jsSource).call(this._get_owner());
+                    currentIdentifiers = currentIdentifiers.remove(identifier);
                     return this._owner._lookup(identifier); // a little hacky
                 }
-                currentIdentifiers.remove(identifier);
+                currentIdentifiers = currentIdentifiers.remove(identifier);
                 throw "error in dawn file: " + identifier + " " + jsSource;
             }
             else
@@ -90,18 +91,25 @@ function DawnWebFile(name)
                 var qualified_name = this._get_qualified_name();
                 if (qualified_name.indexOf(":") == -1)
                     qualified_name = "./" + qualified_name;
+
+/*
                 var loaded_object_constructor = Dawn.require(qualified_name);
                 var loaded_object = new loaded_object_constructor(); // create initial instance
                 this._owner._children[loaded_object._name]=loaded_object; // and register - replace FileObject - should it do this
     //            if (name === identifier)
     //                   return loaded_object; // do not return the original prototype - allow it to instance (possible use lookup)
                 currentIdentifiers.remove(identifier);
-                return this._owner._lookup(identifier)
+*/
+                var fob_inserter = Dawn.require(qualified_name);
+                delete this._owner._children[identifier];
+                fob_inserter(this._owner); // call inserter with scope
+                currentIdentifiers = currentIdentifiers.remove(identifier);
+                return this._owner._lookup(identifier);
             }
         }
         else
         {
-            currentIdentifiers.remove(identifier);
+            currentIdentifiers = currentIdentifiers.remove(identifier);
             return this._parent_lookup(pipe);
         }
     }

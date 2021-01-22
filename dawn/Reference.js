@@ -9,8 +9,20 @@ Reference = function (resource, parent)
     this.inputs_bound = {};
     if (typeof(resource) !== "string" && resource._is_reference())
         Dawn.debugInfo("ERROR - reference to reference");
+    
+    this._test_previous= function(_new_previous)
+    {
+        if (this.previous)
+        {
+            if (_new_previous == this.previous)
+                throw("circular reference");
+            return this.previous._test_previous(_new_previous);
+        }
+        return true;
+    }
     this._set_previous= function(_previous)
     {
+        _previous._test_previous(this);
         this.previous = _previous;
     }
     this._get_previous = function(_previous)
@@ -57,7 +69,7 @@ Reference = function (resource, parent)
 
         if (resource._pass_bind)
         {
-            let input_bound = resource._pass_bind(this,bindee);
+            let input_bound = resource._pass_bind(bindee);
             //return input_bound;
         }
 
@@ -88,7 +100,7 @@ Reference = function (resource, parent)
     {
         this.resource._in_end(this);
     }
-    this._in_go = async function()
+    this._in_go = function(scope)
     {
         this.resource._in_go(this);
     }
@@ -106,7 +118,9 @@ Reference = function (resource, parent)
                 first = first._get_previous();
                 loopTest.forEach(function(element){
                   if (first == element)
+                  {
                       throw "circular ref error";
+                  }
                 });
                 loopTest.push(first);
             }

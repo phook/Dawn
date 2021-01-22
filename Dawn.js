@@ -74,7 +74,24 @@ Dawn = {
             const Directory = require("./dawn/Directory.js");
             Directory.call(this,"","dawn");
         }
-        this.path.push("Dawn.");
+        this.path.push("Operators.");
+        this.path.push("Number.");
+    },
+    saveStringResource : function(url,string,overwrite) {
+        if (Dawn.isBrowser())
+        {
+            throw new Error("save not supported in browser");
+        }
+        else
+        {
+            const fs = require("fs");
+            if (overwrite || !fs.existsSync(url))
+                fs.writeFileSync(url, string, function (err) {
+              if (err) return console.log(err);
+            });
+            else
+                console.log("file exists");
+        }
     },
     resourceAsString : function(url)
     {
@@ -103,7 +120,6 @@ Dawn = {
 
         const bnft = this.require("./BNFT/BNFT.js");
 
-        this.Reference = this.require("./dawn/Reference.js");
         this.bigRat = this.require("./BigInt_BigRat.min.js");
 
         this.passedEval = evaluate ? evaluate : evalInContext;

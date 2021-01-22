@@ -2,7 +2,7 @@ define http
   native javascript
     var self = this;
     var http = require('http');  
-    this._in_go = async function(pipe)
+    this._in_go = function(scope)
       http.get("http:" + this._url, function(resp)
         let data = '';
         resp.on('data', function(chunk)
@@ -13,9 +13,9 @@ define http
             var dataAsString = pipe._get_owner()._lookup("String:"+encodeURIComponent(data));
             var ref = new Reference(dataAsString);
             ref._bind(pipe.bindee);
-            ref._in_go();
+            ref._in_go(scope);
         );
       );
     this._in_lookup_child = function(pipe)
-      return Object.assign({_url:decodeURIComponent(pipe.resource)},this);
+      return Object.assign({_url:decodeURIComponent(pipe._value)},this);
   endnative

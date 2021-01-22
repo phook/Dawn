@@ -1,0 +1,13 @@
+define power
+  native javascript
+    this._out_number = null;
+    this._in_begin = function()
+      this._value = new Dawn.bigRat();
+    this._in_go = function()
+      if (this._out_number)
+        this._out_number(this);
+    this._in_number_base = function(number)
+      this._value = number._value;
+    this._in_number_exponent = function(number)
+      this._value = this._value.pow(number._value.round(true));
+  endnative

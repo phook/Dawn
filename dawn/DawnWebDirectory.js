@@ -32,7 +32,7 @@ function _DawnWebDirectory(name, path_to_directory)
     else
     if (typeof(files[file]) == "object")
     {
-      var newDirectory = new _DawnWebDirectory(file, path_to_directory + "/" + file);
+      var newDirectory = new _DawnWebDirectory(file + ".", path_to_directory + "/" + file);
       self._add(newDirectory);
     }
   };

@@ -2,14 +2,16 @@ define Number
   output number
   input all number
     native javascript
-      self._value = s._value;
+      this._value = number._value;
     endnative
   input go
     native javascript
-      if (pipe._out_number)
-        pipe._out_number._call(arguments[0].resource);
+      if (this._out_number)
+        this._out_number(this);
     endnative
   input lookup_child
     native javascript
-         return Object.assign({_value:new Dawn.bigRat(pipe.resource)},this);
+         var newObject= this._clone();
+         newObject._value=new Dawn.bigRat(lookup_child._value);
+         return newObject;
     endnative

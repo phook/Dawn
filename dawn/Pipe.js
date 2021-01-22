@@ -7,11 +7,11 @@ function Pipe()
 	this._last=null;
     this._bound = false;
 	this._out_pipe=null;
-	this._in_lookup = function(pipe,from_owner)
+	this._in_lookup = function(identifier)
 	{
 			return new Pipe();
 	}
-	this._pass_bind = function(pipe, bindee)
+	this._pass_bind = function(bindee)
 	{
 		if (this._last)
             this._last._bind(bindee);
@@ -26,17 +26,17 @@ function Pipe()
         this._first["_in_end@"]   = true; // occupy _end
 		return this;
 	}
-	this._in_go = function(pipe)
+	this._in_go = function(scope)
 	{
 		if (this._first)
 		{
 			if (this._first._in_begin)
-				this._first._in_begin(pipe);
+				this._first._in_begin();
 			if (this._first._in_go)
-				this._first._in_go(pipe);
+				this._first._in_go(scope);
 			if (this._first._in_end)
-				this._first._in_end(pipe);
+				this._first._in_end();
 		}
 	}
 }
-module.exports = Pipe;
+module.exports = function(scope){scope._add(new Pipe());};

@@ -4,16 +4,16 @@ function _Javascript()
     Fob.call(this,"Javascript");
     this._out_native=null;
     this._out_go=null;
-    this._in_lookup_child=function(pipe)
+    this._in_lookup_child=function(identifier)
     {
-       return Object.assign({_source:decodeURIComponent(pipe.resource)},new _Javascript());
+       return Object.assign({_value:decodeURIComponent(identifier._value)},new _Javascript());
     }
-    this._in_go = function(pipe)
+    this._in_go = function(scope)
     {
-        if (pipe._out_native)
-            pipe._out_native._call(this);
-        if (pipe._out_go)
-            pipe._out_go._call(this);
+        if (this._out_native)
+            this._out_native(this);
+        if (this._out_go)
+            this._out_go(scope);
     }
 } 
-module.exports = _Javascript;
+module.exports = function(scope){scope._add(new _Javascript());};

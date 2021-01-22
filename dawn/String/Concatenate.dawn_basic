@@ -6,7 +6,7 @@ define Concatenate
       self._value = ""
     self._in_go = async function(pipe)
       if (pipe._out_string)
-        pipe._out_string._call(self)
+        pipe._out_string(self)
     self._in_string_$ = function(pipe, s)
       self._value += s._value
   endnative

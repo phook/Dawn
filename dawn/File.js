@@ -37,7 +37,7 @@ function File(name)
 	}
 	this._in_lookup = function(pipe)
 	{
-        var identifier = pipe.resource;
+        var identifier = pipe._value;
         if (currentIdentifiers.includes(identifier))
             return;
         currentIdentifiers.push(identifier);

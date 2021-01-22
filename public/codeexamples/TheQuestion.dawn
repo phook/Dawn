@@ -1,1 +1,1 @@
-[[Number:-80538738812075974 Number:3]>>power [Number:80435758145817515 Number:3]>>power [Number:12602123297335631 Number:3]>>power]>>add
+[[Number:-80538738812075974 Number:3]>>Number.power: [Number:80435758145817515 Number:3]>>Number.power: [Number:12602123297335631 Number:3]>>Number.power:]>>Number.add:

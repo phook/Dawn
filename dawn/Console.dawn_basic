@@ -1,9 +1,9 @@
 define Console
   input all string
     native javascript
-        Dawn.print(encodeURIComponent(string._value).replace(/'/g, "%27"))
+        Dawn.print(string._value)
     endnative
   input all number
     native javascript
-        Dawn.print(encodeURIComponent(number._value.toDecimal()))
+        Dawn.print(number._value.toDecimal())
     endnative

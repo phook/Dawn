@@ -18,8 +18,8 @@
 <meta name="theme-color" content="#ffffff">
 
 
-      <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
-      <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+      <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
+      <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
       <link rel="stylesheet" href="css/material.css">
 
 <head>
@@ -303,9 +303,10 @@ function select(flavor)
        
 }
 
-function doRun(noOutput)
+function doRun(noOutput,dont)
 {
-    select(currentFlavor);
+    if (!dont)
+        select(currentFlavor);
     var dawnSource = exampleSource;
     if (Dawn.parser)
 	{
@@ -314,24 +315,28 @@ function doRun(noOutput)
         for(i in lines)
         {
             if (lines[i] != "")
-            if (lines[i].indexOf("Console") == -1)
-                lines[i] += ">>Console";
+            if (lines[i].indexOf("Console:") == -1)
+                lines[i] += ">>Console:";
         }
         dawnSource = lines.join("\n");
 	    var source = Dawn.parser.parse(dawnSource + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
 		Dawn.debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{
-            var evalInContext = function(str){
-                return eval(str);
-            };
             Dawn.print = function(string)
             {
                 if (!noOutput)
                     console_element.innerHTML += string + "<br>";
             }
+            /*
+            var evalInContext = function(str){
+                return eval(str);
+            };
 			evalInContext.call(Dawn.root,source);
-			Dawn.debugInfo(Object.keys(Dawn.root._children));
+			*/
+            Function("scope",source)(Dawn.root);
+            
+            Dawn.debugInfo(Object.keys(Dawn.root._children));
 		}
 	}
 }
@@ -346,7 +351,7 @@ function autoFocus()
 {
 }
 ///// PRECOMPILE - SOMEWHAT DO BNFT PARSING IN BACKGROUND WITH WEB WORKER AND PASS JAVASCRIPT SOURCE TO MAIN THREAD FOR EVAL....
-doRun(true);
+setTimeout(doRun(true),10);
 
 </script>
 </body>

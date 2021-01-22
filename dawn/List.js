@@ -3,15 +3,15 @@ function DawnList()
 {
 	Fob.call(this,"List");
 	this._elements=[];
-	this._pass_bind = function(pipe, bindee)
+	this._pass_bind = function(bindee)
 	{
 		this._bindee = bindee;
 		for(element in this._elements)
 		{
-	        this._elements[element]._set_previous(pipe);
+	        //this._elements[element]._set_previous(this);
 			this._elements[element]._bind(bindee);
 		}
-		bindee._set_previous(pipe);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
+		bindee._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
 		return bindee;
 	}
 	this._offer_bind = function(match)
@@ -23,7 +23,8 @@ function DawnList()
 				if ((b.indexOf("_$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
 				{
 					this[b+"@"] = true;
-					return new _call(pipe,this,this[b]);
+					//return new _call(this,this[b]);
+					return this[b].bind(this);
 					break;
 				}
 			}
@@ -55,36 +56,37 @@ function DawnList()
 	{
 		return new DawnList();
 	}
-	this._in_begin = function(pipe)
+	this._in_begin = function()
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]._in_begin(pipe);
+				this._elements[element]._in_begin();
 		}
 		if (this._bindee)
-			this._bindee._in_begin(pipe);
+			this._bindee._in_begin();
 	}
-	this._in_end = function(pipe)
+	this._in_end = function()
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]._in_begin(pipe);
+				this._elements[element]._in_end();
 		}
 		if (this._bindee)
-			this._bindee._in_end(pipe);
+			this._bindee._in_end();
+        this.input_bound={};
 	}
-	this._in_go = function(pipe)
+	this._in_go = function(scope)
 	{
         Dawn.debugInfo("list going");
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]._in_go(pipe);
+				this._elements[element]._in_go(scope);
 		}
 		if (this._bindee)
-			this._bindee._in_go(pipe);
+			this._bindee._in_go(scope);
 	}
 }
-module.exports=DawnList;
+module.exports=function(scope){scope._add(new DawnList());};
