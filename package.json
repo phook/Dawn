@@ -11,13 +11,15 @@
     "@material/textfield": "^7.0.0",
     "@webcomponents/webcomponentsjs": "^2.4.4",
     "big-rational": "^0.10.9",
+    "compression": "^1.7.4",
     "express": "^4.17.1",
     "express-fileupload": "^1.1.7-alpha.4",
     "express-transform-bare-module-specifiers": "^1.0.3",
     "express-upload": "^0.1.0",
     "lz-string": "^1.4.4",
     "socket.io": "^2.3.0",
-    "tslib": "^2.0.1"
+    "tslib": "^2.0.1",
+    "uglify-js": "^3.12.5"
   },
   "devDependencies": {},
   "scripts": {

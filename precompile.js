@@ -1,7 +1,7 @@
 const path = require('path')
 const fs = require('fs')
 const bnft = require("./BNFT/BNFT.js");
-
+const UglifyJS = require("uglify-js");
 
 var Dawn = require("./Dawn.js");
 Dawn.initialize("./dawn");
@@ -45,6 +45,7 @@ function traverse_directory(directory)
 
                 }
                 source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"PROGRAM"}) +"\n";
+                source = UglifyJS.minify(source).code;
                 var jsFilename=filepath.substr(0,filepath.indexOf(".dawn"))+".js";
                 console.log("saving "+ jsFilename);
                 Dawn.saveStringResource(jsFilename,source,true);

@@ -1,14 +1,16 @@
-var express = require('express');
-var http = require('http');
-var transformMiddleware = require('express-transform-bare-module-specifiers').default;
-var path = require('path')
-var fs = require('fs')
-var fileUpload = require('express-fileupload');
-var checkForLocalHost = require('./checkForLocalHost.js');
+const express = require('express');
+const compression = require('compression');
+const http = require('http');
+const transformMiddleware = require('express-transform-bare-module-specifiers').default;
+const path = require('path')
+const fs = require('fs')
+const fileUpload = require('express-fileupload');
+const checkForLocalHost = require('./checkForLocalHost.js');
 
-var hub     = require('./hubserver.js');
+const hub     = require('./hubserver.js');
 var app = express();
 var server = http.createServer(app);
+app.use(compression());
 
 var Dawn = require("./Dawn.js");
 
