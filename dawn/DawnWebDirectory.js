@@ -18,12 +18,14 @@ function _DawnWebDirectory(name, path_to_directory)
   var files = JSON.parse(X.responseText);
   for(var file in files)
   {
+    /*
     if (file.indexOf(".dawn") !== -1)
     {
       var newFile = new DawnWebFile(file);
       self._add(newFile);
     }
     else
+    */
     if (file.indexOf(".js") !== -1)
     {
       var newFile = new DawnWebFile(file);

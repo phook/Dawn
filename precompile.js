@@ -21,6 +21,7 @@ function traverse_directory(directory)
        files.sort().forEach(function (filename) {
             filepath = path.resolve(directory, filename); 
             var stat = fs.statSync(filepath);
+            if (filename.indexOf(".js") == -1)
             if (filename.indexOf(".dawn") !== -1)
             {
                console.log("compiling "+filename);
@@ -45,17 +46,20 @@ function traverse_directory(directory)
 
                 }
                 source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"PROGRAM"}) +"\n";
-                source = UglifyJS.minify(source).code;
-                var jsFilename=filepath.substr(0,filepath.indexOf(".dawn"))+".js";
-                console.log("saving "+ jsFilename);
-                Dawn.saveStringResource(jsFilename,source,true);
+                if (source != "ERROR")
+                {
+                    source = UglifyJS.minify(source).code;
+                    var jsFilename=filepath+".js";
+                    console.log("saving "+ jsFilename);
+                    Dawn.saveStringResource(jsFilename,source,true);
 
-                // test for js version
-                // stat for timestamps
-                // if different or missing
-                //    test for flavored - if do flavor compile
-                //    compile to js
-                //    save and match time
+                    // test for js version
+                    // stat for timestamps
+                    // if different or missing
+                    //    test for flavored - if do flavor compile
+                    //    compile to js
+                    //    save and match time
+                }
             }
             else
             if (stat && stat.isDirectory()) {                   

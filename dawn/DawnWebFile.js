@@ -17,7 +17,8 @@ currentIdentifiers.remove = function(){
 THE WEBFILE SHOULD REMOVE ITSELF - AND LET THE DEFINE ALTER THE TREE, SO THE CONFLICT DOESNT EXITS
 ALSO FOR FILE!!!
 AND AT INSTANCIATION PUT FLAVOR->COMPILE TO WEB WORKER (ON BROWSER)
-
+NO - JUST PROMISE - THAT CAN ALTER IT LATER
+SO MOVE COMPILE TO INSTANCE TIME, NOT LOOKUP TIME 
 */
 
 
@@ -27,9 +28,10 @@ function DawnWebFile(name)
     var flavoredFile = false;// name.indexOf(".dawn_") != -1;
     var full_name = name;
     
-    name = name.replace(".js","");
-    name = name.replace(/.dawn.*/,"");
-    Fob.call(this,name);
+    
+    var trimname = name.replace(".js","");
+    trimname = trimname.replace(/.dawn.*/,"");
+    Fob.call(this,trimname);
     
     this._get_qualified_name = function()
     {
@@ -113,6 +115,22 @@ function DawnWebFile(name)
             return this._parent_lookup(pipe);
         }
     }
+ /*
+not work because owner is not know...hm
+ 
+    // ASYNC TEST
+    if (name.indexOf(".js") != -1)
+    {
+                var qualified_name = this._get_qualified_name() + ".js";
+                if (qualified_name.indexOf(":") == -1)
+                    qualified_name = "./dawn/" + qualified_name;
+                Dawn.require(qualified_name, function(fob_inserter)
+                {
+                    delete this._owner._children[identifier];
+                    fob_inserter(this._owner); // call inserter with scope
+                });
+    }
+*/
 }
 
 module.exports = DawnWebFile;

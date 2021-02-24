@@ -232,13 +232,12 @@ function initialize()
     Dawn.initialize("dawn",undefined,false);
     console.timeEnd("init");
 
-    var parsers = {};
-
     if (parameters.flavors)
     {
         parameters.flavors = JSON.parse(parameters.flavors);
         var selectOne = false;
         var elementsToAdd="";
+        var flavor_parser = {};
         for(var i in parameters.flavors)
         {
             entry = "";
@@ -255,16 +254,18 @@ function initialize()
             
             var source = "";
             var parser = null;
-            if (entry in parsers)
-            {
-                parser = parsers[entry];
-            }
-            else
             if (parameters.flavors[oldi] !="")
             {
               source= GET(parameters.flavors[oldi],"");
-              parser = function(code) {return Dawn.parser.parse(code,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",nonterminal:"FROM_DAWN_TO_PRETTY"});};
-              parsers[entry] = parser;
+              var BNFTparser = null;
+              if (entry in flavor_parser)
+                BNFTparser = flavor_parser[entry]
+              else
+              {
+                BNFTparser = new BNFT(source,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",useCache:true});
+                flavor_parser[entry] = BNFTparser;
+              }
+              parser = function(code) {return BNFTparser.parse(code,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",nonterminal:"FROM_DAWN_TO_PRETTY"});};
             }
             else
                 parser = function(code) {return code;};

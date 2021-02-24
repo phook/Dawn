@@ -1,4 +1,5 @@
 Dawn = {
+    promises : [],
     isBrowser : function()
     {
         return typeof window !== 'undefined' && typeof window.document !== 'undefined';
@@ -7,7 +8,7 @@ Dawn = {
     {
         return !isBrowser();
     },
-    require : function(url, deposit) 
+    require : function(url, async_callback) 
     {
         var loadUrl = url;
         if (this.isBrowser())
@@ -18,39 +19,62 @@ Dawn = {
             if (!exports) 
             {
                 if (url.indexOf(".") !== 0)
-                {/*   
-                    if (deposit)
-                    {
-                        //document.body.innerHTML += '<script type="module" onLoad="alert()">import myModule from "https://jspm.dev/'+url+'";require.cache["'+url+'"]=myModule;'+deposit+'=myModule;</script>';
-                        import('https://jspm.dev/'+url).then((module) => 
-                        {Dawn.bigRat=module["big-rational"];});
-                        return;
-                    }
-                    */
+                {
                     loadUrl = "https://jspm.dev/"+url;
                 }
                 try 
                 {
-                    exports={};
-                    var X=new XMLHttpRequest();
-                    X.open("GET", loadUrl, 0); // sync
-                    X.send();
-                    if (X.status && X.status !== 200)
-                      throw new Error(X.statusText);
-                    var source = X.responseText;
-                    if (source.substr(0,10)==="(function(")
-                    { 
-                        var moduleStart = source.indexOf('{');
-                        var moduleEnd = source.lastIndexOf('})');
-                        var CDTcomment = source.indexOf('//@ ');
-                        if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
-                        source = source.slice(moduleStart+1,moduleEnd-1); 
-                    } 
-                    source="//@ sourceURL="+window.location.origin+url+"\n" + source;
-                    var module = { id: url, uri: url, exports:exports }; 
-                    var anonFn = new Function("require", "exports", "module", source);
-                    anonFn(require, exports, module);
-                    require.cache[url]  = exports = module.exports; 
+                    if (!async_callback)
+                    {
+                        exports={};
+                        var X=new XMLHttpRequest();
+                        X.open("GET", loadUrl, 0); // sync
+                        X.send();
+                        if (X.status && X.status !== 200)
+                          throw new Error(X.statusText);
+                        var source = X.responseText;
+                        if (source.substr(0,10)==="(function(")
+                        { 
+                            var moduleStart = source.indexOf('{');
+                            var moduleEnd = source.lastIndexOf('})');
+                            var CDTcomment = source.indexOf('//@ ');
+                            if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
+                            source = source.slice(moduleStart+1,moduleEnd-1); 
+                        } 
+                        source="//@ sourceURL="+window.location.origin+url+"\n" + source;
+                        var module = { id: url, uri: url, exports:exports }; 
+                        var anonFn = new Function("require", "exports", "module", source);
+                        anonFn(require, exports, module);
+                        require.cache[url]  = exports = module.exports; 
+                    }
+                    else
+                    {
+                        exports={};
+                        var X=new XMLHttpRequest();
+                        
+                        function callback()
+                        {
+                            var source = this.responseText;
+                            if (source.substr(0,10)==="(function(")
+                            { 
+                                var moduleStart = source.indexOf('{');
+                                var moduleEnd = source.lastIndexOf('})');
+                                var CDTcomment = source.indexOf('//@ ');
+                                if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
+                                source = source.slice(moduleStart+1,moduleEnd-1); 
+                            } 
+                            source="//@ sourceURL="+window.location.origin+url+"\n" + source;
+                            var module = { id: url, uri: url, exports:exports }; 
+                            var anonFn = new Function("require", "exports", "module", source);
+                            anonFn(require, exports, module);
+                            require.cache[url]  = exports = module.exports; 
+                            async_callback(exports);
+                        }
+                        
+                        X.addEventListener("load", callback);
+                        X.open("GET", loadUrl); 
+                        X.send();
+                    }
                 } 
                 catch (err) 
                 {

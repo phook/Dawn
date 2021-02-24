@@ -1,9 +1,9 @@
 define times
-  native javascript
-    this._out_go = null
-    this._in_number_$ = function(number)
-       if (this._out_go)
-            while (number._value.greater(0,1))
-                number._value = number._value.subtract(1,1)
-                this._out_go()        
-  endnative
+  output go
+  input all number
+    native javascript
+      if (this._out_go)
+        while (number._value.greater(0,1))
+          number._value = number._value.subtract(1,1)
+          this._out_go()
+    endnative

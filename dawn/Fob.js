@@ -98,7 +98,7 @@ function Fob(name)
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier)
     {
-      var ref = {_value:identifier};
+      var ref = {_value:identifier, _scope:this};
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       return this._in_lookup(ref);
@@ -267,6 +267,11 @@ function Fob(name)
           return this;   
         }
     }
+    this._in_native_$ = function(data)
+    {
+        Function(data._value).call(this);
+    }
+
 	return this;
 }
 

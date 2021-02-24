@@ -1,0 +1,20 @@
+define Boolean
+  output boolean
+  input all boolean
+    native javascript
+      this._value = boolean._value;
+    endnative
+  input go
+    native javascript
+      if (this._out_boolean)
+        this._out_boolean(this);
+    endnative
+  input lookup_child
+    native javascript
+         var newObject= this._clone();
+         if (lookup_child._value.toLowerCase() === "true" || lookup_child._value === "1")
+            newObject._value=true;
+         else
+            newObject._value=false;
+         return newObject;
+    endnative
