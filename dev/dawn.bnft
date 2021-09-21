@@ -1,0 +1,114 @@
+ANY_CHAR:
+ "\0x0000".."\0xFFFF"
+
+ALPHA:
+ "a".."z"
+ "A".."Z"
+ 
+DIGIT:
+ "0".."9"
+
+WHITESPACE:
+ " "  { WHITESPACE }
+ "\t" { WHITESPACE }
+
+OPTWHITESPACE:
+ { WHITESPACE } 
+
+NEWLINE:
+ "\r" { OPTWHITESPACE NEWLINE }
+ "\n" { OPTWHITESPACE NEWLINE }
+
+OPTNEWLINE:
+ { NEWLINE }
+
+SEPARATOR:
+ NEWLINE
+ WHITESPACE 
+
+OPTSEPARATOR:
+ { SEPARATOR }
+
+SAFE:
+ "$" | "-" | "_" | "@" | "." | "&" | ":" | "#"
+ 
+EXTRA:
+ "!" | "*" | "\"" | "'" | "|" | "," | "(" | ")" | "/"
+
+ESCAPE:
+ "%" HEX HEX
+
+ESCAPEDECODE:
+ ESCAPE { ESCAPE } ->  #decodeuri ESCAPE
+ 
+HEX:
+ DIGIT
+ "a".."f"
+ "A".."F"
+ 
+XALPHA:
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPE
+
+XALPHADECODE:
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPEDECODE 
+
+URI:
+ XALPHA { XALPHA }
+
+URIDECODE:
+ XALPHADECODE { XALPHADECODE }
+
+EOT:
+ "\0x0004"
+
+URILOOKUP:
+ URI -> "scope._lookup(\"" URI "\")" 
+
+METAPIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+
+PIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+
+PIPELISTELEMENTS:
+  PIPE -> "," PIPE
+  
+PIPELISTEND:
+ { SEPARATOR PIPELISTELEMENTS } 
+
+INNER_PIPELIST:
+ PIPE PIPELISTEND -> "scope._lookup(\"List:\")._add(" PIPE PIPELISTEND ")"
+
+PIPELIST:
+ "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
+
+PIPE:
+ "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
+ URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
+ PIPELIST PIPEEND -> "scope._lookup(\"Pipe:\")._add(" PIPELIST PIPEEND ")"
+ URILOOKUP
+ PIPELIST
+
+COMMAND_LINE:
+ "Old.Native.Javascript:" URIDECODE           -> URIDECODE
+ OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+
+PROGRAMLINE:
+ PIPE 
+
+PROGRAMLINES:
+ PIPE -> "," PIPE
+
+BLOCK:
+  OPTWHITESPACE PROGRAMLINE SEPARATOR {OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "scope._lookup(\"Block:\")._bind(scope._lookup(\"List:\")._add(" PROGRAMLINE PROGRAMLINES "))"
+
+PROGRAMBODY:
+ BLOCK 
+
+PROGRAM:
+ PROGRAMBODY -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\nlet boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+
+
+

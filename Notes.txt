@@ -1,0 +1,272 @@
+DAWN GETTING FORWARD:
+
+Missing:
+ - Commands (if, for, while, loop, block)
+ - Number bases (binary, octal, hex)
+ - List comprehension
+ - Pretty Syntax Printing
+ - Pretty Syntax Input
+ - Browser environment
+ - Server environment
+ - UIL integration (Dawn/CSS)
+ - Library
+   - http(s)
+   - mime types
+   - images
+   - videos
+   - sound
+ - Async/Multithread/Parallel
+ - Javascript packages interface
+ - BNFT compiler
+ - Measurements/Units
+ - IDE
+ - Console
+
+Basic fobs:
+ Fob, List, Pipe, Block,
+
+Precompile pass:
+ console command - on server side , converts dawn (and flavors) into javascript
+
+DemoConsole:
+ - list of flavors + flavor files - PURE and BASIC (PURE is not a flavor - its just the DAWN file)
+ - dawn source - whenever flavor changes reset view
+ - optionally running the code - on/off
+ - in bnft options for (interactive console)
+     FROM_CLI    - special syntax for CLI (cd, mkdir etc.) - ouput DAWN (should also take FROM_EDITOR and PRINT as input)
+     FROM_EDITOR - keyboard input from editor - output DAWN (should also take PRINT as input)
+     TO_EDITOR   - input DAWN to keyin friendly text - only if editor should support reverting to limited charset input...
+     TO_PRINT    - input DAWN prettiest version - for console history/editor when not editing
+ - demo uses TO_PRINT (to create the source from editor FROM_EDITOR is needed)  
+
+Boolean
+If
+Number     ---rational
+
+Number:Add,Less,Greater
+String:Concatenate,
+Boolean:And/Or osv
+Command:if,for,while
+
+Javascript.Command.If
+
+Javascript should be first in path
+
+type inference:
+
+String:Compare
+Number:Compare
+
+Path modifier? 
+[Number:1 Number:2] >> Compare
+
+Compare would usually be looked up normally - how to find Number:Compare instead of String:Compare?
+... HINT PATH - i.e. already looked up in pipe? i.e. hints are store until ":" i.e. Number, so path will search Dawn.Compare, then Dawn.Number:Compare
+Nah be explicit - let flavor handle the types
+Nopes - compile to binding- run bind and let bind display "type" error i.e. plus not getting 2 number outputs
+
+basic syntax?
+[] >> {}  - LOOP
+[1..10:2] >> {} - FOR from to step
+[A > 10:0] >> {} - WHILE expr repeat (REPEAT set repeat = 1 or TRUE)
+
+inline FOB:
+[1..10] >>
+  input number -- this could be implicit for loops 
+     number >> Console
+[A > 10] >>
+  String:ThisRoomIsBig >> Console
+
+
+Explicit bind to input:
+A.output >> Explicit:input >> B  - "." notation selects output and Explicit routes it to input
+
+Events binding:
+Mouse.event_move_relative >> position - returns an fob that binds at time of execution
+
+Event unbind syntax sugar:
+Mouse.event_move_relative << - undbinds i.e. Unbind >> Mouse.event_move_relative 
+
+Event output can be bound to multiple inputs (maybe all outputs can? builtin tee function)
+
+DAWN "INHERITANCE"
+Define Add
+  BaseOn Number
+  Output Result
+  Input Addend
+    native addition
+    output Result this
+
+BaseOn!!!!
+
+    
+?use this for self reference?
+
+flavor:
+
+expression
+boolean expression
+
+
+how create var?
+
+lookup?
+
+name?
+String:Hello >> Holder:greeting  - should be altight since String returns new Fob - Holder is special like NewObject and creates im scope
+
+Reference:greeting >> Console
+
+EDITOR - SYNTAX + COLORING
+  - BNFT FLAVOR Compile to Dawn, back to flavor - Dawn -> Flavor should colour it.... (if errors do nothing)
+  
+CONSOLE - 
+ - inputs for string, number, image, webpage etc.
+ 
+ 
+ [[Number:-80538738812075974 Number:3]>>Power [Number:80435758145817515 Number:3]>>Power [Number:12602123297335631 Number:3]>>Power]>>Add>>Console
+ 
+ %C2%B3 = 3 superscript ³
+ 
+ function nthRoot(num, nArg, precArg) {
+  var n = nArg || 2;
+  var prec = precArg || 12;
+ 
+  var x = 1; // Initial guess.
+  for (var i=0; i<prec; i++) {
+    x = 1/n * ((n-1)*x + (num / Math.pow(x, n-1)));
+  }
+ 
+  return x;
+}
+
+trig - convert to Math - space - and back
+
+NUMBER
+ string output -> outputs seed format
+ output_alternate_base -> outputs specific base in stead of stored
+ stores base - so binary value continues to be binary
+
+MEASUREMENT
+ Number + Unit   (can prefer formatting i.e. bytes likes Kilo, Mega (but not the correct ones))
+ Unit can be combined with Kilo Mega, so it doesnt change with it.
+
+FOR LOOP -> LIST? ie. [Number:1 .. Number:10] >> Console
+[Number:1 Number:10]>>For>>Console
+
+LOOP -> BEGINLOOP:ID -> TERMINATED WITH STOPLOOP:ID
+
+WHILE (expr) ->   BEGINLOOP:ID -> BOOL -> IF -> [ block  STOPLOOP:ID ]
+
+BNFT:
+  Unique number i.e : ID - USAGE - ID: <UUID>, so something can ref ID and get same in single line, see above.
+
+BIND GROUPS....
+Only one member of a bind group is bound - tried in the order specified
+i.e. 
+
+html - the "source" of the website
+url - the position of the website
+string - the source of the website as a string
+
+because binding a website to console should only attach html (or url), not string to display source
+specify is possible i.e. blahblah.html>string> CONSIDER SYNTAX etc. the double is binding parameters? 
+
+FILE PROTOCOL
+File in browser redirects to localStorage compressed  File://localStorage/ (this can url in IDE)
+
+
+SHOWING URLS IN SCALED IFRAME
+<style>
+    #frame { 
+    	width: 1000px; 
+        height: 1000px; 
+        border: 1px solid black; 
+        -ms-zoom: 0.25;
+        -moz-transform: scale(0.25);
+        -moz-transform-origin: 0 0;
+        -o-transform: scale(0.25);
+        -o-transform-origin: 0 0;
+        -webkit-transform: scale(0.25);
+        -webkit-transform-origin: 0 0;
+        overflow: hidden;
+    }
+</style>
+<iframe id="frame" src="https://wikipedia.org/"/>
+</body>
+</html>
+
+
+
+
+
+s-expression like xml:
+{tag
+tag} or }
+
+note that code will need code} to end because insides likely contains curlies
+
+BNFT support for matching tags?
+"<" identifer&1 ">" block "<" identifier&1 ">" - this means that when first &1 is found second becomes match criteria
+
+templates:
+
+{template name="hor" alias="horisontal,row" 
+  {code language="html"
+     <>
+     <>
+  code}
+  {code language="javascript"
+     <>
+     <>
+  code}
+}
+
+reserved words:
+code
+template
+include
+
+parameters
+{code language=javascript urlencode?
+
+{include file=stuff dir=bunch
+all template files in a dir
+
+
+if using javascript - and using document.innerhtml += , loading and parsing templates should be possible.
+consider live template, animatable parameters etc.
+
+and also how does it relate to Dawn
+
+
+
+
+
+
+SYNTAX FOR EXPLICIT BINDING:
+
+A >> B - default binding
+
+A >[.]> B - also default binding
+
+A >[string>>string .] - bind string out to string in then do binding
+A >[string>>string] - bind string out to string in
+
+BECOMES
+
+[A [[string,string][dot]]] >> BIND >> B
+
+i.e. list of A + binding description is piped into bind, which is bound to B
+
+Syntax markers for explicit i.e. _$_string - means explicit bound string input (BIND should check for this for explicit lists)
+
+
+
+
+
+Server:https >> Function:A >> Command.Block >> 
+[
+   // create variable A with output from Server
+   
+]

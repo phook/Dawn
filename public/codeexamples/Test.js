@@ -1,0 +1,1 @@
+function fn(o){o._lookup("Number:1_000_000")._in_go(o)}module.exports=fn;

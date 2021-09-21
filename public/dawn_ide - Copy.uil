@@ -1,0 +1,22 @@
+{body templatepath=templates
+    {button}
+    {col
+        {filler}
+        {row
+            {filler}
+            {framed
+                {text
+                  norwegian wood
+                }
+            }
+            {filler background=red}
+            {editor}
+            {filler}
+        }
+        {filler}
+        {text max-width=900000
+          danish
+        }
+        {filler}
+    }
+}

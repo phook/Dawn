@@ -1,0 +1,59 @@
+{:editor-area flex=1 display=flex
+    {script src=/ace/src-min-noconflict/ace.js type=text/javascript charset=utf-8}
+    {row display=none
+        {tab}
+        {editor}
+    }
+    {row
+        {tabs
+        }
+        {layers
+        }
+    }
+    {script
+      var currentElement = document.currentScript.parentElement;
+
+        var tabs   = currentElement.getElementsByClassName("mdc-tab-scroller__scroll-content")[0];
+        var layers = currentElement.getElementsByClassName("layers")[0];
+  
+        function elementFromHTML(htmlString) {
+          var div = document.createElement('div');
+          div.innerHTML = htmlString.trim();
+          return div.firstChild; 
+        }
+
+       // PUT TABS IN HERE AND MAKE LOAD/SAVE FUNCTIONS 
+        var loading = []; 
+        //debugHook();
+
+        function load(url)
+        {
+            if (loading.indexOf(url)===-1)
+            {
+                loading.push(url);
+                GET(url,function(source) {
+                    var element=templateClone("editor");
+                    layers.appendChild(element);
+                    var editElement = element.getElementsByClassName("editarea")[0];
+                    var editor = ace.edit(editElement);
+                    editor.session.setValue(source);
+                    editor.setReadOnly(false); 
+                    editElement.editor=editor;
+
+                    let tabtext = url.split("/").pop();
+                    let tab = templateClone("tab",tabtext);
+                    tabs.appendChild(tab);
+                    
+                    tab.connected_editor = element;
+                });
+            }
+        }
+
+      setTimeout(function(){
+        //debugHook();
+       
+        load("http://localhost:5000/dawn_ide.uil");
+        load("http://localhost:5000/dawn/times.dawn_basic");
+        },1);        
+    }
+}

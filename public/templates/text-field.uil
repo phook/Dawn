@@ -1,0 +1,22 @@
+{:text-field
+    {html
+        <label class="mdc-text-field mdc-text-field--filled" style="height:48px;">
+          <span class="mdc-text-field__ripple"></span>
+          <span class="mdc-floating-label" id="my-label-id">Project URL</span>
+          <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id"/>
+          <span class="mdc-line-ripple"></span>
+        </label>
+    }
+    {script
+    /*
+        [].forEach.call(document.querySelectorAll('.mdc-text-field'), function(el) {
+                mdc.textField.MDCTextField.attachTo(el);
+            });
+      */   
+        var currentElement = document.currentScript.parentElement;
+        var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
+        var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
+      
+        innerElement.textField = new mdc.textField.MDCTextField(textElement);
+    }
+}

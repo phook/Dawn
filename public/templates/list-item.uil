@@ -1,0 +1,40 @@
+{:list-item value=listentry text=helptext icon=none icon_text=none
+    {html
+          <li class="mdc-list-item" tabindex="0" style="height:32px" title=":text" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
+            <span class="material-icons" style="padding-right:10px">folder</span>
+            <span class="mdc-list-item__ripple"></span>
+            <span class="mdc-list-item__text">:value</span>
+            <span style="flex-grow:1"></span>
+            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="_icon_text">:icon</i></span>
+          </li>
+        <!--
+          <li class="mdc-list-item" style="height:32px" title="The dawn script &quot;add&quot;" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
+            <span class="material-icons"><img src="dawn_icon.ico" style="width:24px;height:24px;padding-right:10px"/></span>
+            <span class="mdc-list-item__ripple"></span>
+            <span class="mdc-list-item__text">add</span>
+            <span style="flex-grow:1"></span>
+            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="Run script">play_arrow</i></span>
+          </li>
+          <li class="mdc-list-item" style="height:32px" title="The uil file &quot;index&quot;" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
+            <span class="material-icons" style="padding-right:10px">text_snippet</span>
+            <span class="mdc-list-item__ripple"></span>
+            <span class="mdc-list-item__text">index</span>
+            <span style="flex-grow:1"></span>
+            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="Open in Browser">launch</i></span>
+          </li>
+        --->
+    }
+    {script            
+        function changeIcon1(el, value)
+        {
+            debugHook();
+            var icon=el.getElementsByClassName("material-icons")[1];
+            if (value)
+                icon.className=icon.className.replace("anim-fadeout","anim-fadein");
+            else
+                icon.className=icon.className.replace("anim-fadein","anim-fadeout");
+        }
+
+        
+    }
+}

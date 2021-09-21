@@ -1,0 +1,1 @@
+function fn(n){n._lookup("function")._in_go(n)}module.exports=fn;

@@ -1,0 +1,22 @@
+<html>
+<body>
+<script>
+function outside () {
+    document.open(); document.write('<meta http-equiv="refresh" content="0; URL=https://home.phook.dk" />'); document.close();
+}
+function inside () {
+    document.open(); document.write('<meta http-equiv="refresh" content="0; URL=192.168.0.200:3000" />'); document.close();
+}
+
+    var oReq = new XMLHttpRequest();
+    oReq.timeout = 500;
+    oReq.addEventListener("load" , inside);
+    oReq.addEventListener("timeout", outside);
+    oReq.open("GET", "http://192.168.0.200:3000/home.txt");
+    oReq.send();
+
+</script>
+</body>
+</html>
+
+

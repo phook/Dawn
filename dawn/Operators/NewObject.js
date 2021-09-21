@@ -1,6 +1,7 @@
 const Fob  = Dawn.require("./dawn/Fob.js");
 _NewObject = function()
 {
+    // should have input for cloning any object i.e. creating a var String:Hello >> NewObject:HelloText (syntax sugared: var HelloText="Hello") 
 	Fob.call(this,"NewObject");
     this._stored_body=null;
 	this._in_lookup_child = function(pipe)

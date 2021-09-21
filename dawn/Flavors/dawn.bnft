@@ -9,28 +9,35 @@ DIGIT:
  "0".."9"
 
 WHITESPACE:
- " "  { WHITESPACE }
- "\t" { WHITESPACE }
+ " " | "\t"  { " " | "\t" }
 
 OPTWHITESPACE:
  { WHITESPACE } 
 
 NEWLINE:
- "\r" { OPTWHITESPACE NEWLINE }
- "\n" { OPTWHITESPACE NEWLINE }
+ "\r" | "\n"  { " " | "\t" | "\r" | "\n"}
 
 OPTNEWLINE:
- { NEWLINE }
+ [ NEWLINE ]
+
+ENDLINE:
+ OPTWHITESPACE NEWLINE
+
+OPTLINEEND:
+ OPTWHITESPACE OPTNEWLINE
 
 SEPARATOR:
- NEWLINE
+ ENDLINE
  WHITESPACE 
 
 OPTSEPARATOR:
  { SEPARATOR }
 
+OPTSEPARATOR:
+ { SEPARATOR }
+
 SAFE:
- "$" | "-" | "_" | "@" | "." | "&" | ":"
+ "$" | "-" | "_" | "@" | "." | "&" | ":" | "#"
  
 EXTRA:
  "!" | "*" | "\"" | "'" | "|" | "," | "(" | ")" | "/"
@@ -47,7 +54,7 @@ HEX:
  "A".."F"
  
 XALPHA:
- ALPHA | DIGIT | SAFE | EXTRA | ESCAPE 
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPE
 
 XALPHADECODE:
  ALPHA | DIGIT | SAFE | EXTRA | ESCAPEDECODE 
@@ -62,14 +69,15 @@ EOT:
  "\0x0004"
 
 URILOOKUP:
- URI -> "._lookup(\"" URI "\")" 
+ URI -> "scope._lookup(\"" URI "\")" 
 
-URILIST:
- URI { "|" URILOOKUP } -> "scope._lookup(\"" URI "\")" 
+METAPIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
 
 PIPEEND:
-  OPTWHITESPACE ">>" OPTWHITESPACE URILIST  [ PIPEEND ] -> "._bind(" URILIST ")" PIPEEND
-  OPTWHITESPACE ">>" OPTWHITESPACE PIPE     [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
 
 PIPELISTELEMENTS:
   PIPE -> "," PIPE
@@ -84,22 +92,30 @@ PIPELIST:
  "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
 
 PIPE:
- URILIST  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILIST  PIPEEND ")"
+ "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
+ URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
  PIPELIST PIPEEND -> "scope._lookup(\"Pipe:\")._add(" PIPELIST PIPEEND ")"
- URILIST
+ URILOOKUP
+ PIPELIST
 
 COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
  OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
 
 PROGRAMLINE:
- "REMARK BEGIN" { ANY_CHAR } "REMARK END"    -> "..."
- PIPE -> PIPE "._in_go(scope);"
+ PIPE 
+
+PROGRAMLINES:
+ PIPE -> "," PIPE
+
+BLOCK:
+  OPTWHITESPACE PROGRAMLINE SEPARATOR {OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "scope._lookup(\"Block:\")._bind(scope._lookup(\"List:\")._add(" PROGRAMLINE PROGRAMLINES "))"
 
 PROGRAMBODY:
- { OPTWHITESPACE PROGRAMLINE SEPARATOR } 
+ BLOCK 
 
 PROGRAM:
- PROGRAMBODY -> "function fn(scope) {\n" PROGRAMBODY "\n};\nmodule.exports = fn;\n"
+ PROGRAMBODY -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\nlet boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+
 
 

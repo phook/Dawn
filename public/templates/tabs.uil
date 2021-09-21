@@ -1,0 +1,37 @@
+{:tabs
+    {html
+        <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
+        <div class="mdc-tab-bar" role="tablist">
+          <div class="mdc-tab-scroller">
+            <div class="mdc-tab-scroller__scroll-area">
+              <div class="mdc-tab-scroller__scroll-content">
+    }
+    {:content}
+    {html                
+              </div>
+            </div>
+          </div>
+        </div>
+    }
+    {script
+        document.activateTab=function()
+        {
+            [].forEach.call(document.querySelectorAll('.mdc-tab-bar'), function(el) {
+                tabBar = mdc.tabBar.MDCTabBar.attachTo(el);
+                tabBar.listen('MDCTabBar:activated', function(event) {
+                    let tabs = [].slice.call(event.srcElement.getElementsByClassName("tab"));
+                    if (tabs[event.detail.index].connected_editor.style.visibility == "visible")
+                        return;
+                    console.log(tabs[event.detail.index].innerText);
+                    debugHook();
+                    for(let i=0; i<tabs.length; i++)
+                    {
+                        tabs[i].connected_editor.style.visibility = (i == event.detail.index) ? "visible" : "hidden";
+                    }
+                });
+                tabBar.activateTab(0);
+            });
+        }
+        
+    }
+}

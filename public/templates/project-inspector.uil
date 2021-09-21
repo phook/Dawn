@@ -1,0 +1,22 @@
+{:project-inspector
+    {row
+        {text-field height=48px
+        }
+        {list
+            {list-item value=dawn text="The folder &quot;dawn&quot;" icon=chevron_right icon_text="Open Folder"}
+        }
+        {script
+             var currentElement = document.currentScript.parentElement;
+             var input = currentElement.getElementsByClassName("mdc-text-field__input")[0];
+             input.textField.value="~:/";
+             input.onkeyup=function(event)
+             {
+                if (event.which == 13)
+                {
+                    document.editorURL = input.textField.value;
+                }
+             }
+             document.editorURL = input.textField.value;
+        }
+     }
+}

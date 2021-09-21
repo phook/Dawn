@@ -1,0 +1,39 @@
+@use "@material/button";
+@use "@material/density";
+@use "@material/select";
+@use "@material/textfield";
+
+.mdc-select .mdc-select__anchor::before {
+    height:36px;
+}
+
+.mdc-select .mdc-select__anchor {
+    height:36px;
+    border-bottom-right-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+.mdc-select__anchor .mdc-floating-label--float-above {
+    -webkit-transform: translateY(-90%) scale(0.75);
+    transform: translateY(-90%) scale(0.75);
+}
+.demo-label {
+    height:24px;
+}
+#demo-selected-text {
+    -webkit-transform: translateY(-90%) scale(0.75);
+    transform: translateY(-10%);
+}
+.mdc-list-item {
+    height:24px;
+}
+
+.mdc-select__ripple {
+    height:36px;
+}
+.small-button {
+  // Sets button density scale to `-3`, i.e. button height to `24px`.
+  @include button.density(-3);
+}
+
+.small-select {
+}

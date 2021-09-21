@@ -1,0 +1,11 @@
+{:framed bsize=10 color=red
+    {col
+        {filler background=:color height=:bsize}
+        {row
+            {filler background=:color minWidth=:bsize maxWidth=:bsize}
+            {:content}
+            {filler background=:color minWidth=:bsize maxWidth=:bsize}            
+        }
+        {filler background=:color height=:bsize}            
+    }
+}

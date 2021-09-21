@@ -18,6 +18,11 @@
       flex-grow:5;
     }
 
+    .card {
+      display: flex;
+      flex-grow:5;
+    }
+
     #console {
       height: 200px;
     }    
@@ -31,6 +36,8 @@
         display: flex;
         flex-direction: column;
         height:100vh;
+        flex-grow:1;
+        overflow:hidden;
     }
 
 ul, li {
@@ -52,7 +59,7 @@ ul, li {
 }
 
 .indent {
-  padding-left: 10px;
+  padding-left: 14px;
 }
 
 .indent::before {
@@ -73,6 +80,10 @@ ul, li {
 .active {
   display: block;
   list-style-type: none;
+}
+
+.small {
+  height: 20px;
 }
 
 .btn {
@@ -116,7 +127,9 @@ ul, li {
   -ms-transform: translate(-50%, -50%);
   -o-transform: translate(-50%, -50%);
    transform: translate(-50%, -50%); 
-}
+}   
+   
+
 
 .btn:active:before {
   transition: width .2s ease-out, padding-top .2s ease-out;
@@ -124,18 +137,55 @@ ul, li {
 
 
   </style>
+  <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
 </head>
 <body>
 
 <div class="column">
      <div><button class="btn" type="button" style="float: right;"><img src="favicon/baseline_save_alt_black_18dp.png" width="30px"/></button></div>
     <div class="row">
+        <div class="mdc-card" style="height:500px">
+        <div class="mdc-select mdc-select--filled demo-width-class small-select">
+          <div class="mdc-select__anchor"
+               role="button"
+               aria-haspopup="listbox"
+               aria-expanded="false"
+               aria-labelledby="demo-label demo-selected-text">
+            <span class="mdc-select__ripple"></span>
+            <span id="demo-label" class="mdc-floating-label">Flavor</span>
+            <span id="demo-selected-text" class="mdc-select__selected-text"></span>
+            <span class="mdc-select__dropdown-icon">
+              <svg
+                  class="mdc-select__dropdown-icon-graphic"
+                  viewBox="7 10 10 5" focusable="false">
+                <polygon
+                    class="mdc-select__dropdown-icon-inactive"
+                    stroke="none"
+                    fill-rule="evenodd"
+                    points="7 10 12 15 17 10">
+                </polygon>
+                <polygon
+                    class="mdc-select__dropdown-icon-active"
+                    stroke="none"
+                    fill-rule="evenodd"
+                    points="7 15 12 10 17 15">
+                </polygon>
+              </svg>
+            </span>
+            <span class="mdc-line-ripple"></span>
+          </div>
+        </div>
         <div id="project">
         </div>
-        <pre id="editor">
-        </pre>
+        </div>
+        <div class="card mdc-card" style="height:500px">
+            <pre id="editor">
+            </pre>
+        </div>
     </div>
-    <embed id="console" src="index.html">
+    <embed class="mdc-card" id="console" src="index.html" style="height:200px">
     </embed>
 </div>
 <script src="ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
@@ -179,44 +229,65 @@ ul, li {
     function DELETE(url,json,callback) {Do("DELETE",url,json,callback); return "returnValueInCallback";}
 
 
-    var editor = ace.edit("editor");
+    var editElement = document.getElementById("editor");
+    var editor = ace.edit(editElement);
     editor.setTheme("ace/theme/dawn");
     //editor.session.setMode("ace/mode/javascript");
 
     
-    function createMarkup(tree)
+    function createMarkup(tree,level)
     {
-        var markup="";
+        var markup="<ul style='padding:0px' class='mdc-list'>";
         for(var i in tree)
         {
             if (typeof(tree[i]) == "string")
             {
-                markup += "<li><span class='indent'>" + i + "<span></li>";
+                let type="<span class='indent  mdc-list-item__text'></span><i style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</i>";
+                markup += "<li style='height:24px;' class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
+            
             }
             else
             {
-                markup += "<li><span class='caret'>" + i + "<span><ul class='nested'>";
-                markup += createMarkup(tree[i]);
-                markup += "</ul></li>";
+                let type="<span class='caret  mdc-list-item__text'></span><i  style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>folder</i>";
+                markup += "<li style='height:24px;'class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
+                markup += "<li  class='nested'>" + createMarkup(tree[i],level+1) + "</li>";
             }
         }
-        return markup;
+        return markup +"</ul>";
     }
     
 
-    var project = GET("/_dir?dir=file:///C:/Users/pohak/Documents/Custom%20Office%20Templates/Special/dawn/dawn_console&recursive=true", function(project)
+    var project = GET("/_dir?dir=file:///./dawn&recursive=true", function(project)
     {
-        document.getElementById("project").innerHTML = createMarkup(JSON.parse(project));
+        document.getElementById("project").innerHTML = createMarkup(JSON.parse(project),0);
         var toggler = document.getElementsByClassName("caret");
         var i;
 
         for (i = 0; i < toggler.length; i++) {
           toggler[i].addEventListener("click", function() {
-            this.parentElement.querySelector(".nested").classList.toggle("active");
+            this.parentElement.nextSibling.classList.toggle("active");
             this.classList.toggle("caret-down");
           });
         }
     });
+    
+    
+    
+    
+    /*
+    
+        Editor component:
+        Seed with dawn URL - try to get resource
+        figure write ability
+        
+        Dawn file server - login - file/dir rights, create, write, delete
+        
+        when getting a file - the users rights could be in the header
+        when getting a dir - the users rights could be in the header
+    
+    */
+    
+    
 </script>
 
 </body>

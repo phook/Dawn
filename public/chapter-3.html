@@ -73,7 +73,7 @@ into the Dawn native form, which is the saved version of source. Then the flavor
 <p>You can say that the flavor is the bridge between the human readable domain and the computer readable domain. Actually they are both quite
 readable, so the flavor is more like syntax sugar - but you can control it, should you be a syntax diabetic.</p>
 
-<p>The flavor is the color of you bikeshed. Prefer LISP style backets? Roll a flavor that allows that. Pascal BEGIN END? Ditto.
+<p>The flavor is the color of your bikeshed. Prefer LISP style backets? Roll a flavor that allows that. Pascal BEGIN END? Ditto.
 Python significant whitespace? Consider it done. PASCAL := assignments? Yessir!</p>
  
 <p><strong>Read the following aloud to yourself (with Flavor set to "Basic Pretty").</strong></p>
@@ -86,7 +86,7 @@ Python significant whitespace? Consider it done. PASCAL := assignments? Yessir!<
 </iframe>
 
 <p>Just read the above as: <em>Five times “Odelay”.</em>.
-Press <em>run</em> in the console below to watch Forest run. Smells pretty good, huh?</p>
+Press <em>run</em> in the console below to watch Forest run. Tastes pretty good, huh?</p>
 
 <p>Go ahead and try the other flavors - you know you want to.</p>
 
@@ -105,16 +105,16 @@ One URI to bring them all<br>
 find this page - it points to "<scan><img src onerror="this.parentElement.innerHTML=window.location"/></scan>" and the resource in this case is a web page, 
 which turns out to be chapter 3 of the <b>Not So Poignant Dawn Tutorial</b>). URI's start with a scheme - browsers usually use the https:// scheme.</p> 
 
-<p>In Dawn everything is a resource that can be fetched by a scheme. An image, a programmatic loop, a number, text, whatever. In the example
+<p>In Dawn everything is a resource that can be fetched by a URI. An image, a programmatic loop, a number, text, whatever. In the example
 notice how the five is fetched using the scheme called "Number" and the text "Odelay" is fetched using the scheme "String".</p>
 
-<p>So if you really want to say this sentence (you really shouldn't), say Number 5 bound to times bound to the String Odelay.
+<p>So if you really want to say this sentence (you really shouldn't), say "Number 5 bound to times bound to the String Odelay".
 You can use bound, tied, connected to, on top of or whatever relational phrase of your preferral. 
 </p>
 <iframe class="highlight" src='embed_demo.html?src=codeexamples/NotBeckSpoken.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/Flavors/basic.bnft","Basic Keyboard":"dawn/Flavors/basic.bnft"}' style="width:768px;height:250px;">
 </iframe>
-<p>If you get tired of Beck’s <a href="http://whiskeyclone.net/ghost/songinfo.php?songID=175">mutated Spanish</a> you can.
-Crank up your speakers, press run and listen to <em>Three times “Órale!” spoken in Spanish</em>.
+<p>If you get tired of Beck’s <a href="http://whiskeyclone.net/ghost/songinfo.php?songID=175">mutated Spanish</a> you can crank up your speakers, press run and listen to 
+<em>Three times “Órale!” spoken in Spanish</em>.
 
 <iframe class="highlight" src='embed_demo.html?src=codeexamples/TheQuestion.dawn&flavors={"Pure":"","*Basic Pretty":"dawn/Flavors/basic.bnft","Basic Keyboard":"dawn/Flavors/basic.bnft"}' style="width:768px;height:250px;">
 </iframe>
@@ -185,7 +185,7 @@ that can be read by humans, but also by computers.</p>
 
   <p>The Master promptly drew his sword, and cut of the head of the
   third student. As his blood spattered all over the other 2 students,
-  they were enlightened.</p>
+  they were enlightened (well, the bulb turned on).</p>
 
   <p>The Master smiled and resumed his quest for wings.</p>
 
@@ -241,42 +241,30 @@ J. Paul Morrison.</p>
   <p>However this is the preferred programming style in Dawn, you can still create stateful programs, so it's up to you - 
   there is just a lot of good to say about Deterministic Programming.</p>
 
-  <p><strong><span class="caps">IDEA FOUR</span>: ALEC <span class="caps">BALDWIN</span></strong></p>
+  <p><strong><span class="caps">IDEA FOUR</span>: PROGRAMMABLE <span class="caps">BINDING</span></strong></p>
 
-  <p>Adapt the book into a movie. And since, you know, I’m a character in this book,
-you could get someone like Alec Baldwin to play me. Someone who’s at a real
-low point in his career.</p>
+  <p>"How does the typesystem work?", I hear the language experts ask.</p>
 
-  <p>You could make it seem like I did tons of drugs. Like I was insane to work with.
-Like I kept firing people and locking them in the scooter room and making them
-wear outfits made of bread. Yeah, like I could actually be <em>baking</em> people into
-the outfits.</p>
+  <p>I don't know how the type system works. Generally Dawn is based on conventions.</p>
 
-  <p>You could have this huge mold that I strap people into. Then, I pour all the
-dough on them and actually bake them until the bread has risen and they’ve
-almost died. And when the television crews come and I’m on Good Morning America,
-they’ll ask, “So, how many people have you employed in the production of your
-book?” And I’d respond, “A baker’s dozen!” and erupt into that loud maniacal
-laughing that would force audience members to cup their hands over their ears.</p>
+  <p>When you strap 2 resources together they negotiate how they should bind to each other.
+  The binding patterns are generally determined by matching inputs to outputs. The 
+  general binding mechanism has the convention that the "type" of input/ouput is the
+  first part of the name of the output i.e. until the "_". Another convention is that
+  this type is lowercase, and matches the uppercase "scheme" or "type" i.e. number_input1 would
+  receive a Number as input.</p>
 
-  <p>Of course, in the throes of my insanity, I would declare war on the world. The
-bread people would put up quite a fight. Until the U.S. Marshals (or the
-Pentagon) engineer a giant robotic monkey brain (played by Burt Lancaster) to
-come after me.</p>
+  <p>I don't know where Alec Baldwin fits in this, so I think I'll just leave him out of it.</p>
 
-  <p>Here’s where you’ll make me look completely lame. Not only will I sacrifice all
-of the bread people (the Starchtroopers) to save myself, not only will I
-surrender to the great monkey brain like a coward, but when I narrowly escape,
-I’ll yell at the audience. Screaming insistently that it’s <em>MY</em> movie and no one
-should see it any more, I’ll rip the screen in half and the film projector will
-spin with its reel flapping in defeat. And that will be the end of the movie.
-People will be <em>so</em> pissed.</p>
+  <p>Other conventions are that inputs postfixed with "_$" can receive input from multiple outputs
+  otherwise they generally only connect to a single output. But all this stuff will usually be hidden
+  by the flavors. I'm just telling you about stuff under the hood.</p>
 
-  <p>Now, I’ve got to thinking. See, and actually, Alec Baldwin did a decent
-voiceover in <em>The Royal Tenenbaums</em>. His career might be okay. You might not
-want to use him. He might not do it.</p>
+  <p>The resources themselves can after binding report an error if they are unsatisfied with the bind
+  process. The plus/addition resource will get sulky if only 1 number output gets connected to its
+  input. "Hey man", it says, "in order for me to function properly, give me 2 numbers, man". So you
+  can program the type system in by testing after binding.</p>
 
-  <p>Tell ya what. I’ll play the part. I’ve made a career out of low points.</p>
 </aside>
 
 <p><a name="section2"></a></p>

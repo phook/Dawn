@@ -1,0 +1,16 @@
+{:app-bar-top 
+    {html 
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    }
+    {menu max-height=56px min-height=56px background-color=%235B48CC font-family=Rubik color=white font-size=20  align-items=center
+        {col
+            {filler max-width=16px min-width=16px}
+            {material-icons flex-grow=0
+                menu
+            }
+            {filler max-width=32px min-width=32px}
+            {:content}
+            {filler}
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{body
+    {script src=https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js}
+    {row
+        {app-bar-top
+            Dawn IDE
+        }
+        {col
+            {project-inspector background-color=%23B8D4C2
+            }
+            {editor-area
+            }
+        }
+        {html
+            <iframe src="index-old.html">
+            </iframe>
+        }
+    }
+}

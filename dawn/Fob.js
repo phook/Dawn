@@ -46,6 +46,7 @@ function Fob(name)
     this.inputs_bound = {};
     
     this.previous = null;
+    this.next = null; 
     this._test_previous= function(_new_previous)
     {
         if (this == _new_previous)
@@ -70,6 +71,14 @@ function Fob(name)
     this._get_previous = function(_previous)
     {
         return this.previous;
+    }
+    this._set_next= function(_next)
+    {
+        this.next = _next;
+    }
+    this._get_next = function(_next)
+    {
+        return this.next;
     }
 
 	this._set_owner = function(owner)
@@ -210,8 +219,13 @@ function Fob(name)
                 }
             }
         }
+        if (typeof(bindee._end_bind) != "undefined")
+            bindee._end_bind();
         return bindee;
     }    
+
+
+
     this._in_native_$ = function(data)
     {
         Function(data._value).call(this);

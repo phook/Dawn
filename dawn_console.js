@@ -27,12 +27,29 @@ Dawn.server = server; // NOT SERVER BUT OUTPUT FUNCTION - SO IT CAN WORK IN BROW
 hub.createServer(server, globalEval);
 
 app.use(transformMiddleware());
+
+app.use(function (request, result, next) {
+  let { url } = request;
+  if (url.indexOf("/*") !== -1)
+  {
+    console.log(url);
+    if (url.indexOf("/dawn") !== 0)
+        url = "\\public" + url;
+    var dir = __dirname + url.replace("*","");
+    result.send(JSON.stringify(read_dir(dir,request.query.recursive,request.query.hidden)));
+  }
+  else
+    next()
+})
+
+
 app.use(express.static('public'));
 app.use("/node_modules",express.static('node_modules'));
 app.use("/dawn",express.static('dawn'));
 app.use("/Dawn.js",express.static('Dawn.js'));
 app.use("/BigInt_BigRat.min.js",express.static('BigInt_BigRat.min.js'));
 app.use("/BNFT",express.static('BNFT'));
+app.use("/uil",express.static('uil'));
 app.use(fileUpload());
 
 
@@ -76,6 +93,9 @@ setFileTime('/tmp/scache/fdf/admin.log', date, date);
 app.get('*/_dir', function(request, result) {
     // test for file beginning
     var dir = request.query.dir.replace("file:///","");
+    
+    /* ADD USERS RIGHTS TO HEADER - NOT LOGGED IN IS READONLY */
+    
     result.send(JSON.stringify(read_dir(dir,request.query.recursive,request.query.hidden)));
 });
 
@@ -84,6 +104,9 @@ app.get('/_file', async (request, result) => {
     try {
         var file = request.query.file;
         // test for file beginning
+
+    /* ADD USERS RIGHTS TO HEADER - NOT LOGGED IN IS READONLY */
+
         file = file.replace("file:///","");
         fs.readFile(file, function (err,data) {
             if (err) {
