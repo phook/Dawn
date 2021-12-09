@@ -1,4 +1,7 @@
 /*jslint nomen: true, plusplus: true, vars: true, indent: 2*/
+args = []
+if (process) 
+    args = process.argv;
 (function () {
 
   "use strict";
@@ -1308,6 +1311,9 @@
         this.tokenizer = new this.Tokenizer(source);
         var result = start_non_terminal.parse();
         if (result !== null) {
+          // There is a result
+          if (this.tokenizer.position + 1 !== this.tokenizer.source.len)
+                return "ERROR";
           return result.result();
         }
         if (options && typeof(options.alert) == "function")
@@ -1376,4 +1382,4 @@ document.write(bnft.parse("ABCD"));
     root.BNFT = BNFT;
   }
   
-}).apply(this,process.argv);
+}).apply(this,args);

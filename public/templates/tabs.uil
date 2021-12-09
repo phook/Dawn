@@ -1,4 +1,4 @@
-{:tabs
+{:tabs overflow=hidden
     {html
         <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
         <div class="mdc-tab-bar" role="tablist">
@@ -22,8 +22,8 @@
                     let tabs = [].slice.call(event.srcElement.getElementsByClassName("tab"));
                     if (tabs[event.detail.index].connected_editor.style.visibility == "visible")
                         return;
-                    console.log(tabs[event.detail.index].innerText);
-                    debugHook();
+                    //console.log(tabs[event.detail.index].innerText);
+                    //debugHook();
                     for(let i=0; i<tabs.length; i++)
                     {
                         tabs[i].connected_editor.style.visibility = (i == event.detail.index) ? "visible" : "hidden";
@@ -32,6 +32,5 @@
                 tabBar.activateTab(0);
             });
         }
-        
     }
 }

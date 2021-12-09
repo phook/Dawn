@@ -53,6 +53,7 @@ app.use("/uil",express.static('uil'));
 app.use(fileUpload());
 
 
+
 // CAN BE USED FOR MONITORING CHANGES - FILES HAS TIMESTAMP - 
 function read_dir(dirpath,recursion,hidden)
 {
@@ -153,6 +154,11 @@ app.put('/_file', async (request, result) => {
     }
 });
 
+
+// LAST CATCH ALL CONT SEND 404, send 204 - prevent 404 errors in debugging
+app.use(function (req, res, next) {
+  res.status(204).send()
+})
 
 server.listen(process.env.PORT || 5000, function () {
 })

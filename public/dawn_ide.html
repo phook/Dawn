@@ -213,7 +213,7 @@ ul, li {
         {
             if (uilSource !== "")
             {
-                document.uilCompleteSource = uilSource.concat(document.uilCompleteSource);
+                document.uilCompleteSource = (uilSource + "\n").concat(document.uilCompleteSource);
                 handleTemplates(uilSource);
             }
             loadingUilTemplates--;

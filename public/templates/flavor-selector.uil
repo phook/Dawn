@@ -1,0 +1,104 @@
+{:flavor-selector height=48px value="" width=200px
+    {html
+        <div class="mdc-select mdc-select--filled demo-width-class small-select" style="height:48px; right:10; top:10; position:absolute; z-index:1;">
+          <div class="mdc-select__anchor"
+               role="button"
+               aria-haspopup="listbox"
+               aria-expanded="false"
+               aria-labelledby="demo-label demo-selected-text" style="height:48px;">
+            <span class="mdc-select__ripple"></span>
+            <span id="demo-label" class="mdc-floating-label">Flavor</span>
+            <span id="demo-selected-text" class="mdc-select__selected-text"></span>
+            <span class="mdc-select__dropdown-icon">
+              <svg
+                  class="mdc-select__dropdown-icon-graphic"
+                  viewBox="7 10 10 5" focusable="false">
+                <polygon
+                    class="mdc-select__dropdown-icon-inactive"
+                    stroke="none"
+                    fill-rule="evenodd"
+                    points="7 10 12 15 17 10">
+                </polygon>
+                <polygon
+                    class="mdc-select__dropdown-icon-active"
+                    stroke="none"
+                    fill-rule="evenodd"
+                    points="7 15 12 10 17 15">
+                </polygon>
+              </svg>
+            </span>
+            <span class="mdc-line-ripple"></span>
+          </div>
+
+          <div class="mdc-select__menu mdc-menu mdc-menu-surface mdc-menu-surface--fullwidth">
+            <ul id="flavors" class="mdc-list" role="listbox" aria-label="Flavor picker listbox">
+                  <li class="mdc-list-item mdc-list-item--selected" aria-selected="true" data-value="pure" role="option">
+                    <span class="mdc-list-item__ripple"></span>
+                    <span class="mdc-list-item__text">
+                      Pure
+                    </span>
+                  </li>
+                  <li class="mdc-list-item" aria-selected="false" data-value="basic_pretty" role="option">
+                    <span class="mdc-list-item__ripple"></span>
+                    <span class="mdc-list-item__text">
+                      Basic Pretty
+                    </span>
+                  </li>
+                  <li class="mdc-list-item" aria-selected="false" data-value="basic_keyboard" role="option">
+                    <span class="mdc-list-item__ripple"></span>
+                    <span class="mdc-list-item__text">
+                      Basic Keyboard
+                    </span>
+                  </li>
+            </ul>
+          </div>
+        </div>
+    }
+    {script
+    
+    //consider loader - in flavors dir : uil.Pure.js = uil.Pure flavor
+    document.flavors=
+    {
+        "uil" : 
+        {
+        },
+        "dawn" : 
+        {
+            "Pure" : 
+            {
+            },
+            "Basic Pretty" : 
+            {
+            },
+            "Basic Pretty Keyboard" : 
+            {
+            }
+        },
+        "BNFT" : 
+        {
+        }
+    }
+    
+    
+    
+    /*
+        [].forEach.call(document.querySelectorAll('.mdc-text-field'), function(el) {
+                mdc.textField.MDCTextField.attachTo(el);
+            });
+        var currentElement = document.currentScript.parentElement;
+        var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
+        var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
+      
+        innerElement.textField = new mdc.textField.MDCTextField(textElement);
+      */
+        var currentElement = document.currentScript.parentElement;
+
+        setTimeout(function() {
+            debugHook();
+            let selector = currentElement.getElementsByClassName('mdc-select')[0];
+            console.log(selector);
+            if (selector)
+                mdc.select.MDCSelect.attachTo(selector);
+        },1);
+    }
+}

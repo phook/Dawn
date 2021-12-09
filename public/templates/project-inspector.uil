@@ -1,22 +1,142 @@
-{:project-inspector
+{:project-inspector  width=300px min-width=300px max-width=300px
     {row
-        {text-field height=48px
+        {layers
+            {text-field id="projectURL" height=48px width=300px value="http://localhost:5000/"
+            }
+            {layers
+                {filler}
+                {col
+                    {filler}
+                    {html
+                        <div class="material-icons" style="line-height:48px;user-select: none; padding-right:16px; pointer-events:auto;"  onclick="document.uilfunctions.directoryUp()" title=":action_icon_text">arrow_upward</div>
+                    }
+                }
+                {filler}
+            }
         }
-        {list
-            {list-item value=dawn text="The folder &quot;dawn&quot;" icon=chevron_right icon_text="Open Folder"}
+        {list width=300px
+        }
+        {row display=none
+            {list-item}
         }
         {script
+        
              var currentElement = document.currentScript.parentElement;
              var input = currentElement.getElementsByClassName("mdc-text-field__input")[0];
-             input.textField.value="~:/";
+             //input.textField.value="~:/";
+             
+             var filelist = currentElement.getElementsByClassName("list")[0];
+             
+             document.uilfunctions={
+             };
+             
+             function updateURL()
+             {
+                for(let i=filelist.uilChildren.length-3; i>=0; i--)
+                {
+                    uilRemoveChild(filelist,filelist.uilChildren[i]);
+                }
+                GET(document.editorURL+"*",function(data) {
+                    data = JSON.parse(data);
+                    let keys= Object.keys(data);
+
+                    keys.sort(function(key1, key2)
+                    {
+                        if (typeof(data[key1]) === "object")
+                            if (typeof(data[key2]) === "object")
+                                return key2 - key1;
+                            else
+                                return -1;
+                        else
+                            if (typeof(data[key2]) === "object")
+                                return 1;
+                        return key2 - key1;
+                    });
+                    
+                    for(let i=0; i<keys.length; i++)
+                    {
+                        let entry={
+                            value:keys[i],
+                        }
+                        if (typeof(data[keys[i]]) == "object")
+                        {
+                            entry.text        = "The folder \'"+keys[i]+"\'";
+                            entry.icon        = "folder";
+                            entry.icon_show   = "flex";
+                            entry.action_icon = "chevron_right";
+                            entry.action_icon_text = "Open folder";
+                            entry.action_function = "changeDirectory";
+                        }
+                        else
+                        {
+                            switch (keys[i].split('.').pop())
+                            {
+                                case "dawn" : 
+                                    entry.text        = "The dawn script \'"+keys[i]+"\'";
+                                    entry.icon_img    = "dawn_icon.ico";
+                                    entry.img_show    = "flex";
+                                    entry.action_icon = "play_arrow";
+                                    entry.action_icon_text = "Run Script";                            
+                                break;
+                                case "uil" : 
+                                    entry.text        = "The uil file \'"+keys[i]+"\'";
+                                    entry.icon        = "text_snippet";
+                                    entry.icon_show   = "flex";
+                                    entry.action_icon = "launch";
+                                    entry.action_icon_text = "Open in Browser";                            
+                                break;
+                                default : 
+                                    entry.text        = "The file \'"+keys[i]+"\'";
+                                    entry.icon        = "description";
+                                    entry.icon_show   = "flex";
+                                    entry.action_icon = "a";
+                                    entry.action_icon_text = "a";                            
+                                break;
+                            }
+                            entry.action_function = "loadEditor";
+                        }
+                        let template = templateClone("list-item","",entry);
+                        uilAppendChild(filelist,template);
+                    }
+                });
+             }
+             
              input.onkeyup=function(event)
              {
                 if (event.which == 13)
                 {
+                    if (input.textField.value.slice(-1) !== "/")
+                        input.textField.value += "/"
                     document.editorURL = input.textField.value;
+                    updateURL();
                 }
              }
              document.editorURL = input.textField.value;
+             updateURL();
+
+             document.uilfunctions.changeDirectory=function(dir)
+             {
+                if (input.textField.value.slice(-1) !== "/")
+                    input.textField.value += "/"
+                input.textField.value += dir + "/";
+                document.editorURL = input.textField.value;
+                updateURL();
+             }
+
+             document.uilfunctions.directoryUp=function()
+             {
+                if (input.textField.value.slice(-1) !== "/")
+                    input.textField.value += "/"
+                let arr = input.textField.value.split("/");
+                arr.pop();
+                arr.pop();
+                input.textField.value = arr.join("/") + "/";
+                document.editorURL = input.textField.value;
+                updateURL();
+             }
+
+
         }
+        
      }
 }

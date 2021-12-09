@@ -326,7 +326,7 @@ function doRun(noOutput,dont)
                 lines[i] += ">>Console:";
         }
         dawnSource = lines.join("\n");
-	    var source = Dawn.parser.parse(dawnSource + "\n",{alert:console.log, nonterminal:"COMMAND_LINE"});
+	    var source = Dawn.parser.parse(dawnSource,{alert:console.log, nonterminal:"COMMAND_LINE"});
 		Dawn.debugInfo("COMMAND PARSED:" + source);
 		if (source != "ERROR")
 		{

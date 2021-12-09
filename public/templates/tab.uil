@@ -9,7 +9,7 @@
     {html
         </span>
           </span>
-         <span><i class="material-icons mdc-select__icon anim-fadeout" tabindex="0" role="button" style="position:absolute; line-height:48px; z-index:1000;user-select: none; opacity:0.95;" onclick="alert('hello')" title="close">cancel</i></span>
+         <span><i class="material-icons mdc-select__icon anim-fadeout" tabindex="0" role="button" style="position:absolute; line-height:48px; z-index:1000;user-select: none; opacity:0.95;" onclick="this.parentElement.parentElement.parentElement.close_tab()" title="close">cancel</i></span>
           <span class="mdc-tab-indicator">
             <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
           </span>
@@ -17,7 +17,6 @@
         </span>
     }
     {script
-        var currentElement = document.currentScript.parentElement;
         function changeIcon(el, value)
         {
             var icon=el.getElementsByClassName("material-icons")[0];
@@ -26,8 +25,10 @@
             else
                 icon.className=icon.className.replace("anim-fadein","anim-fadeout");
         }
-
-        setTimeout(document.activateTab,1);
-        
-    }
+ 
+        setTimeout(function() 
+        {
+            document.activateTab();
+        },1);
+     }
 }

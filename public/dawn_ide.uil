@@ -11,7 +11,7 @@
             }
         }
         {html
-            <iframe src="index-old.html">
+            <iframe src="index-old.html" style="height:150px">
             </iframe>
         }
     }

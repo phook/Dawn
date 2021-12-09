@@ -1,4 +1,4 @@
-{:app-bar-top 
+{:app-bar-top height=56px
     {html 
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     }

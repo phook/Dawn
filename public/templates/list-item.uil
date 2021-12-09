@@ -1,40 +1,29 @@
-{:list-item value=listentry text=helptext icon=none icon_text=none
+{:list-item value=a text=a icon=a action_icon_text=a action_icon=a icon_img=a img_show=none icon_show=none action_function=none
     {html
-          <li class="mdc-list-item" tabindex="0" style="height:32px" title=":text" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
-            <span class="material-icons" style="padding-right:10px">folder</span>
+          <li class="mdc-list-item" tabindex="0" style="height:32px; flex: 1 1 auto;" title=":text" onmouseover="changeIcon1(this,true)" " onmouseout="changeIcon1(this,false)">
+            <span class="material-icons" uilstyle="display::icon_show" style="padding-right:10px;user-select: none;">:icon</span>
+            <div class="material-icons" uilstyle="display::img_show"><img src=":icon_img" style="width:24px;height:24px;padding-right:10px;user-select: none;"/></div>
             <span class="mdc-list-item__ripple"></span>
-            <span class="mdc-list-item__text">:value</span>
+            <span class="mdc-list-item__text" style="user-select: none;">:value</span>
             <span style="flex-grow:1"></span>
-            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="_icon_text">:icon</i></span>
+            <div class="material-icons anim-fadeout" style="line-height:32px;user-select: none;" fn=":action_function" onclick="callActionFunction(this)" title=":action_icon_text">:action_icon</div>
           </li>
-        <!--
-          <li class="mdc-list-item" style="height:32px" title="The dawn script &quot;add&quot;" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
-            <span class="material-icons"><img src="dawn_icon.ico" style="width:24px;height:24px;padding-right:10px"/></span>
-            <span class="mdc-list-item__ripple"></span>
-            <span class="mdc-list-item__text">add</span>
-            <span style="flex-grow:1"></span>
-            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="Run script">play_arrow</i></span>
-          </li>
-          <li class="mdc-list-item" style="height:32px" title="The uil file &quot;index&quot;" onmouseover="changeIcon1(this,true)" onmouseout="changeIcon1(this,false)">
-            <span class="material-icons" style="padding-right:10px">text_snippet</span>
-            <span class="mdc-list-item__ripple"></span>
-            <span class="mdc-list-item__text">index</span>
-            <span style="flex-grow:1"></span>
-            <span><i class="material-icons anim-fadeout" style="line-height:32px" onclick="alert('hello')" title="Open in Browser">launch</i></span>
-          </li>
-        --->
     }
     {script            
         function changeIcon1(el, value)
         {
-            debugHook();
-            var icon=el.getElementsByClassName("material-icons")[1];
+            var icon=el.getElementsByClassName("material-icons")[2];
             if (value)
                 icon.className=icon.className.replace("anim-fadeout","anim-fadein");
             else
                 icon.className=icon.className.replace("anim-fadein","anim-fadeout");
         }
-
-        
+        function callActionFunction(current)
+        {
+            if (current.attributes.fn.nodeValue != "none")
+                if (document.uilfunctions[current.attributes.fn.nodeValue])
+                    document.uilfunctions[current.attributes.fn.nodeValue](current.parentElement.getElementsByClassName("mdc-list-item__text")[0].innerText);
+            debugHook();
+        }
     }
 }

@@ -1,12 +1,10 @@
-{:editor flex=1 position=absolute z-index=200 height=100%25 width=100%25
-    {row height=100%25
-        {script src=/ace/src-min-noconflict/ace.js type=text/javascript charset=utf-8}
-        {editarea height=inherit}
-        {script
-            var editElement = document.currentScript.parentElement.getElementsByClassName("editarea")[0];
-            var editor = ace.edit(editElement);
-            editor.setValue("hello");       
-            editElement.editor=editor;
-        }
+{:editor height="100%"
+    {script src="/ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"}
+    {editarea height=inherit}
+    {script
+        var editElement = document.currentScript.parentElement.getElementsByClassName("editarea")[0];
+        var editor = ace.edit(editElement);
+        editor.setValue("hello");       
+        editElement.editor=editor;
     }
 }
