@@ -4,3 +4,6 @@
 [submodule "public/ace-builds"]
 	path = public/ace
 	url = https://github.com/ajaxorg/ace-builds.git
+[submodule "uil"]
+	path = uil
+	url = https://github.com/phook/uil
