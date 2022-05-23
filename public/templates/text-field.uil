@@ -28,6 +28,6 @@
         }
       
         innerElement.textField = new mdc.textField.MDCTextField(textElement);
-        innerElement.addEventInputListener('input',moveData);
+        innerElement.addEventListener('input',moveData);
     }
 }
