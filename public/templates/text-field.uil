@@ -1,11 +1,15 @@
 {:text-field height=48px value=""
     {html
-        <label class="mdc-text-field mdc-text-field--filled" style="height:48px; display:flex; flex:1 1 auto;">
-          <span class="mdc-text-field__ripple"></span>
-          <span class="mdc-floating-label" id="my-label-id">Project URL</span>
-          <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id" value=":value"/>
-          <span class="mdc-line-ripple"></span>
-        </label>
+        <div class="mdc-tooltip-wrapper--rich">
+            <label class="mdc-text-field mdc-text-field--filled" style="height:48px; display:flex; flex:1 1 auto;">
+              <span class="mdc-text-field__ripple"></span>
+              <span class="mdc-floating-label" id="my-label-id">Project URL</span>
+              <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id" value=":value"/>
+              <span class="mdc-line-ripple"></span>
+            </label>
+             <div class="mdc-tooltip__surface mdc-tooltip__surface-animation">
+             </div>
+        </div>
     }
     {script
     /*
@@ -15,8 +19,15 @@
       */   
         var currentElement = document.currentScript.parentElement;
         var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
+        var tooltipElement =currentElement.getElementsByClassName('mdc-tooltip__surface')[0];
         var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
       
+        function moveData()
+        {
+            tooltopElement.text = innerElement.text;
+        }
+      
         innerElement.textField = new mdc.textField.MDCTextField(textElement);
+        innerElement.addEventInputListener('input',moveData);
     }
 }
