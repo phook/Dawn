@@ -28,6 +28,7 @@
         }
       
         innerElement.textField = new mdc.textField.MDCTextField(textElement);
+        tooltipElement.tooltipElement = new mdc.tooltip.MDCTooltip(tooltipElement);
         innerElement.addEventListener('input',moveData);
     }
 }
