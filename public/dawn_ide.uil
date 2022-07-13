@@ -1,5 +1,15 @@
 {body
-    {script src=https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js}
+    {html
+        <link rel="stylesheet" href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css">
+        <script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+        <script>
+               let module=1;
+        </script>
+        <script src="./Dawn.js"></script>
+        <script>
+        Dawn.initialize("./dawn");
+        </script>
+    }
     {row
         {app-bar-top
             Dawn IDE

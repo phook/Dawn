@@ -31,22 +31,22 @@ function traverse_directory(directory)
                     var flavor = filename.substring(filename.indexOf(".dawn_")+6);
                     if (flavor == "basic")
                     {
-                        source = basic_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"TO_DAWN_BASE"});
+                        source = basic_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"TO_DAWN"});
                     }
                     else
                     {
                         console.log("unknown flavor "+ filename);
                         return;
                     }
-                    if (source == "ERROR")
+                    if (source.indexOf("ERROR") == 0)
                     {
-                         console.log("compile error "+ filename);
+                         console.log("compile error for file:"+ filename + " in flavor " + flavor + " compile step");
                          return;
                     }
 
                 }
-                source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"PROGRAM"}) +"\n";
-                if (source != "ERROR")
+                source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"PROGRAM"});
+                if (source.indexOf("ERROR") == 0)
                 {
                     source = UglifyJS.minify(source).code;
                     var jsFilename=filepath+".js";
@@ -59,6 +59,11 @@ function traverse_directory(directory)
                     //    test for flavored - if do flavor compile
                     //    compile to js
                     //    save and match time
+                }
+                else
+                {
+                     console.log("compile error for file:"+ filename + " in dawn compile step");
+                     return;
                 }
             }
             else

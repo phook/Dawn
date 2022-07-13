@@ -8,22 +8,22 @@ ALPHA:
 DIGIT:
  "0".."9"
 
-WHITESPACE:
- " " | "\t"  { " " | "\t" }
-
 OPTWHITESPACE:
- { WHITESPACE } 
+ { " " | "\t" }
 
-NEWLINE:
- "\r" | "\n"  { " " | "\t" | "\r" | "\n"}
+WHITESPACE:
+ " " | "\t"  OPTWHITESPACE
 
 OPTNEWLINE:
- [ NEWLINE ]
+ { " " | "\t" | "\r" | "\n" }
+
+NEWLINE:
+ "\r" | "\n" OPTNEWLINE
 
 ENDLINE:
  OPTWHITESPACE NEWLINE
 
-OPTLINEEND:
+OPTENDLINE:
  OPTWHITESPACE OPTNEWLINE
 
 SEPARATOR:
@@ -31,10 +31,7 @@ SEPARATOR:
  WHITESPACE 
 
 OPTSEPARATOR:
- { SEPARATOR }
-
-OPTSEPARATOR:
- { SEPARATOR }
+ { " " | "\t" | "\r" | "\n" }
 
 SAFE:
  "$" | "-" | "_" | "@" | "." | "&" | ":" | "#"
@@ -114,8 +111,11 @@ BLOCK:
 PROGRAMBODY:
  BLOCK 
 
+CONSTRUCTOR:
+ PROGRAMBODY OPTENDLINE -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\n"
+
 PROGRAM:
- PROGRAMBODY -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\nlet boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+ CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
 
 
 

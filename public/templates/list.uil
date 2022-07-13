@@ -11,7 +11,7 @@
         [].forEach.call(document.querySelectorAll('.mdc-list'), function(el) {
                 mdc.list.MDCList.attachTo(el);
             });
-            /*
+ 
         function changeIcon1(el, value)
         {
             debugHook();
@@ -21,7 +21,6 @@
             else
                 icon.className=icon.className.replace("anim-fadein","anim-fadeout");
         }
-*/
 
         
     }

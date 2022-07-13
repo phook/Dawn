@@ -1,8 +1,0 @@
-Sum = 2 × 2
-Sum = 2 + 2
-Sum = (2 + Period) × 1₁₀
-if not a?
- [Number:1#10 Number:2#10]>>Number.add:>>Sum
-if True and not False?
- Text = 2² times “Odelay”
-[a b]>>c

@@ -1,7 +1,6 @@
 {:tab
     {html
-        <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css"/>
-        <span class="mdc-tab" role="tab" aria-selected="false" tabindex="0" onmouseover="changeIcon(this,true)" onmouseout="changeIcon(this,false)">
+        <button class="mdc-tab" role="tab" aria-selected="true" tabindex="0" onmouseover="changeIcon(this,true)" onmouseout="changeIcon(this,false)">
           <span class="mdc-tab__content">
             <span class="mdc-tab__text-label" style="text-transform:none;">
     }
@@ -14,9 +13,10 @@
             <span class="mdc-tab-indicator__content mdc-tab-indicator__content--underline"></span>
           </span>
           <span class="mdc-tab__ripple"></span>
-        </span>
+        </button>
     }
     {script
+        currentElement = document.currentScript.parentElement;
         function changeIcon(el, value)
         {
             var icon=el.getElementsByClassName("material-icons")[0];
@@ -24,11 +24,28 @@
                 icon.className=icon.className.replace("anim-fadeout","anim-fadein");
             else
                 icon.className=icon.className.replace("anim-fadein","anim-fadeout");
+        } 
+
+         function tabBarListener(event) 
+         {
+            debugHook();
+            let tabs = [].slice.call(currentElement.getElementsByClassName("tab"));
+            for(let i=0; i<tabs.length; i++)
+            {
+                tabs[i].connected_editor.style.visibility = (i == event.detail.index) ? "visible" : "hidden";
+            }
         }
- 
-        setTimeout(function() 
+
+        setTimeout(function()
         {
-            document.activateTab();
+            debugHook();
+            let tabs = DOMLookup.call(currentElement,"tabs");
+            tabs.tabBar.destroy();
+            tabs.tabBar = new mdc.tabBar.MDCTabBar(tabs);
+            tabs.tabBar.listen('MDCTabBar:activated', tabs.tabBarListener);
+            let numberOfTabs = tabs.tabBar.getTabElements().length;
+            tabs.tabBar.activateTab(numberOfTabs-1);
         },1);
+
      }
 }

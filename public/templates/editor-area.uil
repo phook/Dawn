@@ -24,12 +24,27 @@
         {editor}
     }
     {script
-      var foo=function()
+      var currentElement = document.currentScript.parentElement;
+      
+      async function async_fileToString(url)
       {
-          var currentElement = document.currentScript.parentElement;
+        let response = await fetch(url);
+        let text     = await response.text();
+        return text;
+      }
+      setTimeout(async function()
+      {
+           let basic_flavor_source = await fetch("dawn/Flavors/basic.bnft");
+           basic_flavor_source = await basic_flavor_source.text();
+           let basic_flavor_parser = await BNFT.async_BNFT(basic_flavor_source, {alert:console.log, fileToString: async_fileToString, path:"dawn/Flavors/"});
+           let dawn_flavor_source = await fetch("dawn/Flavors/dawn.bnft");
+           dawn_flavor_source =  await dawn_flavor_source.text();
+           let dawn_flavor_parser = await BNFT.async_BNFT(dawn_flavor_source, {alert:console.log, fileToString:  async_fileToString, path:"dawn/Flavors/"});
+           
+           
           
-              var tabs   = [];
-              var layers = [];
+            var tabs   = [];
+            var layers = [];
 
             function elementFromHTML(htmlString) {
               var div = document.createElement('div');
@@ -40,22 +55,59 @@
             var loading = []; 
             //debugHook();
 
-            function load(url)
+            async function load(url)
             {
+                url = document.editorURL + url;
                 if (loading.indexOf(url)===-1)
                 {
                     loading.push(url);
-                    GET(url,function(source) {
+                    debugHook();
+                    
+                    await fetch(url)
+                     .then(response => response.text())
+                     .then(function(source) {
                         var element=templateClone("editor");
                         uilAppendChild(layers,element);
                         
+                        console.log(source);
                         
                         var editElement = element.getElementsByClassName("editarea")[0];
-                        var editor = ace.edit(editElement);
+                        var editor = ace.edit(editElement, {mode: "ace/mode/dawn"});
                         editor.session.setValue(source);
                         editor.setReadOnly(false); 
                         editElement.editor=editor;
+                        
+                        lateCompile=0;
+                        editor.session.on('change', function() {
+                          clearTimeout(lateCompile);
+                          lateCompile = setTimeout(autoCompile,3000);
+                        });
 
+                        function autoCompile() 
+                        {
+                          var val = editor.session.getValue();
+                          
+                          let to_dawn_result = basic_flavor_parser.parse(val,{alert:console.log, nonterminal:"TO_DAWN"});
+    
+                          //console.log(to_dawn_result);
+
+                          let to_javascript_result = dawn_flavor_parser.parse(to_dawn_result,{alert:console.log, nonterminal:"PROGRAMBODY"});
+                          
+                          //console.log(to_javascript_result);
+
+                           // eval and running bind are complex - scope must be supplied 
+                          let to_code_result = new Function("scope","return " + to_javascript_result);
+                          let bound_result = to_code_result(Dawn.root);
+    
+                           // bound result is the executable compiled dawn javascript object, so if we are here ok the source is good to save
+        
+                          // user should press button for - flavor->dawn->flavor and save dawn file - red marker in tab for unsaved files and errors
+                          
+                          // NOTE: save is for store for file systems, add for git systems - another button for commit is needed
+                          
+                        }
+
+                        
                         let tabtext = url.split("/").pop();
                         let tab = templateClone("tab",tabtext);
                         uilAppendChild(tabs,tab);
@@ -65,7 +117,6 @@
                             debugHook();
                             uilRemoveChild(layers,element);
                             uilRemoveChild(tabs,tab);
-                            document.activateTab();
                             loading = loading.filter(element => element !== url);
                         }
 
@@ -79,15 +130,14 @@
             document.uilfunctions.loadEditor = load;
             document.loadEditor = load;
 
-          setTimeout(function(){
+          setTimeout(async function(){
             //debugHook();
             tabs   = currentElement.getElementsByClassName("mdc-tab-scroller__scroll-content")[0];
             layers = currentElement.getElementsByClassName("layers")[1];
 
-            document.loadEditor("http://localhost:5000/dawn_ide.uil");
-            document.loadEditor("http://localhost:5000/dawn/times.dawn_basic");
+            await document.loadEditor("dawn_ide.uil");
+            await document.loadEditor("dawn/times.dawn_basic");
             },100);
-         }
-         foo();
+         },0);
     }
 }

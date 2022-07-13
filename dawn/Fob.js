@@ -4,6 +4,8 @@ function Fob(name)
 	this.id = id++;
     this.path = [""];
 	
+    this._output_bind_error = null;
+    
     // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
     function dawnSort(a,b)
     { 
@@ -287,6 +289,13 @@ function Fob(name)
     }
 
 	return this;
+    this._bind_error = function(errorMessage)
+    {
+        if (this._output_bind_error)
+            this._output_bind_error(errorMessage);
+        else
+            this.call(this._get_owner(),errorMessage);
+    }
 }
 
 

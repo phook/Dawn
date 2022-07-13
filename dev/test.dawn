@@ -1,8 +1,0 @@
-Meta:Assignment>>[Number:2 Number:2]>>Number.multiply:>>Sum
-Meta:Assignment>>[Number:2 Number:2]>>Number.add:>>Sum
-Meta:Assignment>>[[Number:2 Period]>>Number.add: Number:1#10]>>Number.multiply:>>Sum
-a>>Boolean.not:>>command.if:>>
-[Number:1#10 Number:2#10]>>Number.add:>>Sum
-[Boolean:True Boolean:False>>Boolean.not:]>>Boolean.and:>>command.if:>>
-Meta:Assignment>>[Number:2 Number:2]>>Number.power:>>String.times:>>String:Odelay>>Text
-[a b]>>c

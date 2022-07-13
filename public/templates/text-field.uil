@@ -1,34 +1,32 @@
 {:text-field height=48px value=""
     {html
-        <div class="mdc-tooltip-wrapper--rich">
-            <label class="mdc-text-field mdc-text-field--filled" style="height:48px; display:flex; flex:1 1 auto;">
+            <label class="mdc-text-field mdc-text-field--filled" aria-describedby="tt0" style="height:48px; display:flex; flex:1 1 auto;">
               <span class="mdc-text-field__ripple"></span>
               <span class="mdc-floating-label" id="my-label-id">Project URL</span>
-              <input class="mdc-text-field__input" type="text" aria-labelledby="my-label-id" value=":value"/>
+              <input class="mdc-text-field__input" type="text"  aria-labelledby="my-label-id" value=":value"/>
               <span class="mdc-line-ripple"></span>
             </label>
-             <div class="mdc-tooltip__surface mdc-tooltip__surface-animation">
-             </div>
-        </div>
+              <div id="tt0" class="mdc-tooltip" role="tooltip" aria-hidden="true">
+                <div class="mdc-tooltip__surface">
+                  :value
+                </div>
+              </div>
     }
     {script
-    /*
-        [].forEach.call(document.querySelectorAll('.mdc-text-field'), function(el) {
-                mdc.textField.MDCTextField.attachTo(el);
-            });
-      */   
         var currentElement = document.currentScript.parentElement;
-        var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
-        var tooltipElement =currentElement.getElementsByClassName('mdc-tooltip__surface')[0];
-        var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
+        var textElement    = currentElement.getElementsByClassName('mdc-text-field')[0];
+        var tooltipElement = currentElement.getElementsByClassName('mdc-tooltip')[0];
+        var tooltipTextElement = currentElement.getElementsByClassName('mdc-tooltip__surface')[0];
+        var innerElement   = currentElement.getElementsByClassName('mdc-text-field__input')[0];
       
         function moveData()
         {
-            tooltopElement.text = innerElement.text;
+            tooltipTextElement.innerText = innerElement.value;
         }
       
         innerElement.textField = new mdc.textField.MDCTextField(textElement);
-        tooltipElement.tooltipElement = new mdc.tooltip.MDCTooltip(tooltipElement);
         innerElement.addEventListener('input',moveData);
+        tooltipElement.tooltipElement = new mdc.tooltip.MDCTooltip(tooltipElement);
+        
     }
 }

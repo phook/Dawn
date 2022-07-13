@@ -1,1 +1,1 @@
-ERROR;
+function bind(o){return o._lookup("Block:")._bind(o._lookup("List:")._add(o._lookup("Pipe:")._add(o._lookup("Number:3")._bind(o._lookup("times:"))._bind(o._lookup("String:%C3%93rale%21")))))}let boundFunction=null;function go(o){boundFunction=boundFunction||bind(o),boundFunction._in_go(o),go._bind=bind}module.exports=go;

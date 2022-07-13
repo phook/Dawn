@@ -1,1 +1,0 @@
-function bind(n){return n._lookup("Block:")._bind(n._lookup("List:")._add(n._lookup("Sum")))}let boundFunction=null;function go(n){boundFunction=boundFunction||bind(n),boundFunction._in_go(n),go._bind=bind}module.exports=go;

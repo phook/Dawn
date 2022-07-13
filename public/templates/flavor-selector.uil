@@ -81,16 +81,15 @@
     
     
     
-    /*
-        [].forEach.call(document.querySelectorAll('.mdc-text-field'), function(el) {
-                mdc.textField.MDCTextField.attachTo(el);
-            });
-        var currentElement = document.currentScript.parentElement;
-        var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
-        var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
+        //[].forEach.call(document.querySelectorAll('.mdc-text-field'), function(el) {
+        //        mdc.textField.MDCTextField.attachTo(el);
+        //    });
+        //var currentElement = document.currentScript.parentElement;
+        //var textElement =currentElement.getElementsByClassName('mdc-text-field')[0];
+        //var innerElement =currentElement.getElementsByClassName('mdc-text-field__input')[0];
       
-        innerElement.textField = new mdc.textField.MDCTextField(textElement);
-      */
+        //innerElement.textField = new mdc.textField.MDCTextField(textElement);
+
         var currentElement = document.currentScript.parentElement;
 
         setTimeout(function() {
