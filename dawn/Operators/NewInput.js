@@ -3,7 +3,7 @@ _Input = function ()
 {
 	Fob.call(this,"NewInput");
 	this._out_native=null;
-	this._in_lookup_child = function(identifier)
+	this._in_instanciate = function(identifier)
 	{
        return Object.assign({_input_name:identifier._value},new _Input());
 	}
@@ -20,4 +20,4 @@ _Input = function ()
             this._out_native({_value:"this._in_"+clean_name+"=function("+clean_name+"){"+function_source+"}"});
     }
 }
-module.exports=function(scope){scope._add(new _Input());};
+module.exports=_Input;

@@ -1,5 +1,5 @@
 const Fob = Dawn.require("./dawn/Fob.js");
-function DawnList()
+function List()
 {
 	Fob.call(this,"List");
 	this._elements=[];
@@ -52,9 +52,9 @@ function DawnList()
         });
 		return this;
 	}
-	this._in_lookup = function()
+	this._in_instanciate = function()
 	{
-		return new DawnList();
+		return new List();
 	}
 	this._in_begin = function()
 	{
@@ -89,4 +89,4 @@ function DawnList()
 			this._bindee._in_go(scope);
 	}
 }
-module.exports=function(scope){scope._add(new DawnList());};
+module.exports=List;

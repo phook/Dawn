@@ -3,7 +3,7 @@ _Output = function ()
 {
 	Fob.call(this,"NewOutput");
 	this._out_native=null;
-	this._in_lookup_child = function(identifier)
+	this._in_instanciate = function(identifier)
 	{
        return Object.assign({_output_name:identifier._value},new _Output());
 	}
@@ -17,4 +17,4 @@ _Output = function ()
         //else in current scope
     }
 }
-module.exports=function(scope){scope._add(new _Output());};
+module.exports=_Output;

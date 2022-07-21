@@ -1,12 +1,14 @@
-define Multiply
+define multiply
   native javascript
-    var self = this
-    self._out_number = null
-    self._in_begin = function(pipe)
-      self._value = new Dawn.bigRat(1);
-    self._in_go = async function(pipe)
+    this._out_number = null
+    this._in_begin = function(pipe)
+      this._value = new Dawn.bigRat(1);
+    this._in_go = function(pipe)
       if (pipe._out_number)
-        pipe._out_number(self)
-    self._in_number_$ = function(pipe, number)
-      self._value = self._value.multiply(number._value)
+        pipe._out_number(this)
+    this._in_number_$ = function(pipe, number)
+      this._value = this._value.multiply(number._value)
+    this._in_end = function()
+        if (!this.inputs_bound["_in_number_$"])
+            this._bind_error("multiplication input not bound");       
   endnative

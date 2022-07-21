@@ -7,7 +7,7 @@ function Pipe()
 	this._last=null;
     this._bound = false;
 	this._out_pipe=null;
-	this._in_lookup = function(identifier)
+	this._instanciate = function(identifier)
 	{
 			return new Pipe();
 	}
@@ -39,4 +39,4 @@ function Pipe()
 		}
 	}
 }
-module.exports = function(scope){scope._add(new Pipe());};
+module.exports = Pipe;

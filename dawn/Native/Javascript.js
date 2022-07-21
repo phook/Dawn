@@ -4,7 +4,7 @@ function _Javascript()
     Fob.call(this,"Javascript");
     this._out_native=null;
     this._out_go=null;
-    this._in_lookup_child=function(identifier)
+    this._in_instanciate=function(identifier)
     {
        return Object.assign({_value:decodeURIComponent(identifier._value)},new _Javascript());
     }
@@ -16,4 +16,4 @@ function _Javascript()
             this._out_go(scope);
     }
 } 
-module.exports = function(scope){scope._add(new _Javascript());};
+module.exports = _Javascript;

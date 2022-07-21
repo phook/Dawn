@@ -91,15 +91,16 @@ Dawn = {
         if (Dawn.isBrowser())
         {
             const DawnWebDirectory = require("./dawn/DawnWebDirectory.js");
-            DawnWebDirectory.call(this,"","dawn");
+            this._children["dawn"]=(new DawnWebDirectory("dawn","dawn"));
         }
         else
         {
-            const Directory = require("./dawn/Directory.js");
-            Directory.call(this,"","dawn");
+            const FileSystemResource = require("./dawn/FileSystemResource.js");
+            this._children["dawn"]=(new FileSystemResource("dawn","dawn"));
         }
-        this.path.push("Operators.");
-        this.path.push("Number.");
+        this.path.push("dawn.");
+        this._children["dawn"].path.push("Operators.");
+        this._children["dawn"].path.push("Number.");
     },
     saveStringResource : function(url,string,overwrite) {
         if (Dawn.isBrowser())
@@ -140,7 +141,10 @@ Dawn = {
             return eval(str);
         };
 
-        this.root = new this.Root(rootUrl);
+        const Fob = require("./dawn/Fob.js");
+
+        Fob.call(this,"");
+        this.Root(rootUrl);
 
         const bnft = this.require("./BNFT/BNFT.js");
 

@@ -10,4 +10,9 @@ define power
       this._value = number._value;
     this._in_number_exponent = function(number)
       this._value = this._value.pow(number._value.round(true));
+    this._in_end = function()
+        if (!this.inputs_bound["_in_number_base"])
+            this._bind_error("power input base not bound");       
+        if (!this.inputs_bound["_in_number_exponent"])
+            this._bind_error("power input exponent not bound");       
   endnative

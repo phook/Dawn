@@ -1,14 +1,18 @@
-define Subtract
+define subtract
   native javascript
-    var self = this
-    self._out_number = null
-    self._in_begin = function(pipe)
-      self._value = new Dawn.bigRat();
-    self._in_go = async function(pipe)
-      if (pipe._out_number)
-        pipe._out_number(self)
-    self._in_number_minuend = function(pipe, number)
-      self._value = number._value
-    self._in_number_subtrahend = function(pipe, number)
-      self._value = self._value.subtract(number._value)
+    this._out_number = null
+    this._in_begin = function(pipe)
+      this._value = new Dawn.bigRat();
+    this._in_go = function(pipe)
+      if (this._out_number)
+        this._out_number(this)
+    this._in_number_minuend = function(pipe)
+      this._value = pipe._value
+    this._in_number_subtrahend = function(pipe)
+      this._value = this._value.subtract(pipe._value)
+    this._in_end = function()
+        if (!this.inputs_bound["_in_number_minuend"])
+            this._bind_error("subtracion input minuend not bound");       
+        if (!this.inputs_bound["_in_number_subtrahend"])
+            this._bind_error("subtracion input subtrahend not bound");       
   endnative

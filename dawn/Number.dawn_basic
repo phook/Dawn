@@ -9,9 +9,9 @@ define Number
       if (this._out_number)
         this._out_number(this);
     endnative
-  input lookup_child
+  input instanciate
     native javascript
          var newObject= this._clone();
-         newObject._value=new Dawn.bigRat(lookup_child._value);
+         newObject._value=new Dawn.bigRat(instanciate._value);
          return newObject;
     endnative

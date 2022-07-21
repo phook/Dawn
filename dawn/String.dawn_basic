@@ -9,8 +9,8 @@ define String
       if (this._out_string)
         this._out_string(this);
     endnative
-  input lookup_child
+  input instanciate
     native javascript
          var newObject = this._clone();
-         return Object.assign({_value:decodeURIComponent(lookup_child._value)},newObject);
+         return Object.assign({_value:decodeURIComponent(instanciate._value)},newObject);
     endnative

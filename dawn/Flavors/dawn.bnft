@@ -83,10 +83,10 @@ PIPELISTEND:
  { SEPARATOR PIPELISTELEMENTS } 
 
 INNER_PIPELIST:
- PIPE PIPELISTEND -> "scope._lookup(\"List:\")._add(" PIPE PIPELISTEND ")"
+ PIPE PIPELISTEND 
 
 PIPELIST:
- "[" OPTWHITESPACE INNER_PIPELIST OPTWHITESPACE "]" -> INNER_PIPELIST
+ "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
 
 PIPE:
  "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
@@ -114,8 +114,12 @@ PROGRAMBODY:
 CONSTRUCTOR:
  PROGRAMBODY OPTENDLINE -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\n"
 
-PROGRAM:
+MODULE:
  CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+
+PROGRAM:
+ CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_begin(scope);\nboundFunction._in_go(scope);\nboundFunction._in_end(scope);\ngo._bind=bind;\n}\ngo(this);\n"
+
 
 
 

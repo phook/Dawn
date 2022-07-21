@@ -1,12 +1,11 @@
-define Concatenate
+define concatenate
   native javascript
-    var self = this
-    self._out_string = null
-    self._in_begin = function(pipe)
-      self._value = ""
-    self._in_go = async function(pipe)
-      if (pipe._out_string)
-        pipe._out_string(self)
-    self._in_string_$ = function(pipe, s)
-      self._value += s._value
+    this._out_string = null
+    this._in_begin = function(pipe)
+      this._value = "";
+    this._in_go = function(pipe)
+      if (this._out_string)
+        this._out_string(this)
+    this._in_string_$ = function(pipe)
+      this._value += pipe._value;
   endnative

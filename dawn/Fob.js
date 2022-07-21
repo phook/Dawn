@@ -112,36 +112,52 @@ function Fob(name)
       var ref = {_value:identifier, _scope:this};
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
-      return this._in_lookup(ref);
+      let result = this._in_lookup_child(ref);
+	  if (!result && this._owner)
+		result=this._owner._lookup(identifier);
+      if (!result)
+          throw "error lookup of "+identifier+" failed";
+       return result;
+    }
+    this._in_instanciate = function(pipe)
+    {
+        return this._clone();
     }
 	this._in_lookup = function(pipe,from_owner)
 	{
         if (pipe._value == this._name)
             return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE PIPE RELATED INFO - BUT VALUE RETAINED IN ORIGINAL FOB
+        if (this._name == "")
+            return this._in_lookup_child(pipe); // temp hack for root
 
         var originalResource = pipe._value;
 
         // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
         var skip=false;
+        let deref = "";
         if (this._name.charAt(-1) != "." && pipe._value.indexOf(this._name) == 0)
         {
-            if (pipe._value.indexOf(this._name + ":") == 0)
-                pipe._value = pipe._value.substring(this._name.length+1);
-            else
-                pipe._value = pipe._value.substring(this._name.length);
-		}
-        
-        let result = this._in_lookup_child(pipe);
-        if (result)
-            return result;
-        
+            deref = pipe._value[this._name.length];
+            pipe._value = pipe._value.substring(this._name.length+1);
+            if (deref == ".")
+            {
+                let result = this._in_lookup_child(pipe);
+                if (result)
+                    return result;
+            }
+            else if (deref == ":")
+            {
+                return this._in_instanciate(pipe);
+            }
+ 		}
+                
 		if (this._owner && !from_owner)
 		{
             pipe._value = originalResource;
 			return this._owner._in_lookup(pipe);
 		}
 		
-        return this._clone();
+        return null;
 	}
     this._lookup_child = function(identifier)
     {

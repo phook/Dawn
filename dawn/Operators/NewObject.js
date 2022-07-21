@@ -3,9 +3,20 @@ _NewObject = function()
 {
     // should have input for cloning any object i.e. creating a var String:Hello >> NewObject:HelloText (syntax sugared: var HelloText="Hello") 
 	Fob.call(this,"NewObject");
-    this._stored_body=null;
-	this._in_lookup_child = function(pipe)
+    this._newObject = null;
+    this._in_go=function(scope)
+    {
+        if (this._newObject)
+            scope._add(this._newObject);        
+    }
+    this._in_native_$ = function(pipe)
+    {
+        if (this._newObject)
+            this._newObject._in_native_$(pipe);
+    }
+	this._in_instanciate = function(pipe)
 	{
+        /*
         var newObject;
         var separator = pipe._value.indexOf("_");
         var name;
@@ -24,6 +35,12 @@ _NewObject = function()
         if (name != "")
             pipe._scope._add(newObject);
         return newObject;
+        */
+        let newObject = this._clone();
+        if (pipe._value)
+            newObject._newObject = new Fob(pipe._value);        
+
+        return newObject;
 	}
 }
-module.exports=function(scope){scope._add(new _NewObject());};
+module.exports=_NewObject;

@@ -40,7 +40,7 @@ function DawnBlock()
         else
             console.log("Error: Block Expects List");
     }
-	this._in_lookup = function()
+	this._in_instanciate = function()
 	{
 		return new DawnBlock();
 	}
@@ -60,4 +60,4 @@ function DawnBlock()
 			this._bindee._in_go(scope);
 	}
 }
-module.exports=function(scope){scope._add(new DawnBlock());};
+module.exports=DawnBlock;

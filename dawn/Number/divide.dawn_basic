@@ -1,14 +1,18 @@
-define Divide
+define divide
   native javascript
-    var self = this
-    self._out_number = null
-    self._in_begin = function(pipe)
-      self._value = new Dawn.bigRat();
-    self._in_go = async function(pipe)
-      if (pipe._out_number)
-        pipe._out_number(self)
-    self._in_number_dividend = function(pipe, number)
-      self._value = number._value
-    self._in_number_divisor = function(pipe, number)
-      self._value = self._value.divide(number._value)
+    this._out_number = null
+    this._in_begin = function(pipe)
+      this._value = new Dawn.bigRat();
+    this._in_go = function(pipe)
+      if (this._out_number)
+        this._out_number(this);
+    this._in_number_dividend = function(pipe)
+      this._value = pipe._value;
+    this._in_number_divisor = function(pipe)
+      this._value = this._value.divide(pipe._value);
+    this._in_end = function()
+        if (!this.inputs_bound["_in_number_dividend"])
+            this._bind_error("division input dividend not bound");       
+        if (!this.inputs_bound["_in_number_divisor"])
+            this._bind_error("division input divisor not bound");       
   endnative
