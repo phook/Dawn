@@ -21,7 +21,7 @@ Basic Syntax
 
 A "Hello World" example in Dawn could look like this:
 
-String:Hello%World >> Console
+String:Hello%20World >> Console
 
 The conventions defined makes Dawn look in the Types folder or namespace where it finds String, that matches the beginning of the URI/URL. The rest of the URL is used as constructor.
 
