@@ -1,8 +1,8 @@
-const Fob = Dawn.require("./dawn/Fob.js");
+const Resource = Dawn.require("./dawn/Resource.js");
 Reference = function (resource, parent)
 {
     this.resource = resource;
-    Fob.call(this,"");
+    Resource.call(this,"");
     this._name = "Reference to " + resource._type;
     this.previous = null;
     this._set_owner(parent);

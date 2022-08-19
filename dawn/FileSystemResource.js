@@ -1,4 +1,4 @@
-const Fob  = Dawn.require("./dawn/Fob.js");
+const Resource  = Dawn.require("./dawn/Resource.js");
 const fs   = Dawn.require('fs');
 const path = Dawn.require('path');
 const bnft = Dawn.require("./BNFT/BNFT.js");
@@ -26,7 +26,7 @@ function FileSystemResource(name, uri)
             compiledExtension = ".dawn_basic";
         }
 
-        if (compiledExtension != ".js" && name.endsWith(".dawn"))
+        if (!compiledExtension.endsWith(".js") && name.endsWith(".dawn"))
         {
             isCompiledFile = true;
             compiledExtension = ".dawn";
@@ -35,7 +35,10 @@ function FileSystemResource(name, uri)
         if (name.endsWith(".js"))
         {
             isCompiledFile = true;
-            compiledExtension = ".js";
+	        if (name.endsWith(".dawn.js"))
+	            compiledExtension = ".dawn.js";
+			else
+	            compiledExtension = ".js";
         }
 
         if (_isDirectory)
@@ -66,7 +69,7 @@ function FileSystemResource(name, uri)
     name = name.replace(".js","");
     name = name.replace(/.dawn.*/,"");
 
-    Fob.call(this,name);
+    Resource.call(this,name);
     this._type= "FileSystemResource";
 
     this.initialize(full_name,uri);
@@ -79,6 +82,8 @@ function FileSystemResource(name, uri)
     this._compiled_object = null;
 	this._in_instanciate = function(pipe)
 	{
+		if (this._compiled_object)
+			return this._compiled_object._in_instanciate(pipe);
         if (isCompiledFile)
         {
             let sourceURI = uri.substr(0, (uri + '.').indexOf('.')) + compiledExtension;
@@ -91,10 +96,17 @@ function FileSystemResource(name, uri)
                 return this._compiled_object._in_instanciate(pipe);
             }
             else
+            if (compiledExtension == ".dawn.js")
             {
-                if (this._compiled_object)
-                    return this._compiled_object._in_instanciate(pipe);
-                
+                let fakeScope = new Resource("");
+                fakeScope._owner = this._get_owner();
+                var loaded_object_constructor = Dawn.require(sourceURI);
+                loaded_object_constructor(fakeScope);
+                this._compiled_object = fakeScope._children[this._name];
+                return this._compiled_object._in_instanciate(pipe);
+            }
+            else
+            {
                 if (this.reentry)
                     throw "error - recursion - file resource "+this._name+" not compiled";
                 this.reentry=true;
@@ -122,10 +134,10 @@ function FileSystemResource(name, uri)
                 {
                     // Save cached compile - and require it?
                     // eval in owners scope
-                    let fakeScope = new Fob("");
+                    let fakeScope = new Resource("");
                     fakeScope._owner = this._get_owner();
 //                    Dawn.passedEval.call(this._get_owner(),jsSource);
-                    Dawn.passedEval.call(fakeScope,jsSource);
+                    Dawn.passedEval.call(fakeScope,jsSource)(fakeScope);
 //					let lookup = this._name + ":" + pipe._value;
                     this._compiled_object = fakeScope._children[this._name];
                     return this._compiled_object._in_instanciate(pipe);

@@ -1,11 +1,10 @@
 var id = 1;
-function Fob(name)
+function Resource(name)
 {
 	this.id = id++;
     this.path = [""];
 	
     this._output_bind_error = null;
-    
     // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
     function dawnSort(a,b)
     { 
@@ -25,7 +24,7 @@ function Fob(name)
         {
    	 	    var args = Array.prototype.slice.call(arguments);
 			//args.unshift(pipe);
-            fn.apply(obj,args);
+            return fn.apply(obj,args);
         }
     }
 	function clone(src) {
@@ -37,7 +36,7 @@ function Fob(name)
 	
     this._clone = function(){return clone(this);}
 	this._name = name;
-	this._type="Fob";
+	this._type="Resource";
 	this._it = 0;
 	this._children = {};
 	this._owner = null;
@@ -109,15 +108,21 @@ function Fob(name)
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier)
     {
+      if (identifier.indexOf(":") == -1)
+          throw "error lookup of "+identifier+": colon missing";
+      if (identifier == ".")
+          return this;
       var ref = {_value:identifier, _scope:this};
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       let result = this._in_lookup_child(ref);
-	  if (!result && this._owner)
-		result=this._owner._lookup(identifier);
-      if (!result)
-          throw "error lookup of "+identifier+" failed";
+	  if (!result)
+          throw "error lookup of "+identifier+": lookup failed";
        return result;
+    }
+    this._in_string_name_e$=function(pipe)
+    {
+        this._name = pipe._value;
     }
     this._in_instanciate = function(pipe)
     {
@@ -126,7 +131,7 @@ function Fob(name)
 	this._in_lookup = function(pipe,from_owner)
 	{
         if (pipe._value == this._name)
-            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE PIPE RELATED INFO - BUT VALUE RETAINED IN ORIGINAL FOB
+            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE PIPE RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
         if (this._name == "")
             return this._in_lookup_child(pipe); // temp hack for root
 
@@ -138,16 +143,83 @@ function Fob(name)
         if (this._name.charAt(-1) != "." && pipe._value.indexOf(this._name) == 0)
         {
             deref = pipe._value[this._name.length];
-            pipe._value = pipe._value.substring(this._name.length+1);
+			if (deref == "?")
+	            pipe._value = pipe._value.substring(this._name.length);
+	        else
+				pipe._value = pipe._value.substring(this._name.length+1);
             if (deref == ".")
             {
-                let result = this._in_lookup_child(pipe);
+                let result = this._in_lookup_child(pipe,from_owner);
                 if (result)
                     return result;
             }
-            else if (deref == ":")
+            else if (deref == ":" || deref == "?")
             {
-                return this._in_instanciate(pipe);
+				let urlParametersToInputs = [];
+
+				if (pipe._value.indexOf("?") !== -1)
+                {
+			        let parameters = pipe._value.substring(pipe._value.indexOf("?"));
+			        pipe._value = pipe._value.substring(0,pipe._value.indexOf("?"));
+				    //if (pipe._value.indexOf("|") !== -1) // if parameters AND input parameters
+					{
+						const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
+	                    const matchAll = parameters.matchAll(URLparameters);
+	                    let addAmpersand = false;
+	                    for (const match of matchAll)
+	                    {
+	                        if (match[1].indexOf("|") === -1)
+	                        {
+	                            pipe._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
+	                            addAmpersand = true;
+	                        }
+	                        else
+	                        {
+	                            if (match[1].indexOf("|") === 0)
+	                            {
+									urlParametersToInputs.push({input:match[1].substring(1),value:match[2]});
+	                            }
+	                            else
+                                {
+	                                Dawn.error("illegal URI \"|\" only allowed as first charachter in input parameters");
+                                }
+	                        }
+	                    }
+					}
+                }
+                let result = this._in_instanciate(pipe);
+                if (result)
+				{
+					for(i in urlParametersToInputs)
+		            {
+						let type = "number";
+						let input = urlParametersToInputs[i].input;
+						let value = urlParametersToInputs[i].value;
+						if (value.indexOf("\"") == 0)
+						{
+							value.replace("\"","");
+							type="string";
+                            value =  this._lookup("String:" + value);
+						}
+                        else
+                        {
+                            value = this._lookup("Number:" + value);
+                        }
+						let inputname = "_in_" + type + "_" + input;
+						if (inputname in result)
+                        {
+							result[inputname](value);
+                            result.inputs_bound[inputname]=true; // to prevent bind errors
+                        }
+						else
+						if (inputname+"_e$" in result)
+                        {
+							result[inputname+"_e$"](value);
+                            result.inputs_bound[inputname+"_e$"]=true; // to prevent bind errors
+                        }
+					}
+				}
+                return result;
             }
  		}
                 
@@ -185,22 +257,33 @@ function Fob(name)
                 }
             }
         }
+	    if (this._owner && !from_owner)
+		   return this._owner._in_lookup_child(pipe);
         return null;
 	}
     
 	this._offer_bind = function(match)
 	{
+        match = "_in_" + match;
 		for(b in this)
 		{
-			if ((b.indexOf('@') == -1) && (b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
-			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(this.inputs_bound[b]) == "undefined")
-				{
-					this.inputs_bound[b] = true;
-					return this[b].bind(this);
-                    break;
-				}
-			}
+            if (b.indexOf("_in_") == 0)
+            {
+                let explicit = b.endsWith("_e$");
+                let all_outputs = b.endsWith("_$");
+                if ((b == match) ||                                   // perfect match
+                    (!explicit && b.indexOf(match+"_") == 0) ||       // type match 
+                    (explicit && b == match+"_e$"))                   // explicit match
+                {
+                       // inputs ending with _$ takes all outputs
+                    if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
+                    {
+                        this.inputs_bound[b] = true;
+                        return this[b].bind(this);
+                        break;
+                    }
+                }
+            }
 		}
 	}
     this._bind = function(bindee)
@@ -225,8 +308,6 @@ function Fob(name)
             if (a.indexOf("_out_") == 0)
             {
                 match = a.substr(5);
-                if (match.indexOf("_") != -1)
-                    match = match.substr(0,match.indexOf("_"));
                 
                 let input_bound = bindee._offer_bind(match)
                 
@@ -250,20 +331,20 @@ function Fob(name)
         //    eval.call(this, data._value);
         //Dawn.passedEval.call(this, data._value);
     }
-	this._in_begin = function()
+	this._in_begin = function(scope)
 	{
 		if (this._out_begin)
-			this._out_begin();
+			this._out_begin(scope);
 	}
-	this._in_end = function()
+	this._in_end = function(scope)
 	{
 		if (this._out_end)
-			this._out_end();
+			this._out_end(scope);
         this.inputs_bound={};
         this.bindee=null;
         this.previous=null;
 	}
-	this._in_go = function()
+	this._in_go = function(scope)
 	{
 	}
     this._get_qualified_name = function()
@@ -304,7 +385,6 @@ function Fob(name)
         Function(data._value).call(this);
     }
 
-	return this;
     this._bind_error = function(errorMessage)
     {
         if (this._output_bind_error)
@@ -312,7 +392,28 @@ function Fob(name)
         else
             this.call(this._get_owner(),errorMessage);
     }
+
+	this._add_next_function_at = 0;
+    this._nextFunction = [];
+    this._add_next_function=function(context,fn)
+    {
+        if (fn)
+            this._nextFunction.splice(this._add_next_function_at,0,fn.bind(context));
+//            this._nextFunction.push(fn.bind(context));
+		this._add_next_function_at++;
+    }
+    this._execute_next_function = function(scope)
+    {
+		this._add_next_function_at = 0;
+        while (this._nextFunction.length)
+        {
+            let result = this._nextFunction.shift()(scope);
+            if (result)
+                return result;
+        }
+    }
+	return this;
 }
 
 
-module.exports = Fob;
+module.exports = Resource;

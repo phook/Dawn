@@ -1,7 +1,7 @@
-const Fob = Dawn.require("./dawn/Fob.js");
+const Resource = Dawn.require("./dawn/Resource.js");
 function List()
 {
-	Fob.call(this,"List");
+	Resource.call(this,"List");
 	this._elements=[];
 	this._pass_bind = function(bindee)
 	{
@@ -56,7 +56,7 @@ function List()
 	{
 		return new List();
 	}
-	this._in_begin = function()
+	this._in_begin = function(scope)
 	{
 		for(element in this._elements)
 		{
@@ -64,17 +64,17 @@ function List()
 				this._elements[element]._in_begin();
 		}
 		if (this._bindee)
-			this._bindee._in_begin();
+			this._bindee._in_begin(scope);
 	}
-	this._in_end = function()
+	this._in_end = function(scope)
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]._in_end();
+				this._elements[element]._in_end(scope);
 		}
 		if (this._bindee)
-			this._bindee._in_end();
+			this._bindee._in_end(scope);
         this.input_bound={};
 	}
 	this._in_go = function(scope)
@@ -83,10 +83,15 @@ function List()
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]._in_go(scope);
+            {
+                scope._add_next_function(this._elements[element],this._elements[element]._in_go);
+            }
 		}
 		if (this._bindee)
-			this._bindee._in_go(scope);
+        {
+            scope._add_next_function(this._bindee,this._bindee._in_go);
+        }
+        return scope._execute_next_function(scope);
 	}
 }
 module.exports=List;

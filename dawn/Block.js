@@ -1,7 +1,7 @@
-const Fob = Dawn.require("./dawn/Fob.js");
-function DawnBlock()
+const Resource = Dawn.require("./dawn/Resource.js");
+function Block()
 {
-	Fob.call(this,"Block");
+	Resource.call(this,"Block");
 	this._pass_bind = function(bindee)
 	{
 		this._bindee = bindee;
@@ -42,22 +42,23 @@ function DawnBlock()
     }
 	this._in_instanciate = function()
 	{
-		return new DawnBlock();
+		return new Block();
 	}
+    // No need to use stack just pass through
 	this._in_begin = function()
 	{
 		if (this._bindee)
-			this._bindee._in_begin();
+			return this._bindee._in_begin();
 	}
-	this._in_end = function()
+	this._in_end = function(scope)
 	{
 		if (this._bindee)
-			this._bindee._in_end();
+			return this._bindee._in_end(scope);
 	}
 	this._in_go = function(scope)
 	{
 		if (this._bindee)
-			this._bindee._in_go(scope);
+			return this._bindee._in_go(scope);
 	}
 }
-module.exports=DawnBlock;
+module.exports=Block;

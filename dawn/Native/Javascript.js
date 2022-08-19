@@ -1,7 +1,7 @@
-const Fob = Dawn.require("./dawn/Fob.js");
+const Resource = Dawn.require("./dawn/Resource.js");
 function _Javascript()
 {
-    Fob.call(this,"Javascript");
+    Resource.call(this,"Javascript");
     this._out_native=null;
     this._out_go=null;
     this._in_instanciate=function(identifier)

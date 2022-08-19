@@ -1,70 +1,4 @@
-ANY_CHAR:
- "\0x0000".."\0xFFFF"
-
-ALPHA:
- "a".."z"
- "A".."Z"
- 
-DIGIT:
- "0".."9"
-
-OPTWHITESPACE:
- { " " | "\t" }
-
-WHITESPACE:
- " " | "\t"  OPTWHITESPACE
-
-OPTNEWLINE:
- { " " | "\t" | "\r" | "\n" }
-
-NEWLINE:
- "\r" | "\n" OPTNEWLINE
-
-ENDLINE:
- OPTWHITESPACE NEWLINE
-
-OPTENDLINE:
- OPTWHITESPACE OPTNEWLINE
-
-SEPARATOR:
- ENDLINE
- WHITESPACE 
-
-OPTSEPARATOR:
- { " " | "\t" | "\r" | "\n" }
-
-SAFE:
- "$" | "-" | "_" | "@" | "." | "&" | ":" | "#"
- 
-EXTRA:
- "!" | "*" | "\"" | "'" | "|" | "," | "(" | ")" | "/"
-
-ESCAPE:
- "%" HEX HEX
-
-ESCAPEDECODE:
- ESCAPE { ESCAPE } ->  #decodeuri ESCAPE
- 
-HEX:
- DIGIT
- "a".."f"
- "A".."F"
- 
-XALPHA:
- ALPHA | DIGIT | SAFE | EXTRA | ESCAPE
-
-XALPHADECODE:
- ALPHA | DIGIT | SAFE | EXTRA | ESCAPEDECODE 
-
-URI:
- XALPHA { XALPHA }
-
-URIDECODE:
- XALPHADECODE { XALPHADECODE }
-
-EOT:
- "\0x0004"
-
+#include "shared.bnft"
 URILOOKUP:
  URI -> "scope._lookup(\"" URI "\")" 
 
@@ -88,6 +22,9 @@ INNER_PIPELIST:
 PIPELIST:
  "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
 
+PIPELIST_MODULE:
+ "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]"
+
 PIPE:
  "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
  URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
@@ -100,26 +37,22 @@ COMMAND_LINE:
  OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
 
 PROGRAMLINE:
- PIPE 
+ PIPE           -> "function(scope){return " PIPE "}"
 
 PROGRAMLINES:
- PIPE -> "," PIPE
+ PROGRAMLINE -> "," PROGRAMLINE
 
 BLOCK:
-  OPTWHITESPACE PROGRAMLINE SEPARATOR {OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "scope._lookup(\"Block:\")._bind(scope._lookup(\"List:\")._add(" PROGRAMLINE PROGRAMLINES "))"
+  OPTWHITESPACE PROGRAMLINE { SEPARATOR OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "return [" PROGRAMLINE PROGRAMLINES "];"
 
 PROGRAMBODY:
  BLOCK 
 
 CONSTRUCTOR:
- PROGRAMBODY OPTENDLINE -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\n"
+ PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go(scope) {\nDawn.return_program_go(program())(scope);\n};\n"
 
 MODULE:
- CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+ PIPELIST_MODULE ">>NewObject:" URI OPTENDLINE -> "const Fob = Dawn.require('./dawn/Fob.js');\nfunction " URI "()\n{\n" PIPELIST_MODULE "}\nmodule.exports=" URI ";\n"
 
 PROGRAM:
- CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_begin(scope);\nboundFunction._in_go(scope);\nboundFunction._in_end(scope);\ngo._bind=bind;\n}\ngo(this);\n"
-
-
-
-
+ CONSTRUCTOR -> "/*Dawn=require('../Dawn.js');*/" CONSTRUCTOR "module.exports = go;\n"

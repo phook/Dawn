@@ -2,7 +2,10 @@ define power
   native javascript
     this._out_number = null;
     this._in_begin = function()
-      this._value = new Dawn.bigRat();
+      if (!this.inputs_bound["_in_number_base"])
+        this._bind_error("power input base not bound");       
+      if (!this.inputs_bound["_in_number_exponent"])
+        this._bind_error("power input exponent not bound");       
     this._in_go = function()
       if (this._out_number)
         this._out_number(this);
@@ -10,9 +13,4 @@ define power
       this._value = number._value;
     this._in_number_exponent = function(number)
       this._value = this._value.pow(number._value.round(true));
-    this._in_end = function()
-        if (!this.inputs_bound["_in_number_base"])
-            this._bind_error("power input base not bound");       
-        if (!this.inputs_bound["_in_number_exponent"])
-            this._bind_error("power input exponent not bound");       
   endnative

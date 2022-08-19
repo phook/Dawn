@@ -2,7 +2,10 @@ define divide
   native javascript
     this._out_number = null
     this._in_begin = function(pipe)
-      this._value = new Dawn.bigRat();
+        if (!this.inputs_bound["_in_number_dividend"])
+            this._bind_error("division input dividend not bound");       
+        if (!this.inputs_bound["_in_number_divisor"])
+            this._bind_error("division input divisor not bound");       
     this._in_go = function(pipe)
       if (this._out_number)
         this._out_number(this);
@@ -10,9 +13,4 @@ define divide
       this._value = pipe._value;
     this._in_number_divisor = function(pipe)
       this._value = this._value.divide(pipe._value);
-    this._in_end = function()
-        if (!this.inputs_bound["_in_number_dividend"])
-            this._bind_error("division input dividend not bound");       
-        if (!this.inputs_bound["_in_number_divisor"])
-            this._bind_error("division input divisor not bound");       
   endnative

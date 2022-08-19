@@ -1,0 +1,58 @@
+#include "shared.bnft"
+URILOOKUP:
+ URI -> "scope._lookup(\"" URI "\")" 
+
+METAPIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+
+PIPEEND:
+  OPTWHITESPACE ">>NewInput:" URIDECODE -> "this._in_" URIDECODE "=function(" URIDECODE ")"
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+
+PIPELISTELEMENTS:
+  PIPE -> "," PIPE
+
+PIPELISTEND:
+ { SEPARATOR PIPELISTELEMENTS } 
+
+INNER_PIPELIST:
+ PIPE PIPELISTEND 
+
+PIPELIST:
+ "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
+
+PIPELIST_MODULE:
+ "[" OPTWHITESPACE [ PIPE {SEPARATOR PIPE} ] OPTWHITESPACE "]" ->  PIPE 
+
+PIPE:
+ "Native.Javascript:" URIDECODE [ PIPEEND ] -> PIPEEND "{" URIDECODE "}" 
+ "NewOutput:" URIDECODE                 -> "this._out_" URIDECODE "=null;"
+ "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
+ URI PIPEEND 
+ PIPELIST PIPEEND 
+ URI
+ PIPELIST
+
+COMMAND_LINE:
+ "Old.Native.Javascript:" URIDECODE           -> URIDECODE
+ OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+
+PROGRAMLINE:
+ PIPE           -> "function(scope){return " PIPE "}"
+
+PROGRAMLINES:
+ PROGRAMLINE -> "," PROGRAMLINE
+
+BLOCK:
+  OPTWHITESPACE PROGRAMLINE { SEPARATOR OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "return [" PROGRAMLINE PROGRAMLINES "];"
+
+PROGRAMBODY:
+ BLOCK 
+
+CONSTRUCTOR:
+ PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go(scope) {\nDawn.return_program_go(program())(scope);\n};\n"
+
+MODULE:
+  PIPELIST_MODULE ">>NewObject:" URI OPTENDLINE -> "const Fob = Dawn.require('./dawn/Resource.js');\nfunction " URI "()\n{\n" PIPELIST_MODULE "}\nmodule.exports=" URI ";\n"

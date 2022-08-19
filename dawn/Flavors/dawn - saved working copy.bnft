@@ -1,0 +1,59 @@
+#include "shared.bnft"
+URILOOKUP:
+ URI -> "scope._lookup(\"" URI "\")" 
+
+METAPIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+
+PIPEEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
+  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+
+PIPELISTELEMENTS:
+  PIPE -> "," PIPE
+  
+PIPELISTEND:
+ { SEPARATOR PIPELISTELEMENTS } 
+
+INNER_PIPELIST:
+ PIPE PIPELISTEND 
+
+PIPELIST:
+ "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
+
+PIPE:
+ "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
+ URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
+ PIPELIST PIPEEND -> "scope._lookup(\"Pipe:\")._add(" PIPELIST PIPEEND ")"
+ URILOOKUP
+ PIPELIST
+
+COMMAND_LINE:
+ "Old.Native.Javascript:" URIDECODE           -> URIDECODE
+ OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+
+PROGRAMLINE:
+ PIPE 
+
+PROGRAMLINES:
+ PIPE -> "," PIPE
+
+BLOCK:
+  OPTWHITESPACE PROGRAMLINE SEPARATOR {OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "scope._lookup(\"Block:\")._bind(scope._lookup(\"List:\")._add(" PROGRAMLINE PROGRAMLINES "))"
+
+PROGRAMBODY:
+ BLOCK 
+
+CONSTRUCTOR:
+ PROGRAMBODY OPTENDLINE -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\n"
+
+MODULE:
+ CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+
+PROGRAM:
+ CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_begin(scope);\nboundFunction._in_go(scope);\nboundFunction._in_end(scope);\ngo._bind=bind;\n}\ngo(this);\n"
+
+
+
+

@@ -8,6 +8,8 @@ define String
     native javascript
       if (this._out_string)
         this._out_string(this);
+      if (this._out_resource)
+        this._out_resource(this);
     endnative
   input instanciate
     native javascript

@@ -1,4 +1,4 @@
-#include "dawn.bnft"
+#include "shared.bnft"
 BASIC_CHAR:
   " " {" "} -> " "
   ANY_CHAR
@@ -35,19 +35,19 @@ BASIC_SYNTAX:
 BASIC_EXP:
  BASIC_NUMBER
  URI
- "(" EXPRESSION ")"
+ "(" BASIC_EXPRESSION ")"
 
-BASIC_FACTOR:
+BASIC_POWER:
  BASIC_EXP "^" BASIC_EXPRESSION 
  
-BASIC_ADDEND:
- BASIC_FACTOR { ("*"|"/") BASIC_FACTOR } 
+BASIC_MULT:
+ BASIC_POWER { ("*"|"/") BASIC_POWER } 
 
-BASIC_NEGATION:
- BASIC_ADDEND { ("+"|"-") BASIC_ADDEND }
+BASIC_ADD:
+ BASIC_MULT { ("+"|"-") BASIC_MULT }
 
 BASIC_EXPRESSION:
- [ "-" ] BASIC_NEGATION
+ [ "-" ] BASIC_ADDEXPRESSION
 
 MYDIGIT:
  "0".."9"
@@ -184,4 +184,4 @@ FROM_DAWN:
  { OPTWHITESPACE FROM_PROGRAMLINE SEPARATOR }
 
 TO_DAWN:
- BASIC_SYNTAX OPTENDLINE -> #significantwhitespace "{" "}\n" "" BASIC_SYNTAX "\n"
+ BASIC_SYNTAX OPTENDLINE -> #significantwhitespace "{\n" "}\n" "" BASIC_SYNTAX "\n"

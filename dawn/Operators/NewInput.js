@@ -1,7 +1,7 @@
-const Fob = Dawn.require("./dawn/Fob.js");
+const Resource = Dawn.require("./dawn/Resource.js");
 _Input = function ()
 {
-	Fob.call(this,"NewInput");
+	Resource.call(this,"NewInput");
 	this._out_native=null;
 	this._in_instanciate = function(identifier)
 	{

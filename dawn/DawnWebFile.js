@@ -1,4 +1,4 @@
-const Fob  = Dawn.require("./dawn/Fob.js");
+const Resource  = Dawn.require("./dawn/Resource.js");
 const bnft = Dawn.require("./BNFT/BNFT.js");
 currentIdentifiers = new Array();
 currentIdentifiers.remove = function(){
@@ -31,7 +31,7 @@ function DawnWebFile(name)
     
     var trimname = name.replace(".js","");
     trimname = trimname.replace(/.dawn.*/,"");
-    Fob.call(this,trimname);
+    Resource.call(this,trimname);
     
     this._get_qualified_name = function()
     {

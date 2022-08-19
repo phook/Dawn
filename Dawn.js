@@ -91,12 +91,12 @@ Dawn = {
         if (Dawn.isBrowser())
         {
             const DawnWebDirectory = require("./dawn/DawnWebDirectory.js");
-            this._children["dawn"]=(new DawnWebDirectory("dawn","dawn"));
+            this._add(new DawnWebDirectory("dawn","dawn"));
         }
         else
         {
             const FileSystemResource = require("./dawn/FileSystemResource.js");
-            this._children["dawn"]=(new FileSystemResource("dawn","dawn"));
+            this._add(new FileSystemResource("dawn","dawn"));
         }
         this.path.push("dawn.");
         this._children["dawn"].path.push("Operators.");
@@ -132,7 +132,7 @@ Dawn = {
         else
         {
             const fs = require("fs");
-            return fs.readFileSync(url, {option:'utf8', function(err, source) {console.log("error reading "+filename);throw err;}}).toString();
+            return fs.readFileSync(url, {option:'utf8', function(err, source) {console.log("error reading "+url);throw err;}}).toString();
         }
     },
     initialize : function(rootUrl,evaluate, debug, consoleOutputFunction)
@@ -141,9 +141,9 @@ Dawn = {
             return eval(str);
         };
 
-        const Fob = require("./dawn/Fob.js");
+        const Resource = require("./dawn/Resource.js");
 
-        Fob.call(this,"");
+        Resource.call(this,"");
         this.Root(rootUrl);
 
         const bnft = this.require("./BNFT/BNFT.js");
@@ -153,7 +153,7 @@ Dawn = {
         this.passedEval = evaluate ? evaluate : evalInContext;
 
         this.parser = null;
-        this.parser = new bnft(this.resourceAsString("./dawn/Flavors/dawn.bnft"), console.log);
+        this.parser = new bnft(this.resourceAsString("./dawn/Flavors/dawn.bnft"), {alert:console.log,fileToString: Dawn.resourceAsString,path:"dawn/Flavors/",useCache:true});
 
         
         if (this.isBrowser())
@@ -166,6 +166,12 @@ Dawn = {
         }
         else
         {
+            this.debugInfo = function(s)
+            {
+                if (debug)
+                    console.log(s);
+            }
+/*
             const fs = require("fs");
 
             // clear log
@@ -177,6 +183,83 @@ Dawn = {
                 if (debug)
                     root.appendFile('log.txt', s+"\n", function(){});
             }
+            */
+        }
+    },
+    Promise: function()
+    {
+        self=this;
+        let promise = null;
+        let settled = false;
+        this.promise = function()
+        {
+            if (!promise)
+            {
+                promise=new Promise(function(resolve, reject) {
+                    self.resolve = function(x,y,z)
+                    {
+                        if (!settled)
+                        {
+                            settled = true;
+                            resolve(x,y,z);
+                        }
+                    }
+                    self.reject  = function(x,y,z)
+                    {
+                        if (!settled)
+                        {
+                            settled = true;
+                            reject(x,y,z);
+                        }
+                    };
+                });
+            } 
+            return promise;
+        }
+        this.isSettled = function()
+        {
+            return settled;
+        }
+    },
+    return_go: function(fn_to_go)
+    {
+        let boundFunction=null;
+        return function(scope)
+        {
+            if (!boundFunction)
+                boundFunction = fn_to_go(scope);
+            var result = boundFunction._in_go(scope);
+            if (this.next)
+            {
+                if (!result)
+                    this.next.call(this.next,scope);
+                else
+                {
+                    scope._add_next_function(this,this.next);
+                    // potentially return true - maybe promise instead - only 1 promise pr. async
+                }
+            }
+        }
+    },
+    return_program_go: function(program)
+    {
+        let boundFunction=null;
+        return function(scope)
+        {
+            if (!boundFunction)
+            {
+                let previous=null;
+                for(entry in program)
+                {
+                    let line=Dawn.return_go(program[entry]);
+                    if (!boundFunction)
+                        boundFunction=line;
+                    if (previous)
+                        previous.next=line;
+                    previous=line;
+                }
+            }
+            boundFunction.call(boundFunction,scope);
         }
     }
 }

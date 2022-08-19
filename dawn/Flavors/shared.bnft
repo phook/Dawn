@@ -1,0 +1,67 @@
+ANY_CHAR:
+ "\0x0000".."\0xFFFF"
+
+ALPHA:
+ "a".."z"
+ "A".."Z"
+ 
+DIGIT:
+ "0".."9"
+
+OPTWHITESPACE:
+ { " " | "\t" }
+
+WHITESPACE:
+ " " | "\t"  OPTWHITESPACE
+
+OPTNEWLINE:
+ { " " | "\t" | "\r" | "\n" }
+
+NEWLINE:
+ "\r" | "\n" OPTNEWLINE
+
+ENDLINE:
+ OPTWHITESPACE NEWLINE
+
+OPTENDLINE:
+ OPTWHITESPACE OPTNEWLINE
+
+SEPARATOR:
+ ENDLINE
+ WHITESPACE 
+
+OPTSEPARATOR:
+ { " " | "\t" | "\r" | "\n" }
+
+SAFE:
+ "$" | "-" | "_" | "@" | "." | "&" | ":" | "#" | "=" | "?"
+ 
+EXTRA:
+ "\"" -> "\\\""
+ "!" | "*" | "\"" | "'" | "|" | "," | "(" | ")" | "/"
+
+ESCAPE:
+ "%" HEX HEX
+
+ESCAPEDECODE:
+ ESCAPE { ESCAPE } ->  #decodeuri ESCAPE
+ 
+HEX:
+ DIGIT
+ "a".."f"
+ "A".."F"
+ 
+XALPHA:
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPE
+
+XALPHADECODE:
+ ALPHA | DIGIT | SAFE | EXTRA | ESCAPEDECODE 
+
+URI:
+ XALPHA { XALPHA }
+
+URIDECODE:
+ XALPHADECODE { XALPHADECODE }
+
+EOT:
+ "\0x0004"

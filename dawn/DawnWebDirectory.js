@@ -1,9 +1,9 @@
-const Fob = Dawn.require("./dawn/Fob.js");
+const Resource = Dawn.require("./dawn/Resource.js");
 const DawnWebFile = Dawn.require("./dawn/DawnWebFile.js");
 
 function _DawnWebDirectory(name, path_to_directory)
 {
-  Fob.call(this, name);
+  Resource.call(this, name);
   this._type = "DawnWebDirectory";
   var self = this;
 
