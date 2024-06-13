@@ -1,16 +1,16 @@
 define divide
   native javascript
     this._out_number = null
-    this._in_begin = function(pipe)
+    this._in_begin = function()
         if (!this.inputs_bound["_in_number_dividend"])
             this._bind_error("division input dividend not bound");       
         if (!this.inputs_bound["_in_number_divisor"])
             this._bind_error("division input divisor not bound");       
-    this._in_go = function(pipe)
+    this._in_go = function()
       if (this._out_number)
         this._out_number(this);
-    this._in_number_dividend = function(pipe)
-      this._value = pipe._value;
-    this._in_number_divisor = function(pipe)
-      this._value = this._value.divide(pipe._value);
+    this._in_number_dividend = function(number)
+      this._value = number.data._value;
+    this._in_number_divisor = function(number)
+      this._value = this._value.divide(number.data._value);
   endnative

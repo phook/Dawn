@@ -1,58 +1,147 @@
 #include "shared.bnft"
 URILOOKUP:
- URI -> "scope._lookup(\"" URI "\")" 
+ URI -> "this._lookup(\"" URI "\")" 
 
-METAPIPEEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+URILOOKUP_INPUT:
+ "input"  [ ":" ] -> "\"input:\""
+ URI -> "\"" URI "\"" 
+ URI -> "resource._lookup(\"" URI "\")" 
 
-PIPEEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+INPUTNAME:
+  URIDECODE
 
-PIPELISTELEMENTS:
-  PIPE -> "," PIPE
+NATIVE_JAVASCRIPT:
+  URIDECODE
+
+URISTRING:
+ "input"  [ ":" ] -> "\"input:\""
+ URI -> "\"" URI "\"" 
+
+METAFLOWEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ FLOWEND ] ->  URISTRING FLOWEND
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      [ FLOWEND ] ->  FLOW FLOWEND
+
+FLOWMIDDLE_OLD:
+  OPTWHITESPACE ">>" OPTSEPARATOR URISTRING -> "._bind(" URISTRING ")"  
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      -> "._bind(" FLOW ")"     
+
+FLOWMIDDLE:
+  OPTWHITESPACE ">>" OPTSEPARATOR URISTRING -> "," URISTRING  
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      -> "," FLOW     
+
+FLOWEND:
+  FLOWMIDDLE { FLOWMIDDLE }
+
+FLOWLISTELEMENTS:
+  FLOW -> ",\n" FLOW 
   
-PIPELISTEND:
- { SEPARATOR PIPELISTELEMENTS } 
+FLOWLISTEND:
+ { SEPARATOR FLOWLISTELEMENTS } 
 
-INNER_PIPELIST:
- PIPE PIPELISTEND 
+INNER_FLOWLIST:
+ FLOW FLOWLISTEND 
 
-PIPELIST:
- "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
+FLOWLIST:
+ "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]" -> "this._lookup(\"List:\")._add(" INNER_FLOWLIST ")"
 
-PIPELIST_MODULE:
- "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]"
+FLOW:
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ FLOWBEGIN FLOWEND -> "this._lookup(\"Flow:\")._add(" FLOWBEGIN  FLOWEND ")"
+ FLOWBEGIN
 
-PIPE:
- "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
- URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
- PIPELIST PIPEEND -> "scope._lookup(\"Pipe:\")._add(" PIPELIST PIPEEND ")"
+FLOWBEGIN:
+ URISTRING
  URILOOKUP
- PIPELIST
+ FLOWLIST
+
+FLOWLIST_INPUT:
+ "[" OPTWHITESPACE [ FLOW_INPUT FLOWLISTEND_INPUT ] OPTWHITESPACE "]" -> "resource._lookup(\"List:\")._add(" FLOW_INPUT FLOWLISTEND_INPUT ")"
+
+FLOWMIDDLE_INPUT_OLD:
+  OPTWHITESPACE ">>" OPTSEPARATOR URISTRING -> "._bind(" URISTRING ")"  
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW_INPUT      -> "._bind(" FLOW_INPUT ")"     
+
+FLOWMIDDLE_INPUT:
+  OPTWHITESPACE ">>" OPTSEPARATOR URISTRING -> "," URISTRING 
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW_INPUT      -> "," FLOW_INPUT    
+
+FLOWEND_INPUT:
+  FLOWMIDDLE_INPUT { FLOWMIDDLE_INPUT }
+
+FLOWBEGIN_INPUT:
+ FLOWLIST_INPUT
+ URISTRING
+ URILOOKUP_INPUT
+
+FLOWLISTELEMENTS_INPUT:
+  FLOW_INPUT -> ",\n" FLOW_INPUT 
+  
+FLOWLISTEND_INPUT:
+ { SEPARATOR FLOWLISTELEMENTS_INPUT } 
+
+INNER_FLOWLIST_INPUT:
+ "Native.Javascript:" URIDECODE -> "return function(input)\n{\n" URIDECODE "\n}\n"
+ FLOW_INPUT FLOWLISTEND_INPUT -> "return [" FLOW_INPUT FLOWLISTEND_INPUT "];\n"
+
+FLOW_INPUT_OLD:
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ FLOWBEGIN_INPUT { FLOWMIDDLE_INPUT } ">>output:" URIDECODE [ ":" ] -> "function(){return " FLOWBEGIN_INPUT FLOWMIDDLE_INPUT "._bind(this._out_" URIDECODE "_value)},function(){let resource={};Resource.call(resource);resource._in_go=function() {this._out_" URIDECODE "?.(this._out_" URIDECODE "_value);};return resource;}"
+ FLOWBEGIN_INPUT FLOWEND_INPUT -> "resource._lookup(\"Flow:\")._add(" FLOWBEGIN_INPUT  FLOWEND_INPUT ")"
+ FLOWBEGIN_INPUT
+
+FLOW_INPUT:
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ FLOWBEGIN_INPUT { FLOWMIDDLE_INPUT } ">>output:" URIDECODE [ ":" ] -> "function(){return resource._lookup(\"Flow:\")._add(" FLOWBEGIN_INPUT FLOWMIDDLE_INPUT ",this._out_" URIDECODE "_value)},function(){let resource={};Resource.call(resource);resource._in_go=function() {this._out_" URIDECODE "?.(this._out_" URIDECODE "_value);};return resource;}"
+ FLOWBEGIN_INPUT FLOWEND_INPUT -> "resource._lookup(\"Flow:\")._add(" FLOWBEGIN_INPUT  FLOWEND_INPUT ")"
+ FLOWBEGIN_INPUT
+
+FLOWLIST_RESOURCE:
+ "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]" -> INNER_FLOWLIST 
+
+FLOWLISTELEMENTS_RESOURCE:
+  FLOW_RESOURCE -> FLOW_RESOURCE "\n"
+  
+FLOWLISTEND_RESOURCE:
+ { SEPARATOR FLOWLISTELEMENTS_RESOURCE } 
+
+INNER_FLOWLIST_RESOURCE:
+ FLOW_RESOURCE FLOWLISTEND_RESOURCE
+
+FLOWBEGIN_RESOURCE:
+ "Native.Javascript:" URIDECODE -> URIDECODE
+ URILOOKUP
+ FLOWLIST
+
+FLOW_RESOURCE:
+ "NewOutput:" URIDECODE                 -> "this._out_" URIDECODE "=null;\nthis._out_" URIDECODE "_value=resource._lookup(\"" URIDECODE ":\");\n"
+ "[" OPTWHITESPACE "Native.Javascript:" NATIVE_JAVASCRIPT OPTWHITESPACE "]>>NewInput:" INPUTNAME -> "this._in_" INPUTNAME "=function(input){ " NATIVE_JAVASCRIPT "};"
+ "[" OPTWHITESPACE INNER_FLOWLIST_INPUT OPTWHITESPACE "]>>NewInput:" INPUTNAME -> "this._$in_" INPUTNAME "=function(){ " INNER_FLOWLIST_INPUT "};"
+ "[" OPTWHITESPACE INNER_FLOWLIST_INPUT OPTWHITESPACE "]>>NewInput:" INPUTNAME -> "this._$in_" INPUTNAME "=function(){ " INNER_FLOWLIST_INPUT "};"
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ FLOWBEGIN FLOWEND -> "this._lookup(\"Flow:\")._add(" FLOWBEGIN  FLOWEND ");"
+ FLOWBEGIN
 
 COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
- OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+ OPTWHITESPACE FLOW OPTWHITESPACE -> "(" FLOW ")._in_go();\n"
 
 PROGRAMLINE:
- PIPE           -> "function(scope){return " PIPE "}"
+ FLOW           -> "function(){return " FLOW "}"
 
 PROGRAMLINES:
- PROGRAMLINE -> "," PROGRAMLINE
+ OPTWHITESPACE PROGRAMLINE -> ",\n" PROGRAMLINE
 
 BLOCK:
-  OPTWHITESPACE PROGRAMLINE { SEPARATOR OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "return [" PROGRAMLINE PROGRAMLINES "];"
+  OPTWHITESPACE PROGRAMLINE { NEWLINE  PROGRAMLINES }  -> "return [" PROGRAMLINE PROGRAMLINES "];"
 
 PROGRAMBODY:
- BLOCK 
+ BLOCK OPTENDLINE
 
 CONSTRUCTOR:
- PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go(scope) {\nDawn.return_program_go(program())(scope);\n};\n"
+ PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go() {\nDawn.return_program_go(program())();\n};\n"
 
 MODULE:
- PIPELIST_MODULE ">>NewObject:" URI OPTENDLINE -> "const Fob = Dawn.require('./dawn/Fob.js');\nfunction " URI "()\n{\n" PIPELIST_MODULE "}\nmodule.exports=" URI ";\n"
+ "[" OPTWHITESPACE INNER_FLOWLIST_RESOURCE OPTWHITESPACE "]>>NewResource:" URI OPTENDLINE -> "const Resource = Dawn.require('./dawn/Resource.js');\nfunction " URI "(owner)\n{Resource.call(this,\"" URI "\", owner);this.Processor = " URI "Processor;\nreturn this;\n}\nfunction " URI "Processor(resource)\n{\nResource.Processor.call(this,resource);\n" INNER_FLOWLIST_RESOURCE "}\n" URI ".Processor=" URI "Processor;\nmodule.exports=" URI ";\n"
 
 PROGRAM:
  CONSTRUCTOR -> "/*Dawn=require('../Dawn.js');*/" CONSTRUCTOR "module.exports = go;\n"

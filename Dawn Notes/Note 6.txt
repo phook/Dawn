@@ -1,0 +1,92 @@
+
+
+
+
+BNFT namespaces:
+- includes incur namespaces for files - where namespace is filename i.e.
+  #include "foo.BNFT"
+  test:
+   foo.alpha    // this refers to the alpha nonterminal in the foo file
+   
+
+
+
+UIL:
+
+  functions to lookup dawn style:
+  
+   find the first id=bar    recursively foo.bar
+   find the first class=bar recursively foo:bar
+   
+   i.e. dawnLookupIdentifier and dawnLookupClass
+   
+   
+DAWN:
+
+dawn executable like node (dawn.bat to start?)
+so dawn_console can be rewritten - minimize number of .js files (except for precompiles)
+   
+   
+   
+   
+maybe extend uil model with named children? - but is should also find classes
+   
+   
+   
+function _in_lookup = function(_identifier, from_owner)
+{
+    if (_identifier == this._id)
+        return this;
+
+    var originalIdentifier = _identifier;
+
+    if (this._id.charAt(-1) != "." && _identifier.indexOf(this._id) == 0)
+    {
+        if (_identifier.indexOf(this._id + ":") == 0)
+            _identifier = _identifier.substring(this._id.length+1);
+        else
+            _identifier = _identifier.substring(this._id.length);
+    }
+    
+    let result = in_lookup_child.call(this, _identifier);
+    
+    if (result)
+        return result;
+    
+    if (this.parentNode && !from_owner)
+        return _in_lookup.call(this.parentNode, originalIdentifier);
+    
+    return this;
+}
+
+function _in_lookup_child = function(_identifier)
+{
+    var identifier = _identifier;
+       
+    // should collect children nodes and id in structure - maybe already in uil?
+    // this should make dawnstyle lookup possible
+
+    let keys = {};
+    for (let i = 0; i < this.children.length; i++) 
+    {
+        keys[myElement.children[i].tagName] = myElement.children[i]
+    }
+    
+    keys.sort(dawnSort);        
+
+    for(testPath in this.path) // needs the first element to be ""
+    {
+        var identifierToCheck = this.path[testPath] + identifier;
+        _identifier = identifierToCheck;
+        for(id in keys)
+        {
+            if (identifierToCheck.indexOf(keys[id]) == 0)
+            {
+                var result = _in_lookup.call(this._children[keys[id]],_identifier,true);
+                if (result)
+                    return result;
+            }
+        }
+    }
+    return null;
+}

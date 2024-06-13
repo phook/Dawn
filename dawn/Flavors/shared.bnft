@@ -12,13 +12,13 @@ OPTWHITESPACE:
  { " " | "\t" }
 
 WHITESPACE:
- " " | "\t"  OPTWHITESPACE
+ " " | "\t"  OPTWHITESPACE -> " "
 
 OPTNEWLINE:
  { " " | "\t" | "\r" | "\n" }
 
 NEWLINE:
- "\r" | "\n" OPTNEWLINE
+ "\r" | "\n" OPTNEWLINE -> "\n"
 
 ENDLINE:
  OPTWHITESPACE NEWLINE
@@ -65,3 +65,6 @@ URIDECODE:
 
 EOT:
  "\0x0004"
+
+ANY_DAWN_CHAR:
+ XALPHA | WHITESPACE | NEWLINE | ">"

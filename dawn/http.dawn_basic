@@ -27,6 +27,6 @@ define http
         console.error(e);
       );
       return promise;
-    this._in_instanciate = function(pipe)
-      return Object.assign({_url:decodeURIComponent(pipe._value)},this);      
+    this._in_instanciate = function(flow)
+      return Object.assign({_url:decodeURIComponent(flow.data._value)},this);      
   endnative

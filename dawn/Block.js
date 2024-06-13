@@ -2,6 +2,12 @@ const Resource = Dawn.require("./dawn/Resource.js");
 function Block()
 {
 	Resource.call(this,"Block");
+	this.Processor = BlockProcessor;
+	return this;
+}
+function BlockProcessor(data)
+{
+	Resource.ResourceProcessor.call(this,data);
 	this._pass_bind = function(bindee)
 	{
 		this._bindee = bindee;
@@ -14,7 +20,7 @@ function Block()
 		{
 			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
-				if ((b.indexOf("_$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
+				if ((b.indexOf("$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
 				{
 					this[b+"@"] = true;
 					return this[b].bind(this);
@@ -61,4 +67,5 @@ function Block()
 			return this._bindee._in_go(scope);
 	}
 }
+Block.Processor = BlockProcessor;
 module.exports=Block;

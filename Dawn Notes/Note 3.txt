@@ -1,0 +1,110 @@
+
+
+
+Resource URI
+  - numbers
+     - operators precision
+  - strings
+     - concatenation
+  - ranges
+     - outputs (input within?)
+  - vars 
+     - holder with name
+  - methods/operators
+
+  - lists
+  - files
+  - images
+  - sounds
+(hashes/regexps????)
+Variables N/A
+
+
+String:HelloWorld?|name="foo">>.    - this means add a string "HelloWorld" with the name "foo" to current scope - i.e. "var foo='HelloWorld'"
+
+
+Numbers / Strings / Symbols / Constants N/A
+
+
+Methods N/A
+
+Method arguments - N/A
+
+Class methods N/A
+
+Global vars - N/A
+
+instance vars - N/A
+
+class variables - N/A
+
+blocks 
+
+block args
+
+
+arrays
+
+hashes
+
+regexps
+
+operators
+
+keywords
+
+
+introspection - test for inputs & outputs - helpful for i.e. protocols, if login possible display login/logout options
+
+
+Editor - Tabs:
+Not saved - use red when focused - ligthred (#ffa0a0) when not focused
+Tabs should store full path for tooltip
+Tabs should use flavor for selection of the edittype i.e. ace editor is a part of the flavor
+
+Buttons are dependent on protocol - for the downloaded material i.e. git/github will have add and commit, file will have save, etc.
+Can editor be used as email client?
+
+
+Hiearchical document streaming (JSON,XML, HTML, UIL)
+
+BeginObject(optName), EndField() -> this is tag (for xml) or object for json 
+BeginField(name), EndField() -> this is "key"
+ValueString(value)
+ValueBoolean(value)
+ValueNumber(value)
+
+for xml,html,uil BeginField("child") and BeginField("attributes") for children and attributes
+this also means that "unkey" text can occur in these (html-style)
+Keys should be assigned to these i.e. BeginField("text-segment-1")
+Similar "untag" json object should tag as "object"
+
+-Arrays?
+
+Dawn scoping in browser.. - top scope somehow searches onto the server... maybe Server. is not needed since Browser is a sub scope to a website?
+Need to consider nodejs side of Dawn - what is session and what is server? Brower is subscope to session, Session is subscope to server-
+server has a list of sessions, sessions has a browser ref, this can create cross session code in servercode to work (i.e. chat).
+Hm, stateless http - nothing should live on the server...otherwise artificially...dawn concept kind of need a session..
+
+- npm
+  NPM: <module name>.<nextid>.<nextid>
+  - first parameter will load module - if exports return object, next is entry etc. type will determine returns
+  - same with return value - inspect type and create outputs based on it
+  - trashcan for deletion? also other properties?
+  
+  
+Protocols:
+HTTP, HTTPS, FILE, LOCALSTORAGE, SESSIONSTORAGE, GIT, GITHUB, FTP, COOKIE, MAIL:? IMAP? POP3? SMTP? 
+OPENAPI - (definition should be at /rest/spec - possible interpret openapi to something useful in Dawn terms)
+FTP - need server roundtrip like FILE (but file should only work for LOCALHOST)
+
+
+
+
+
+
+
+
+
+
+

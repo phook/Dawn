@@ -1,45 +1,268 @@
 var id = 1;
-function Resource(name)
+
+function clone(src) {
+	var clone=Object.assign({}, src);
+	clone.inputs_bound={};
+	clone.previous=null;
+	return clone;
+}
+function dawnSort(a,b)
+{ 
+	if (b.indexOf(a) == 0)
+	{
+		return 1;
+	}
+	if (a.indexOf(b) == 0)
+	{
+		return -1;
+	}
+	return a>b?1:-1;
+}
+
+function Resource(name,owner)
 {
-	this.id = id++;
-    this.path = [""];
+	this._id = id++;
+    this._path = [""];
+
+	this._name = name;
+	this._type="Resource";
+	this._it = 0;
+	this._children = {};
+	this._owner = owner ? owner : null;
+
+	this.Processor = ResourceProcessor;
+	this._instanciate_processor = function()
+	{
+		return new this.Processor(this);
+	}
+	this.defaultProcessor = null;
 	
+	// instanciate value when creating resources
+    this._in_instanciate = function(input)
+    {   
+		 let newObject=Object.assign({}, this); // Clone
+         return newObject._instanciate_processor();
+    }
+    // javascript wrapper version for dawn defined function
+    this._lookup = function(identifier, setOwner)
+    {
+      if (identifier.indexOf(":") == -1)
+          throw "error lookup of "+identifier+": colon missing";
+      if (identifier == ".")
+          return this;
+	  if (identifier.indexOf("input") == 0)
+		  return new Resource("Input"); // should be created TODO NOTFIXED
+			
+	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
+      // later set up output in ref and return the result of the output
+      // ref._out_fob = new call(this,this.result) - ish
+      let result;
+    /*  
+      if (this._get_previous()) // inside flowscope
+      {
+          // if in a flow - look below and backwards in flow
+         result= this._in_lookup_child(ref,true);
+         if (!result)
+             result = this._get_previous()._lookup(identifier);
+         result._scope = this._first()._get_owner(); // store scope of the flow scope
+      }
+      else
+	  */
+      {
+          // otherwhise look in owner - move that here
+         result= this._in_lookup_child(ref);
+ 	     if (!result && this._scope)
+			result = this._scope._lookup(identifier,true);
+	     if (!result)
+			 return null;
+	     //   throw "error lookup of "+identifier+": lookup failed";
+	     if (setOwner)
+           result._scope = this._get_owner(); 
+		 else
+            result._scope = this; // store the scope in which it was looked up - for var defs
+	  }
+      if (!result)
+          throw "error lookup of "+identifier+": lookup failed";
+      
+      if (setOwner)
+          result._set_owner(this);
+      return result;
+    }
+	
+	this._in_lookup = function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
+	{
+        if (string_name._value == this._name)
+            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE FLOW RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
+        if (this._name == "")
+            return this._in_lookup_child(string_name); // temp hack for root
+
+        var originalResource = string_name._value;
+
+        // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
+        var skip=false;
+        let deref = "";
+        if (this._name.charAt(-1) != "." && string_name._value.indexOf(this._name) == 0)
+        {
+            deref = string_name._value[this._name.length];
+			if (deref == "?")
+	            string_name._value = string_name._value.substring(this._name.length);
+	        else
+				string_name._value = string_name._value.substring(this._name.length+1);
+            if (deref == ".")
+            {
+                let result = this._in_lookup_child(string_name,from_owner,exclude);
+                if (result)
+                    return result;
+            }
+            else if (deref == ":" || deref == "?")
+            {
+				let urlParametersToInputs = [];
+
+				if (string_name._value.indexOf("?") !== -1)
+                {
+			        let parameters = string_name._value.substring(string_name._value.indexOf("?"));
+			        string_name._value = string_name._value.substring(0,string_name._value.indexOf("?"));
+				    //if (string_name._value.indexOf("|") !== -1) // if parameters AND input parameters
+					{
+						const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
+	                    const matchAll = parameters.matchAll(URLparameters);
+	                    let addAmpersand = false;
+	                    for (const match of matchAll)
+	                    {
+	                        if (match[1].indexOf("|") === -1)
+	                        {
+	                            string_name._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
+	                            addAmpersand = true;
+	                        }
+	                        else
+	                        {
+	                            if (match[1].indexOf("|") === 0)
+	                            {
+									urlParametersToInputs.push({input:match[1].substring(1),value:match[2]});
+	                            }
+	                            else
+                                {
+	                                Dawn.error("illegal URI \"|\" only allowed as first charachter in input parameters");
+                                }
+	                        }
+	                    }
+					}
+                }
+                let result = this._in_instanciate(string_name);
+                if (result)
+				{
+					for(let i in urlParametersToInputs)
+		            {
+						let type = "number";
+						let input = urlParametersToInputs[i].input;
+						let value = urlParametersToInputs[i].value;
+						if (value.indexOf("\"") == 0)
+						{
+							value.replace("\"","");
+							type="string";
+                            value =  this._lookup("String:" + value);
+						}
+                        else
+                        {
+                            value = this._lookup("Number:" + value);
+                        }
+						let inputname = "_in_" + type + "_" + input;
+						if (inputname in result)
+                        {
+							result[inputname](value);
+                            result.inputs_bound[inputname]=true; // to prevent bind errors
+                        }
+						else
+						if (inputname+"$e" in result)
+                        {
+							result[inputname+"$e"](value);
+                            result.inputs_bound[inputname+"$e"]=true; // to prevent bind errors
+                        }
+					}
+				}
+                return result;
+            }
+ 		}
+                
+		if (this._owner && !from_owner)
+		{
+            string_name._value = originalResource;
+			return this._owner._in_lookup(string_name,from_owner,this);
+		}
+		
+        return null;
+	}
+    this._lookup_child = function(identifier)
+    {
+      var ref = {_value:identifier};
+      return this._in_lookup_child(ref);
+    }
+	this._in_lookup_child = function(string_name,from_owner,exclude)
+	{
+        var identifier = string_name._value;
+           
+        var keys = Object.keys(this._children);
+        keys.sort(dawnSort);        
+
+        for(testPath in this._path) // needs the first element to be ""
+        {
+            var identifierToCheck = this._path[testPath] + identifier;
+  		    string_name._value = identifierToCheck;
+            for(let id in keys)
+            {
+				if (this._children[keys[id]] != exclude)
+				{
+	                if (identifierToCheck.indexOf(keys[id]) == 0)
+	                {
+	                    var result = this._children[keys[id]]._in_lookup(string_name,true);
+	                    if (result)
+	                        return result;
+	                }
+				}
+            }
+        }
+	    if (this._owner && !from_owner)
+		   return this._owner._in_lookup_child(string_name,false,this);
+        return null;
+	}
+
+	this._get_resource = function()
+	{
+		return this;
+	}
+	this._set_owner = function(owner)
+	{
+		this._owner = owner;
+	}
+	this._get_owner = function(owner)
+	{
+		return this._owner;
+	}
+    this._clone = function(){return clone(this);}
+
+	return this;
+}
+function ResourceProcessor(resource)
+{
+	this._get_resource = function()
+	{
+		return resource;
+	}	
     this._output_bind_error = null;
     // Sorts keys in "dawn" order - where matching starts of string results in the longer being on top
-    function dawnSort(a,b)
-    { 
-        if (b.indexOf(a) == 0)
-        {
-            return 1;
-        }
-        if (a.indexOf(b) == 0)
-        {
-            return -1;
-        }
-        return a>b?1:-1;
-    }
+
+    /*
 	function _call(obj,fn)
     {
         this._call = function()
         {
    	 	    var args = Array.prototype.slice.call(arguments);
-			//args.unshift(pipe);
             return fn.apply(obj,args);
         }
     }
-	function clone(src) {
-	    var clone=Object.assign({}, src);
-        clone.inputs_bound={};
-        clone.previous=null;
-        return clone;
-    }
+    */
 	
     this._clone = function(){return clone(this);}
-	this._name = name;
-	this._type="Resource";
-	this._it = 0;
-	this._children = {};
-	this._owner = null;
 	
 	this._out_begin = null;
 	this._out_end = null;
@@ -84,72 +307,117 @@ function Resource(name)
 
 	this._set_owner = function(owner)
 	{
-		this._owner = owner;
+		resource._owner = owner;
 	}
 	this._get_owner = function(owner)
 	{
-		return this._owner?this._owner:this;
+		return resource._owner?resource._owner:this;
 	}
     this._add=function()
 	{
         var args = Array.prototype.slice.call(arguments);
         var self = this;
         args.forEach(function(child) {
-			child._set_owner(self);
+	        child = child._get_resource(); // nonoptimal - but coerce child to be the resource - if its a processor
+            if (child=="string")
+                child = resource._lookup(child);
+            else
+            if (child._isHolder)
+            {
+                let bindee = child._bindee;
+                child = resource._lookup(child._lookup);
+                child._instanciate_processor()._bind(bindee); // nonoptimal
+            }
+            
+            child._set_owner(self._get_resource()); //nonoptimal
 			var name = "";
 			if (child._name)
 				name = child._name;
 			else
-				name = "Ix" + self._it++;
-			self._children[name] = child;
+				name = "Ix" + resource._it++;
+			resource._children[name] = child;
         });
 		return this;
 	}
+
+    this._in_string_name$e=function(string_name)
+    {
+        resource._name = string_name._value;
+    }
+
+    this._in_instanciate = function(input)
+    {   
+		 
+         return resource._in_instanciate(input);
+    }
+
+/*
     // javascript wrapper version for dawn defined function
-    this._lookup = function(identifier)
+    this._lookup = function(identifier, setOwner)
     {
       if (identifier.indexOf(":") == -1)
           throw "error lookup of "+identifier+": colon missing";
       if (identifier == ".")
           return this;
-      var ref = {_value:identifier, _scope:this};
+	  if (identifier.indexOf("input") == 0)
+		  return new Resource("Input"); // should be created TODO NOTFIXED
+			
+	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
-      let result = this._in_lookup_child(ref);
-	  if (!result)
+      let result;
+      
+      if (this._get_previous()) // inside flowscope
+      {
+          // if in a flow - look below and backwards in flow
+         result= this._in_lookup_child(ref,true);
+         if (!result)
+             result = this._get_previous()._lookup(identifier);
+         result._scope = this._first()._get_owner(); // store scope of the flow scope
+      }
+      else
+      {
+          // otherwhise look in owner - move that here
+         result= this._in_lookup_child(ref);
+ 	     if (!result && this._scope)
+			result = this._scope._lookup(identifier,true);
+	     if (!result)
+	        throw "error lookup of "+identifier+": lookup failed";
+	     if (setOwner)
+           result._scope = this._get_owner(); 
+		 else
+            result._scope = this; // store the scope in which it was looked up - for var defs
+	  }
+      if (!result)
           throw "error lookup of "+identifier+": lookup failed";
-       return result;
+      
+      if (setOwner)
+          result._set_owner(this);
+      return result;
     }
-    this._in_string_name_e$=function(pipe)
-    {
-        this._name = pipe._value;
-    }
-    this._in_instanciate = function(pipe)
-    {
-        return this._clone();
-    }
-	this._in_lookup = function(pipe,from_owner)
+	
+	this._in_lookup = function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
 	{
-        if (pipe._value == this._name)
-            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE PIPE RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
-        if (this._name == "")
-            return this._in_lookup_child(pipe); // temp hack for root
+        if (string_name._value == resource._name)
+            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE FLOW RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
+        if (resource._name == "")
+            return this._in_lookup_child(string_name); // temp hack for root
 
-        var originalResource = pipe._value;
+        var originalResource = string_name._value;
 
         // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
         var skip=false;
         let deref = "";
-        if (this._name.charAt(-1) != "." && pipe._value.indexOf(this._name) == 0)
+        if (resource._name.charAt(-1) != "." && string_name._value.indexOf(resource._name) == 0)
         {
-            deref = pipe._value[this._name.length];
+            deref = string_name._value[resource._name.length];
 			if (deref == "?")
-	            pipe._value = pipe._value.substring(this._name.length);
+	            string_name._value = string_name._value.substring(resource._name.length);
 	        else
-				pipe._value = pipe._value.substring(this._name.length+1);
+				string_name._value = string_name._value.substring(resource._name.length+1);
             if (deref == ".")
             {
-                let result = this._in_lookup_child(pipe,from_owner);
+                let result = this._in_lookup_child(string_name,from_owner,exclude);
                 if (result)
                     return result;
             }
@@ -157,11 +425,11 @@ function Resource(name)
             {
 				let urlParametersToInputs = [];
 
-				if (pipe._value.indexOf("?") !== -1)
+				if (string_name._value.indexOf("?") !== -1)
                 {
-			        let parameters = pipe._value.substring(pipe._value.indexOf("?"));
-			        pipe._value = pipe._value.substring(0,pipe._value.indexOf("?"));
-				    //if (pipe._value.indexOf("|") !== -1) // if parameters AND input parameters
+			        let parameters = string_name._value.substring(string_name._value.indexOf("?"));
+			        string_name._value = string_name._value.substring(0,string_name._value.indexOf("?"));
+				    //if (string_name._value.indexOf("|") !== -1) // if parameters AND input parameters
 					{
 						const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
 	                    const matchAll = parameters.matchAll(URLparameters);
@@ -170,7 +438,7 @@ function Resource(name)
 	                    {
 	                        if (match[1].indexOf("|") === -1)
 	                        {
-	                            pipe._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
+	                            string_name._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
 	                            addAmpersand = true;
 	                        }
 	                        else
@@ -187,7 +455,7 @@ function Resource(name)
 	                    }
 					}
                 }
-                let result = this._in_instanciate(pipe);
+                let result = this._in_instanciate(string_name);
                 if (result)
 				{
 					for(i in urlParametersToInputs)
@@ -212,10 +480,10 @@ function Resource(name)
                             result.inputs_bound[inputname]=true; // to prevent bind errors
                         }
 						else
-						if (inputname+"_e$" in result)
+						if (inputname+"$e" in result)
                         {
-							result[inputname+"_e$"](value);
-                            result.inputs_bound[inputname+"_e$"]=true; // to prevent bind errors
+							result[inputname+"$e"](value);
+                            result.inputs_bound[inputname+"$e"]=true; // to prevent bind errors
                         }
 					}
 				}
@@ -223,10 +491,10 @@ function Resource(name)
             }
  		}
                 
-		if (this._owner && !from_owner)
+		if (resource._owner && !from_owner)
 		{
-            pipe._value = originalResource;
-			return this._owner._in_lookup(pipe);
+            string_name._value = originalResource;
+			return resource._owner._in_lookup(string_name,from_owner,resource);
 		}
 		
         return null;
@@ -236,46 +504,63 @@ function Resource(name)
       var ref = {_value:identifier};
       return this._in_lookup_child(ref);
     }
-	this._in_lookup_child = function(pipe,from_owner)
+	this._in_lookup_child = function(string_name,from_owner,exclude)
 	{
-        var identifier = pipe._value;
+        var identifier = string_name._value;
            
-        var keys = Object.keys(this._children);
+        var keys = Object.keys(resource._children);
         keys.sort(dawnSort);        
 
-        for(testPath in this.path) // needs the first element to be ""
+        for(testPath in resource._path) // needs the first element to be ""
         {
-            var identifierToCheck = this.path[testPath] + identifier;
-  		    pipe._value = identifierToCheck;
+            var identifierToCheck = resource._path[testPath] + identifier;
+  		    string_name._value = identifierToCheck;
             for(id in keys)
             {
-                if (identifierToCheck.indexOf(keys[id]) == 0)
-                {
-                    var result = this._children[keys[id]]._in_lookup(pipe,true);
-                    if (result)
-                        return result;
-                }
+				if (resource._children[keys[id]] != exclude)
+				{
+	                if (identifierToCheck.indexOf(keys[id]) == 0)
+	                {
+	                    var result = resource._children[keys[id]]._in_lookup(string_name,true);
+	                    if (result)
+	                        return result;
+	                }
+				}
             }
         }
-	    if (this._owner && !from_owner)
-		   return this._owner._in_lookup_child(pipe);
+	    if (resource._owner && !from_owner)
+		   return resource._owner._in_lookup_child(string_name,false,resource);
         return null;
 	}
-    
-	this._offer_bind = function(match)
+    */
+	this._offer_bind = function(match, origin)
 	{
         match = "_in_" + match;
+		for(let b in this)
+		{
+			if (b.indexOf("_$in_") == 0 && this[b]) // if not precompiled
+			{
+				let a=b.replace("$","");
+				//this[a]= Dawn.return_executable_function.call(this,this[b]());
+				var result = this[b]();
+				if (Array.isArray(result))
+					result = Dawn.return_executable_function.call(this,result);
+				this[a]=  result; // $ function should return executable function
+				this[b] = undefined; // not entirely correct - function should be saved to react to runtime lookup scope changes - but not a concern now
+			}
+		}
 		for(b in this)
 		{
             if (b.indexOf("_in_") == 0)
             {
-                let explicit = b.endsWith("_e$");
-                let all_outputs = b.endsWith("_$");
+                let explicit = b.endsWith("$e");
+                let all_outputs = b.endsWith("$");
                 if ((b == match) ||                                   // perfect match
+                    (b == match + "$") ||                             // catchall
                     (!explicit && b.indexOf(match+"_") == 0) ||       // type match 
-                    (explicit && b == match+"_e$"))                   // explicit match
+                    (explicit && b == match+"$e"))                    // explicit match
                 {
-                       // inputs ending with _$ takes all outputs
+                       // inputs ending with $ takes all outputs
                     if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
                     {
                         this.inputs_bound[b] = true;
@@ -288,54 +573,66 @@ function Resource(name)
 	}
     this._bind = function(bindee)
     {
-        var id = this._type;
-        if (typeof(this._value) != "undefined")
-            id+=this._value;
+        if (typeof(bindee)=="string")
+		{
+			let result = resource._lookup(bindee,true);
+			if (!result)
+				result = this._get_resource()._lookup(bindee); //nonoptimal
+            bindee = result;
+		}
+        
+//        var id = this._type;
+//        if (typeof(resource._value) != "undefined")
+//            id+=resource._value;
 
         bindee._set_previous(this);
         this.bindee = bindee;		
 
-        Dawn.debugInfo("trying to bind " + this._name + " to " +  bindee._name);
+        Dawn.debugInfo("trying to bind " + resource._name + " to " +  bindee._name);
 
+		// pass bind skal flyttes til en List override ad bind
         if (this._pass_bind)
         {
             let input_bound = this._pass_bind(bindee);
+            // bindee._scope._add_to_flowscope(this);
             return bindee;
         }
 
-        for(a in this)
+        for(let a in this)
         {
             if (a.indexOf("_out_") == 0)
             {
                 match = a.substr(5);
                 
-                let input_bound = bindee._offer_bind(match)
+                let input_bound = bindee._offer_bind(match,this)
                 
                 if (input_bound)
                 {
-                    Dawn.debugInfo("binding " + this._name + " to " +  bindee._name);
+                    Dawn.debugInfo("binding " + resource._name + " to " +  bindee._name);
                     this[a] = input_bound;
                 }
             }
         }
         if (typeof(bindee._end_bind) != "undefined")
             bindee._end_bind();
+        
+        // bindee._scope._add_to_flowscope(this);
         return bindee;
     }    
 
 
 
-    this._in_native_$ = function(data)
+    this._in_native$ = function(data)
     {
         Function(data._value).call(this);
-        //    eval.call(this, data._value);
-        //Dawn.passedEval.call(this, data._value);
     }
+
 	this._in_begin = function(scope)
 	{
 		if (this._out_begin)
 			this._out_begin(scope);
 	}
+
 	this._in_end = function(scope)
 	{
 		if (this._out_end)
@@ -350,10 +647,10 @@ function Resource(name)
     this._get_qualified_name = function()
     {
         if (this._previous)
-            return this._previous._get_qualified_name() + "." + this._name;
-        return this._name;
+            return this._previous._get_qualified_name() + "." + resource._name;
+        return resource._name;
     }
-    this._first = function(pipe)
+    this._first = function()
     {
         
         if (this.previous)
@@ -380,10 +677,6 @@ function Resource(name)
           return this;   
         }
     }
-    this._in_native_$ = function(data)
-    {
-        Function(data._value).call(this);
-    }
 
     this._bind_error = function(errorMessage)
     {
@@ -398,22 +691,30 @@ function Resource(name)
     this._add_next_function=function(context,fn)
     {
         if (fn)
-            this._nextFunction.splice(this._add_next_function_at,0,fn.bind(context));
+            this._nextFunction.splice(this._add_next_function_at,0,fn.bind(context)); // javscript bin to bind function to resource
+//            this._nextFunction.splice(this._add_next_function_at,0,fn._bind(context));
 //            this._nextFunction.push(fn.bind(context));
 		this._add_next_function_at++;
     }
     this._execute_next_function = function(scope)
     {
 		this._add_next_function_at = 0;
+        // flowScope = new FlowScope(scope);
         while (this._nextFunction.length)
         {
-            let result = this._nextFunction.shift()(scope);
+            // flowScope._reset() - sets array to length 1
+            let fn = this._nextFunction.shift(); 
+            let result = fn(scope); //flowScope
             if (result)
                 return result;
         }
     }
+	// little dirty - make sure that resources and processers are called correctly
+	this._instanciate_processor = function()
+	{
+		return this;
+	}
 	return this;
 }
-
-
+Resource.Processor = ResourceProcessor;
 module.exports = Resource;

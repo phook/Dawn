@@ -2,58 +2,57 @@
 URILOOKUP:
  URI -> "scope._lookup(\"" URI "\")" 
 
-METAPIPEEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+METAFLOWEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ FLOWEND ] ->  URILOOKUP FLOWEND
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      [ FLOWEND ] ->  FLOW FLOWEND
 
-PIPEEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+FLOWEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ FLOWEND ] -> "._bind(" URILOOKUP ")" FLOWEND
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      [ FLOWEND ] -> "._bind(" FLOW ")"    FLOWEND
 
-PIPELISTELEMENTS:
-  PIPE -> "," PIPE
+FLOWLISTELEMENTS:
+  FLOW -> "," FLOW
   
-PIPELISTEND:
- { SEPARATOR PIPELISTELEMENTS } 
+FLOWLISTEND:
+ { SEPARATOR FLOWLISTELEMENTS } 
 
-INNER_PIPELIST:
- PIPE PIPELISTEND 
+INNER_FLOWLIST:
+ FLOW FLOWLISTEND 
 
-PIPELIST:
- "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
+FLOWLIST:
+ "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_FLOWLIST ")"
 
-PIPE:
- "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
- URILOOKUP  PIPEEND -> "scope._lookup(\"Pipe:\")._add(" URILOOKUP  PIPEEND ")"
- PIPELIST PIPEEND -> "scope._lookup(\"Pipe:\")._add(" PIPELIST PIPEEND ")"
+FLOWLIST_MODULE:
+ "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]"
+
+FLOW:
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ URILOOKUP  FLOWEND -> "scope._lookup(\"Flow:\")._add(" URILOOKUP  FLOWEND ")"
+ FLOWLIST FLOWEND -> "scope._lookup(\"Flow:\")._add(" FLOWLIST FLOWEND ")"
  URILOOKUP
- PIPELIST
+ FLOWLIST
 
 COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
- OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+ OPTWHITESPACE FLOW OPTWHITESPACE -> "(" FLOW ")._in_go(scope);\n"
 
 PROGRAMLINE:
- PIPE 
+ FLOW           -> "function(scope){return " FLOW "}"
 
 PROGRAMLINES:
- PIPE -> "," PIPE
+ OPTWHITESPACE PROGRAMLINE -> "," PROGRAMLINE
 
 BLOCK:
-  OPTWHITESPACE PROGRAMLINE SEPARATOR {OPTWHITESPACE PROGRAMLINES SEPARATOR}  -> "scope._lookup(\"Block:\")._bind(scope._lookup(\"List:\")._add(" PROGRAMLINE PROGRAMLINES "))"
+  OPTWHITESPACE PROGRAMLINE { NEWLINE  PROGRAMLINES }  -> "return [" PROGRAMLINE PROGRAMLINES "];"
 
 PROGRAMBODY:
- BLOCK 
+ BLOCK OPTENDLINE
 
 CONSTRUCTOR:
- PROGRAMBODY OPTENDLINE -> "function bind(scope) {\n return " PROGRAMBODY ";\n};\n"
+ PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go(scope) {\nDawn.return_program_go(program())(scope);\n};\n"
 
 MODULE:
- CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_go(scope);\ngo._bind=bind;\n}\nmodule.exports = go;\n"
+ FLOWLIST_MODULE ">>NewResource:" URI OPTENDLINE -> "const Fob = Dawn.require('./dawn/Fob.js');\nfunction " URI "()\n{\n" FLOWLIST_MODULE "}\nmodule.exports=" URI ";\n"
 
 PROGRAM:
- CONSTRUCTOR -> CONSTRUCTOR "let boundFunction=null;\nfunction go(scope)\n{\nif (!boundFunction)\nboundFunction = bind(scope);\nboundFunction._in_begin(scope);\nboundFunction._in_go(scope);\nboundFunction._in_end(scope);\ngo._bind=bind;\n}\ngo(this);\n"
-
-
-
-
+ CONSTRUCTOR -> "/*Dawn=require('../Dawn.js');*/" CONSTRUCTOR "module.exports = go;\n"

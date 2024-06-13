@@ -1,9 +1,8 @@
 define add
   native javascript
-    this._out_number = new Dawn.bigRat();
+    this._out_number = null;
     this._in_begin = function()
-        if (!this.inputs_bound["_in_number_$"])
-            this._bind_error("addition input not bound");       
+        this._value = new Dawn.bigRat();
     this._in_go = function()
       if (this._out_number)
         this._out_number(this);

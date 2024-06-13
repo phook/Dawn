@@ -2,45 +2,45 @@
 URILOOKUP:
  URI -> "scope._lookup(\"" URI "\")" 
 
-METAPIPEEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] ->  URILOOKUP PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] ->  PIPE PIPEEND
+METAFLOWEND:
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ FLOWEND ] ->  URILOOKUP FLOWEND
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      [ FLOWEND ] ->  FLOW FLOWEND
 
-PIPEEND:
-  OPTWHITESPACE ">>NewInput:" URIDECODE -> "this._in_" URIDECODE "=function(" URIDECODE ")"
-  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ PIPEEND ] -> "._bind(" URILOOKUP ")" PIPEEND
-  OPTWHITESPACE ">>" OPTSEPARATOR PIPE      [ PIPEEND ] -> "._bind(" PIPE ")"    PIPEEND
+FLOWEND:
+  OPTWHITESPACE ">>NewInput:" URIDECODE -> "this._in_" URIDECODE "=function(" URIDECODE ")\n"
+  OPTWHITESPACE ">>" OPTSEPARATOR URILOOKUP [ FLOWEND ] -> "._bind(" URILOOKUP ")" FLOWEND
+  OPTWHITESPACE ">>" OPTSEPARATOR FLOW      [ FLOWEND ] -> "._bind(" FLOW ")"    FLOWEND
 
-PIPELISTELEMENTS:
-  PIPE -> "," PIPE
+FLOWLISTELEMENTS:
+  FLOW -> "," FLOW
 
-PIPELISTEND:
- { SEPARATOR PIPELISTELEMENTS } 
+FLOWLISTEND:
+ { SEPARATOR FLOWLISTELEMENTS } 
 
-INNER_PIPELIST:
- PIPE PIPELISTEND 
+INNER_FLOWLIST:
+ FLOW FLOWLISTEND 
 
-PIPELIST:
- "[" OPTWHITESPACE [ INNER_PIPELIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_PIPELIST ")"
+FLOWLIST:
+ "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]" -> "scope._lookup(\"List:\")._add(" INNER_FLOWLIST ")"
 
-PIPELIST_MODULE:
- "[" OPTWHITESPACE [ PIPE {SEPARATOR PIPE} ] OPTWHITESPACE "]" ->  PIPE 
+FLOWLIST_MODULE:
+ "[" OPTWHITESPACE [ FLOW {SEPARATOR FLOW} ] OPTWHITESPACE "]" ->  FLOW 
 
-PIPE:
- "Native.Javascript:" URIDECODE [ PIPEEND ] -> PIPEEND "{" URIDECODE "}" 
- "NewOutput:" URIDECODE                 -> "this._out_" URIDECODE "=null;"
- "Meta:" URILOOKUP  METAPIPEEND -> METAPIPEEND
- URI PIPEEND 
- PIPELIST PIPEEND 
+FLOW:
+ "Native.Javascript:" URIDECODE [ FLOWEND ] -> FLOWEND "{" URIDECODE "}" 
+ "NewOutput:" URIDECODE                 -> "this._out_" URIDECODE "=null;\n"
+ "Meta:" URILOOKUP  METAFLOWEND -> METAFLOWEND
+ URI FLOWEND 
+ FLOWLIST FLOWEND 
  URI
- PIPELIST
+ FLOWLIST
 
 COMMAND_LINE:
  "Old.Native.Javascript:" URIDECODE           -> URIDECODE
- OPTWHITESPACE PIPE OPTWHITESPACE -> "(" PIPE ")._in_go(scope);\n"
+ OPTWHITESPACE FLOW OPTWHITESPACE -> "(" FLOW ")._in_go(scope);\n"
 
 PROGRAMLINE:
- PIPE           -> "function(scope){return " PIPE "}"
+ FLOW           -> "function(scope){return " FLOW "}"
 
 PROGRAMLINES:
  PROGRAMLINE -> "," PROGRAMLINE
@@ -55,4 +55,4 @@ CONSTRUCTOR:
  PROGRAMBODY OPTENDLINE -> "function program() {" PROGRAMBODY "};function go(scope) {\nDawn.return_program_go(program())(scope);\n};\n"
 
 MODULE:
-  PIPELIST_MODULE ">>NewObject:" URI OPTENDLINE -> "const Fob = Dawn.require('./dawn/Resource.js');\nfunction " URI "()\n{\n" PIPELIST_MODULE "}\nmodule.exports=" URI ";\n"
+  FLOWLIST_MODULE ">>NewResource:" URI OPTENDLINE -> "const Resource = Dawn.require('./dawn/Resource.js');\nfunction " URI "()\n{\nResource.call(this,\"" URI "\");" FLOWLIST_MODULE "}\nmodule.exports=" URI ";\n"

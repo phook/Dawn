@@ -1,0 +1,100 @@
+
+
+
+Rubab ratepension:
+reg  konto
+6771 7659322
+
+BINDER:
+collect all ins and outs
+offer ins that start with name - i.e. _in_string for String...
+then plugs/groups
+
+
+Resources have 3 lists of different types
+inputs, outputs and child resources (for introspection - not mixed up)
+
+
+
+define foo
+  output all
+  input all obj
+     out all all.dd ->    ._out_all(obj.lookup(dd, true(from owner)))
+
+
+typing in and out?
+
+IMAGE INTERFACE:
+
+_image(self)
+_domelement_image_1(domelement)
+_blob_image_2(blob)
+_image_begin_3(x,y)
+_image_pixel_3(rgba)
+_image_end_3
+
+5 ways of streaming the image only connect 1, based on first matching input
+
+interface image - plugs can be put in interface definition, so more interfaces can be connected but only 1 plug from each ( if only outputs specified 1 interface and 1 plug is implied)
+plug 0
+  out image
+plug 1
+  out image-url
+plug 2
+  out domelement-image
+plug 3
+  out blob-image
+plug 4
+  out image-begin
+  out image-rgba-pixel   (concept type interface = image, type of value = rgba, name = pixel)
+  out image-end
+--- concept, if only rgba-pixel is defined, begin and end binds to next in line or through functions are created in the intermediate  
+  
+inheritance - plug can be defined and inherited - need to do inheritance (or more like composition) so: plug 3 { include image-pipe }
+includes - adds inputs and outputs from resource (how to internally connected stuff? - normally a pipe should be used and act as new object)
+  
+define all_red
+  out image-rgba-pixel
+  in image-rgba-pixel
+    pixel.g = 0   (number:0>>pixel.g)
+    pixel.b = 0
+    out image-rgba-pixel pixel
+    
+    
+this will allow
+
+foo.gif >> all_red >> red_foo.gif
+
+
+DOCUMENTATION:
+directory:sourcedir?recursive=true;>>[ ToC >> documentation.html [extractRemarks [file >> replaceExtension:html] >> File]]
+
+Defintions:
+Identifier:increment >> [
+    Output:number 
+    Input:number >> [
+        [in:number Number:1] >> add >> out:number
+    ]
+] 
+// Identifier and Input passes scope to the next level so definitions go into then
+// figure out how it suits with the javascript versions? probably unbound javascript statements puts it into scope?
+
+VARS and REFERENCES:
+
+String returns a string objects which returns copies of itself but where the data object is referenced
+So to create a var you just need to change the name and add the object to scope
+Oh var can be used for references as well!!! if you lookup a variable and attached it using var it WILL be a reference!!!
+Var is wrong name - should be connect child to scope with the name of ...    nameInScope?
+instanciate is more like getreference - strings returns an instance of a string...
+
+
+
+
+
+diffusion concept but with text = noise introduced into text?
+long term memory in rnn - network with fingerprint for writing style (training with same author), overall plot - training with different parts of the same book (with order indicated)
+(store author fingerprints)
+
+
+
+

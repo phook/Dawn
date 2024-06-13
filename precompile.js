@@ -6,7 +6,7 @@ const UglifyJS = require("uglify-js");
 var Dawn = require("./Dawn.js");
 Dawn.initialize("./dawn");
 basic_flavor_parser = new bnft(Dawn.resourceAsString("dawn/Flavors/basic.bnft"), {alert:reportError, fileToString: Dawn.resourceAsString, path:"dawn/Flavors/"});
-dawn_flavor_parser = new bnft(Dawn.resourceAsString("dawn/Flavors/dawn.bnft"), {alert:reportError, fileToString: Dawn.resourceAsString, path:"dawn/Flavors/"});
+dawn_flavor_parser = new bnft(Dawn.resourceAsString("dawn/Flavors/dawn_to_node_module.bnft"), {alert:reportError, fileToString: Dawn.resourceAsString, path:"dawn/Flavors/"});
 
 function reportError(err)
 {
@@ -45,7 +45,7 @@ function traverse_directory(directory)
                     }
 
                 }
-                source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"PROGRAM"});
+                source = dawn_flavor_parser.parse(source,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"MODULE"});
                 if (source.indexOf("ERROR") == 0)
                 {
                     source = UglifyJS.minify(source).code;

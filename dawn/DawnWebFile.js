@@ -45,9 +45,9 @@ function DawnWebFile(name)
 		console.log(err);
 		Dawn.debugInfo(err);
 	}
-	this._in_lookup = function(pipe)
+	this._in_lookup = function(string_name)
 	{
-        var identifier = pipe._value;
+        var identifier = string_name.data._value;
         if (currentIdentifiers.includes(identifier))
             return;
         currentIdentifiers.push(identifier);
@@ -112,7 +112,7 @@ function DawnWebFile(name)
         else
         {
             currentIdentifiers = currentIdentifiers.remove(identifier);
-            return this._parent_lookup(pipe);
+            return this._parent_lookup(string_name);
         }
     }
  /*

@@ -1,0 +1,55 @@
+{body
+    {row
+        {app-top
+            Banana Melee
+        }
+        {row
+            {arena
+            }
+            {match-area
+                {row
+                    {column
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                    }
+                    {column
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                    }
+                    {column
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                    }
+                    {column
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                        {fruit url="./apple.png"}
+                    }
+                }
+            }
+        }
+    }
+}

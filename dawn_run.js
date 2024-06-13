@@ -24,9 +24,13 @@ let code = DawnParser.parse(source,{alert:console.log,fileToString: Dawn.resourc
 
 //let fn = new Function("scope" , "return " + code);
 let programLines = new Function("scope" , code)();
-
+/*
 //let pipe = fn(Dawn);
 let program = Dawn.return_program_go(programLines);
 
 //pipe._in_go();
-program(Dawn);
+program(Dawn, arguments); // call with Dawn as scope, and arguments as input....
+*/
+
+let program = Dawn.return_executable_function.call(Dawn,programLines);
+program.call(Dawn,arguments);

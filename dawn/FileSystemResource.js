@@ -13,7 +13,7 @@ function FileSystemResource(name, uri)
     let isDirectory = false;
     let isCompiledFile = false;
     let compiledExtension = "";
-    
+
     this.initialize = function(name,in_uri)
     {
         
@@ -43,7 +43,8 @@ function FileSystemResource(name, uri)
 
         if (_isDirectory)
         {
-            let self = this;
+			let self = this;
+            let selfProcessor = this._instanciate_processor();
             let resources = fs.readdirSync(in_uri);
             let lastName = "§";
             let newResource = null;
@@ -57,7 +58,8 @@ function FileSystemResource(name, uri)
                 else
                 {
                     newResource = new FileSystemResource(resource,resourceuri);
-                    self._add(newResource);
+					newResource._set_owner(this);
+                    selfProcessor._add(newResource);
                     lastName = newResource._name;
                 }
             });
@@ -71,6 +73,7 @@ function FileSystemResource(name, uri)
 
     Resource.call(this,name);
     this._type= "FileSystemResource";
+	this.Processor = FileSystemResourceProcessor;
 
     this.initialize(full_name,uri);
     
@@ -80,20 +83,23 @@ function FileSystemResource(name, uri)
 		Dawn.debugInfo(err);
 	}
     this._compiled_object = null;
-	this._in_instanciate = function(pipe)
+	this._compile = function()
 	{
-		if (this._compiled_object)
-			return this._compiled_object._in_instanciate(pipe);
         if (isCompiledFile)
         {
             let sourceURI = uri.substr(0, (uri + '.').indexOf('.')) + compiledExtension;
             if (compiledExtension == ".js")
             {
                 var loaded_object_constructor = Dawn.require(sourceURI);
-                var loaded_object = new loaded_object_constructor(pipe._scope); // create initial instance
+                let fakeScope = new Resource("");
+                fakeScope._owner = this._get_owner();
+                var loaded_object = new loaded_object_constructor(fakeScope); // create initial instance
                 this._owner._children[loaded_object._name]=loaded_object; // and register - replace FileObject - should it do this
-                this._compiled_object = loaded_object;
-                return this._compiled_object._in_instanciate(pipe);
+                loaded_object._set_owner(this._owner);
+				loaded_object._children = this._children;
+				this._compiled_object = loaded_object;
+				if (!this._compiled_object._in_instanciate) // if not precompiled
+					this._compiled_object._in_instanciate=this.$_compiled_object._in_instanciate();
             }
             else
             if (compiledExtension == ".dawn.js")
@@ -103,7 +109,8 @@ function FileSystemResource(name, uri)
                 var loaded_object_constructor = Dawn.require(sourceURI);
                 loaded_object_constructor(fakeScope);
                 this._compiled_object = fakeScope._children[this._name];
-                return this._compiled_object._in_instanciate(pipe);
+				if (!this._compiled_object._in_instanciate) // if not precompiled
+					this._compiled_object._in_instanciate=this.$_compiled_object._in_instanciate();
             }
             else
             {
@@ -112,7 +119,7 @@ function FileSystemResource(name, uri)
                 this.reentry=true;
                 
                 var dawnSource = Dawn.resourceAsString(sourceURI);
-				Dawn.debugInfo("SOURCE<"+this._get_qualified_name()+">:"+dawnSource);
+				Dawn.debugInfo("SOURCE<"+sourceURI+">:"+dawnSource);
                 if (compiledExtension == ".dawn_basic")
                 {
                     var flavor = "basic"; //full_name.substring(full_name.indexOf(".dawn_")+6);
@@ -121,6 +128,7 @@ function FileSystemResource(name, uri)
                         var source = Dawn.resourceAsString("dawn/Flavors/" + flavor + ".bnft");
                         Dawn.flavor_parser = new bnft(source, {alert:reportError, fileToString: Dawn.resourceAsString, path:"dawn/Flavors/"});
                     }
+					let flavorSource = dawnSource;
                     dawnSource = Dawn.flavor_parser.parse(dawnSource,{alert:reportError, fileToString: Dawn.resourceAsString,nonterminal:"TO_DAWN"});
 					Dawn.debugInfo("FLAVOR_PARSE:"+dawnSource);
                     if (dawnSource == "ERROR")
@@ -128,30 +136,63 @@ function FileSystemResource(name, uri)
                         throw "error in flavored dawn file: " + this._get_qualified_name() + " ";
                     }
                 }
-                var jsSource = Dawn.parser.parse(dawnSource,{alert:reportError,nonterminal:"PROGRAM"});
+
+			    var jsSource = Dawn.parser.parse(dawnSource,{alert:reportError,nonterminal:"MODULE"});
 				Dawn.debugInfo("DAWN_PARSE:"+jsSource);
                 if (jsSource != "ERROR")
                 {
-                    // Save cached compile - and require it?
-                    // eval in owners scope
-                    let fakeScope = new Resource("");
-                    fakeScope._owner = this._get_owner();
-//                    Dawn.passedEval.call(this._get_owner(),jsSource);
-                    Dawn.passedEval.call(fakeScope,jsSource)(fakeScope);
-//					let lookup = this._name + ":" + pipe._value;
-                    this._compiled_object = fakeScope._children[this._name];
-                    return this._compiled_object._in_instanciate(pipe);
-                    //return this._owner._lookup(lookup);
-                }
-                throw "error in dawn file: " + this._get_qualified_name() + " " + jsSource;
-            }
+                    var compiled_object_constructor=Dawn.requireBySource(jsSource);
+	                var compiled_object = new compiled_object_constructor(this._owner); // create initial instance
+// DO NOT REPLACE	                this._owner._children[compiled_object._name]=compiled_object; // and register - replace FileObject - should it do this
+	                this._compiled_object = compiled_object;
+					this._compiled_object._children = this._children;
+					
+					/// HERE CALL DAWN FUNCTION TO RUN ALL _in_ FUNCTIONS AND REPLACE THEM WITH THE RESULT
+					
+					if (!this._compiled_object._in_instanciate) // if not precompiled
+						this._compiled_object._in_instanciate=this.$_compiled_object._in_instanciate();
+
+				}
+				else
+					throw "error in dawn file: " + this._get_qualified_name() + " " + jsSource;			
+			}
         }
         else
         {
             //normal file - treat as binary resource - with mime-conversion
             //conceptually all files could be this and "my" javascript file and dawn files could start with mark to allow inference
-        }
+        }			
+	}
+	this._instanciate_processor = function()
+	{
+		if (!this._compiled_object)
+			this._compile(null);
+		if (this._compiled_object)
+		 	return this._compiled_object._instanciate_processor();
+		return new FileSystemResourceProcessor(this);
+	}
+	this._in_instanciate = function(flow)
+	{
+		if (!this._compiled_object)
+			this._compile(flow);
+		return this._compiled_object._in_instanciate(flow);
     }
+	return this;
 }
+function FileSystemResourceProcessor(resource)
+{
+	Resource.Processor.call(this,resource); 
+	this._in_instanciate = function(flow)
+	{
+		if (!resource._compiled_object)
+			resource._compile();
+		let newObject = this._compiled_object._in_instanciate(flow);                
+		newObject._children = this._children;
+		return newObject;
+    }
+	return this;
 
+	return this;
+}
+FileSystemResource.Processor = FileSystemResourceProcessor;
 module.exports = FileSystemResource;

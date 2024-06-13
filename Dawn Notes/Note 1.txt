@@ -1,0 +1,40 @@
+"
+𝜋  =  Σ 0..10 (4 × -1 × n) ÷ (2 × n + 1)
+
+Σ(set)
+
+loop [1.0..0.8:0.2] (x) {
+}
+
+loop [1 2 4 5] (x) {
+} 
+
+a = summation [1..10] (x) {
+}
+
+
+Meta:Parenthesis -> Meta is remarkish - it just passes binds through, but can be used to modify syntax (can be filtered out in syntax step - hm)
+
+if a=2?
+if b in [1 3 5]?
+[[1 2 4] b] >> equal >> 
+
+no if? - ternary
+a=2?
+ say "a equals 2"
+
+Booleans har et numerisk output 0 eller 1, så de kan bruges i udtryk, sammenligning
+
+Greeting ≔ "Hello" + name + old_friend → ", old friend"
+[String:Hello name] [old_friend ", old friend"] >> Logic.implies] >> String.concatenate >> Freeting
+
+say "Hola" + friend -> ", Amigo" in Spanish
+
+RANGE_TO:
+  "[" EXP_NUMBER_TO(FROM) ".." EXP_NUMBER_TO(TO) [ ":" EXP_NUMBER_TO(STEP) "]" ] -> "[" EXP_NUMBER_TO EXP_NUMBER_TO1 EXP_NUMBER_TO2 "]>>Command.Range"  
+
+BNFT:
+Remarks (line start with "#")
+AUTO GEN NEW LIKE ABOVE EXP_NUMBER_TO(1) this will create an entry called exactly that but redirect it to the one without parenthesis
+
+72222894 Skat Aktier

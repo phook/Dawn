@@ -1,0 +1,64 @@
+
+
+
+AR/VR BROWSER:
+=============
+
+
+Mosaic : New App Opportunity - display X3D for VR headsets (AR? how) - define interaction and navigation patterns (back-forth, controllers etc.)
+HTML : X3D
+Link : Portal (extension to X3D)
+Google : New Site Opportunity - traverse VR net for results - present 3d hub of portals to go through to go to search results
+AR: special VR site linked to world coordinates and orientation - multiple may be available for same location , allow turning on/off like layers
+DNS: new service for looking up GEO: (GLS? Geo Location Server) and getting a list of possible resources for it - some kind of distance need to be in source
+ - GLS should have another parameter (like .gov) that hosts the data (layer)
+ - so lookup would be GEO:37.45,-234.324,23,u=345,layer=his - where u is the search sphere and "his" is historical resources within the sphere
+ - GLS lookup is like DNS - lookup layer in root service - layers are like the domains, coords should be looked up in the final GLS 
+ - you will have to buy an entry in a layer (like DNS) nnn.medieval.history (for AR)
+ - GLS can have a search facility to return a list of layers, if not specificed
+ - to convoluted - URL should be enough for layers - maybe service to get AR locations from website - like html request....
+ - as a website - do you have resource for this GEOlocation?
+site can have URL: - resource location AND GEO: position - this is for AR/mixed reality - party "transparent" - generally not visible if you are not at location - although Google Earth might be a proxy
+
+Hm: Browser - bookmark implemented like matrix style bookcase
+    button to toggle "self" - site may specify a self, invisible or default (your chosen avatar)
+    voice integration
+    
+Editor : New Opportunity - Unity etc. tools + server code for easy authoring of an AR/VR website
+
+
+
+
+
+
+Creating a democratic "Metaverse" (not facebook dominated)
+Think building metaverse as how the World Wide Web came about.
+HTML equivalent (maybe X3D) - needs links/portals so URLs can get you from 1 site to another
+Browser equivalent - VR/AR headset app that takes an URL as input - navigation, bookmarks, next/prev patterns should be considered
+Text editor equivalent - 3D Editor - Unity could be the first with exports to easily setup a site
+Google equivalent - site to search all "Metaverse" and present results inside 
+AR - this would take some consideration - multiple "sites" could be available for specific realword location, so some kind of layers
+
+Most of these pieces are already availabe, but its not availabe to normal people, so in order to spark it:
+Build the Browser App - to be ready when apple is going to release their solution (maybe work with them?)
+Include the exporter in Unity Editor
+Create the search "site" and a number of searchable sites, to showcase how its done (Google will run with this)
+
+
+AR - walking around with AR glasses should find layers based on where you are - user can prefilter, or sort methods etc. (how to select the layers?)
+
+
+Seamless AR VR integration i.e. passing between should be simple
+
+Portal appears into VR - user can use a "ENTER" command to enter VR, whereas user has to pass through an AR portal (which probably is more like a bounding box)
+NEXT/PREVIOUS for navigation between content - in AR it is cycling the layers (skipping if user is outside area), in VR the worlds
+
+search AR content and how to prevent spamming
+VR content is more like usual web search
+
+
+
+
+
+
+

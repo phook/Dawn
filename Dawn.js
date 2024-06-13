@@ -8,14 +8,29 @@ Dawn = {
     {
         return !isBrowser();
     },
+    requireBySource : function(source)
+    {
+        if (source.substr(0,10)==="(function(")
+        { 
+            var moduleStart = source.indexOf('{');
+            var moduleEnd = source.lastIndexOf('})');
+            var CDTcomment = source.indexOf('//@ ');
+            if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
+            source = source.slice(moduleStart+1,moduleEnd-1); 
+        } 
+        var module = { exports:exports }; 
+        var anonFn = new Function("require", "exports", "module", source);
+        anonFn(this.require, exports, module);
+        return module.exports;
+    },   
     require : function(url, async_callback) 
     {
         var loadUrl = url;
         if (this.isBrowser())
         {
-            if (!require.cache) 
-              require.cache=[];
-            var exports=require.cache[url]; 
+            if (!this.cache) 
+              this.cache=[];
+            var exports=this.cache[url]; 
             if (!exports) 
             {
                 if (url.indexOf(".") !== 0)
@@ -33,6 +48,7 @@ Dawn = {
                         if (X.status && X.status !== 200)
                           throw new Error(X.statusText);
                         var source = X.responseText;
+                        /*
                         if (source.substr(0,10)==="(function(")
                         { 
                             var moduleStart = source.indexOf('{');
@@ -45,7 +61,8 @@ Dawn = {
                         var module = { id: url, uri: url, exports:exports }; 
                         var anonFn = new Function("require", "exports", "module", source);
                         anonFn(require, exports, module);
-                        require.cache[url]  = exports = module.exports; 
+                        require.cache[url]  = exports = module.exports; */
+                        this.cache[url]  = exports = this.requireBySource(source); 
                     }
                     else
                     {
@@ -91,16 +108,16 @@ Dawn = {
         if (Dawn.isBrowser())
         {
             const DawnWebDirectory = require("./dawn/DawnWebDirectory.js");
-            this._add(new DawnWebDirectory("dawn","dawn"));
+            this._instanciate_processor()._add(new DawnWebDirectory("dawn","dawn"));
         }
         else
         {
             const FileSystemResource = require("./dawn/FileSystemResource.js");
-            this._add(new FileSystemResource("dawn","dawn"));
+            this._instanciate_processor()._add(new FileSystemResource("dawn","dawn"));
         }
-        this.path.push("dawn.");
-        this._children["dawn"].path.push("Operators.");
-        this._children["dawn"].path.push("Number.");
+        this._path.push("dawn.");
+        this._children["dawn"]._path.push("Operators.");
+        this._children["dawn"]._path.push("Number.");
     },
     saveStringResource : function(url,string,overwrite) {
         if (Dawn.isBrowser())
@@ -227,7 +244,10 @@ Dawn = {
         return function(scope)
         {
             if (!boundFunction)
-                boundFunction = fn_to_go(scope);
+            {    
+                boundFunction = fn_to_go.call(scope,scope); // this and parameter - 
+                boundFunction._set_owner(scope); // set scope to owner (but not add - consider)
+            }
             var result = boundFunction._in_go(scope);
             if (this.next)
             {
@@ -241,7 +261,8 @@ Dawn = {
             }
         }
     },
-    return_program_go: function(program)
+    // this takes and array of flows
+    return_program_go: function(program, input)
     {
         let boundFunction=null;
         return function(scope)
@@ -258,9 +279,58 @@ Dawn = {
                         previous.next=line;
                     previous=line;
                 }
+                if (boundFunction)
+                    boundFunction.call(boundFunction,scope, input);
             }
-            boundFunction.call(boundFunction,scope);
+            else
+                boundFunction.call(boundFunction,scope,input);
         }
+    },
+    return_go: function(fn_to_go)
+    {
+        let boundFunction=null;
+        return function(scope)
+        {
+            if (!boundFunction)
+            {    
+                boundFunction = fn_to_go.call(scope,scope); // this and parameter - 
+                boundFunction._set_owner(scope); // set scope to owner (but not add - consider)
+            }
+            var result = boundFunction._in_go(scope);
+            if (this.next)
+            {
+                if (!result)
+                    this.next.call(this.next,scope);
+                else
+                {
+                    scope._add_next_function(this,this.next);
+                    // potentially return true - maybe promise instead - only 1 promise pr. async
+                }
+            }
+        }
+    },
+    // this takes and array of flows - can probably be put into resource
+    return_executable_function: function(program) // call with this as scope
+    {
+		//let processor = this._instanciate_processor();
+		let boundArray = [];
+		for(entry in program)
+		{
+			let boundFlow = program[entry].call(this);// this = scope?
+			boundFlow._set_owner(this);
+			boundArray.push(boundFlow); 
+		}
+		return function execute_flow(input) // call with this as scope
+		{
+			this._input = input;
+			var processor = this._instanciate_processor();
+			//processor._input = input;
+			for(entry in boundArray)
+			{
+				processor._add_next_function(boundArray[entry], boundArray[entry]._in_go);
+			}
+			processor._execute_next_function(processor);
+		}
     }
 }
 module.exports = Dawn;

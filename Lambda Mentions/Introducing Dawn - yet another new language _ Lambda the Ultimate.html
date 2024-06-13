@@ -1,0 +1,837 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<!-- saved from url=(0040)http://lambda-the-ultimate.org/node/3168 -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <title>Introducing Dawn - yet another new language | Lambda the Ultimate</title>
+
+<!--<base href="http://lambda-the-ultimate.org/">--><base href=".">
+<style type="text/css" media="all">@import "misc/drupal.css";</style> <link rel="SHORTCUT ICON" href="http://lambda-the-ultimate.org/favicon.ico"> <link rel="stylesheet" type="text/css" href="./Introducing Dawn - yet another new language _ Lambda the Ultimate_files/common.css">
+<style type="text/css" media="all">@import "themes/chameleon/ltu/style.css";</style> <script src="./Introducing Dawn - yet another new language _ Lambda the Ultimate_files/MathJax.js.download" id=""></script><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head><body><div id="MathJax_Message" style="display: none;"></div>
+ <div id="header">  <h1 class="site-name title"><a href="http://lambda-the-ultimate.org/">Lambda the Ultimate</a></h1>  <img src="./Introducing Dawn - yet another new language _ Lambda the Ultimate_files/tagline.png" alt="The Programming Languages Weblog"><div id="search-form" style="text-align:right;"><form action="http://lambda-the-ultimate.org/search" method="post">  <input class="form-text" type="text" size="15" value="" name="edit[keys]" id="edit-keys">&nbsp;  <input class="form-submit" type="submit" value="Search">&nbsp;</form></div>
+</div>
+ <table id="content">
+  <tbody><tr>
+   <td id="sidebar-left"><div class="block block-block" id="block-block-1">
+ <h2 class="title"></h2>
+ <div class="content"><b>
+<div style="text-align:right">
+<p>
+<a href="http://lambda-the-ultimate.org/rss.xml"><img src="./Introducing Dawn - yet another new language _ Lambda the Ultimate_files/xml.gif" border="0"></a></p><p>
+<a href="http://lambda-the-ultimate.org/">Home</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/34">Feedback</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/40">FAQ</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/492">Getting Started</a></p><p>
+<a href="http://lambda-the-ultimate.org/forum/1">Discussions</a></p><p>
+<a href="http://lambda-the-ultimate.org/forum/2">Site operation discussions</a></p><p>
+<a href="http://lambda-the-ultimate.org/tracker">Recent Posts</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/add/forum/1">(new topic)</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/49">Departments</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/2">Courses</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/4">Research Papers</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/3">Design Docs</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/5">Quotations</a></p><p>
+<a href="http://lambda-the-ultimate.org/node/view/7">Genealogical Diagrams</a></p><p>
+<a href="http://lambda-the-ultimate.org/classic/lambda-archive1.html">Archives</a>
+</p></div>
+</b>
+<hr style="border-width:0 0 1px 0">
+</div>
+</div>
+<div class="block block-user" id="block-user-0">
+ <h2 class="title">User login</h2>
+ <div class="content"><form action="http://lambda-the-ultimate.org/user/login?destination=node%2F3168" method="post">
+<div class="user-login-block">
+<div class="form-item">
+ <label for="edit-name">Username:</label><br>
+ <input type="text" maxlength="64" class="form-text" name="edit[name]" id="edit-name" size="15" value="">
+</div>
+<div class="form-item">
+ <label for="edit-pass">Password:</label><br>
+ <input type="password" class="form-password" maxlength="64" name="edit[pass]" id="edit-pass" size="15" value="">
+</div>
+<input type="submit" class="form-submit" name="op" value="Log in">
+</div>
+
+</form>
+<div class="item-list"><ul><li><a href="http://lambda-the-ultimate.org/user/register" title="Create a new user account.">Create new account</a></li><li><a href="http://lambda-the-ultimate.org/user/password" title="Request new password via e-mail.">Request new password</a></li></ul></div></div>
+</div>
+<div class="block block-user" id="block-user-1">
+ <h2 class="title">Navigation</h2>
+ <div class="content"><div class="menu">
+<ul>
+<li class="leaf"><a href="http://lambda-the-ultimate.org/tracker">recent posts</a></li>
+
+</ul>
+</div></div>
+</div>
+</td>
+   <td id="main">
+<div class="breadcrumb"><a href="http://lambda-the-ultimate.org/">Home</a> » <a href="http://lambda-the-ultimate.org/forum">forums</a> » <a href="http://lambda-the-ultimate.org/forum/1">LtU Forum</a></div><h2>Introducing Dawn - yet another new language</h2>
+<!-- begin content -->
+<div class="node">
+ <div class="content">
+<p>During my entire programming career (19 years) I have been interested in programming languages, how to improve and implement them. I am not formally trained in compiler theory, but have implemented a number of compilers/interpreters for a number of domain specific languages during this time. Now I am pregnant to bursting with a new language, which I need to discuss/present to someone, and I hope that LtU is the correct forum to do so (I can see from the posts that a lot of highly gifted people are lurking, so I hope to get thoughtful feedback).</p>
+<p>The language is currently under development, so it is not fully specified. My hope was to submit papers to OOPSLA in march with a working prototype, alas it does not look like I can make it happen. Still I cannot go on for another year without releasing something about Dawn. Enough said about me and my motivations...</p>
+<p>I will post a couple of times under this topic, with the various aspects of the language, to discuss it with the distinguished members of LtU.</p> </div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at 2009-01-14 11:38 | <a href="http://lambda-the-ultimate.org/taxonomy/term/1">LtU Forum</a> | <a href="http://lambda-the-ultimate.org/node/3203" title="How best to add a record type to my typed Scheme variant?">previous forum topic</a> | <a href="http://lambda-the-ultimate.org/node/3201" title="Tagged Arithmetic Optimization">next forum topic</a> | <a href="http://www.technorati.com/search/lambda-the-ultimate.org/node/3168" title="Technorati search of other blogs commenting on this post.">other blogs</a> | 9389 reads</div>
+</div>
+<a id="comment"></a>
+<form method="post" action="http://lambda-the-ultimate.org/comment"><div>
+<h2 class="title">Comment viewing options</h2><div><div class="form-item">
+ <select name="mode"> <option value="1">Flat list - collapsed</option>
+ <option value="2">Flat list - expanded</option>
+ <option value="3">Threaded list - collapsed</option>
+ <option value="4" selected="selected">Threaded list - expanded</option>
+</select>
+<select name="order"> <option value="1">Date - newest first</option>
+ <option value="2" selected="selected">Date - oldest first</option>
+</select>
+<select name="comments_per_page"> <option value="10">10 comments per page</option> <option value="30">30 comments per page</option> <option value="50">50 comments per page</option> <option value="70">70 comments per page</option> <option value="90">90 comments per page</option> <option value="150">150 comments per page</option> <option value="200" selected="selected">200 comments per page</option></select>
+<input type="hidden" name="threshold" value="0">
+ <input type="submit" class="form-submit" name="op" value="Save settings">
+
+ <div class="description">Select your preferred way to display the comments and click "Save settings" to activate your changes.</div>
+</div>
+</div><input type="hidden" name="edit[nid]" value="3168">
+</div></form><form method="post" action="http://lambda-the-ultimate.org/comment"><div>
+<input type="hidden" name="edit[nid]" value="3168">
+<a id="comment-46306"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46306" class="active">Dataflow, Prototype based, no Functions!?!</a></h3>
+ <div class="content"><p>Dawn is based on prototypes, and uses a dataflow like model where objects have inputs and outputs. Most dataflow based languages I have encountered uses queues for the flow, whereas Dawns inputs are like Java interfaces and outputs are like references to interfaces. This causes an input/output relationship to work like OpenGl, or SAX.<br>
+There are no functions as such, in Dawn. Conceptually, this means that data can only be passed forward in the system. Practically you can of course set a variable as recipient, thus achieving functionlike behavior.</p>
+<p>Example (not a syntax example â€“ just conceptual):</p>
+<pre>(1,2) &gt;&gt; â€œ+â€ &gt;&gt; a      // a = 1 + 2
+</pre><p>Erik Meijer informed me at JAOO that this is continuation passing style and monadic behavior â€“ not being that much into the theoretical aspects, I take his word for it.<br>
+The design consideration was to have a single way of passing data, the possibility of chaining â€œfunctionsâ€, objects and bigger blocks of functionality.</p>
+<p>Example:</p>
+<pre>â€œdata.xmlâ€ &gt;&gt; â€œcopy.xmlâ€		// copyFile(â€œdata.xmlâ€,â€copy.xmlâ€)
+â€œdata.xmlâ€ &gt;&gt; xmlParser &gt;&gt; xmlReplaceTag &gt;&gt; xmlWriter &gt;&gt; â€œoutput.xmlâ€ 
+</pre><p>The thing to notice is that the first and last â€œ&gt;&gt;â€ indicates a the bytewise copyinterface, whereas the 2 middle â€œ&gt;&gt;â€ indicates a SAX like interface (startElement(name), endElement()...)<br>
+Even conditionals fit into this construct and thus becomes part of the library, instead of the basic language:<br>
+<code><br>
+(2,a) &gt;&gt; â€œequalâ€ &gt;&gt; if &gt;&gt; { ..block..}	// if a = 2 { ..block.. }<br>
+</code><br>
+These are still not syntax examples, just serves as a conceptual representation of how stuff gets described in the language.</p>
+<p>That should serve as a good first provocative post â€“ no functions for lambda the ultimate :-)</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Wed, 2009-01-14 11:39 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46400"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46400" class="active">Finite Linear Flows Only?</a></h3>
+ <div class="content"><p>If your language supports only linear dataflow with single inputs, then it can be (as mentioned below) implemented quite readily as a concatenative language.</p>
+<p>OTOH, the sort of dataflow approach you describe here works best when you have 'streams' of data (or 'mutable state' if viewed as functional reactive programming) on the source side, and potentially the ability to break streams and feed them across other paths then back into one another (possibly with cycles for the generic case).</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6002" title="View user profile.">dmbarbour</a> at Thu, 2009-01-15 20:09 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46443"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46443" class="active">Reminds me of Icon</a></h3>
+ <div class="content"><p>Not sure if this is dataflow</p>
+<pre> (2,a) &gt;&gt; â€œequalâ€ &gt;&gt; if &gt;&gt; { ..block..} // if a = 2 { ..block.. } </pre><p>but it reminds me of Icon.</p>
+<p>The Icon equivalent is </p>
+<pre>write("val", (2 == a))
+</pre><p>It uses goal directed evaluation, (the result of inner most expression determines the program flow.)<br>
+another example is</p>
+<pre>write("y=", (x | 5) &gt; y)
+</pre><p>which is same as</p>
+<pre> if ((x &gt; y) or (5 &gt; y))
+     write("y=", y)
+</pre><br></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1397" title="View user profile.">Rahul Gopinath</a> at Fri, 2009-01-16 13:44 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46482"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46482" class="active">Can you explain how 'if'</a></h3>
+ <div class="content"><p>Can you explain how 'if' works? It's not clear to me from your example. </p>
+<p>I agree with the other posts here; this looks very much like a concatenative language.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/3251" title="View user profile.">John Nowak</a> at Sun, 2009-01-18 04:35 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:50px;">
+<a id="comment-46507"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46507" class="active">about if</a></h3>
+ <div class="content"><p>Class based pseudo example of if:</p>
+<pre>class If implements booleanInput
+{
+  Block&amp; then;
+  Block&amp; else;
+
+  void setBoolean(boolean in) 
+  {
+   if condition
+    then.go();
+   else
+    else.go();
+  }  
+}
+</pre><p>As mentioned in another answer, when interpreting a line you first tie the inputs and the outputs together, then execute it (call go on the first object - still not actual implementation though).<br>
+Seems pretty stupid agreed, but of course in Dawn the If object is either implemented internally or has a native call peforming the actual "if condition" statement. It just goes to show how control structures are in the library. You can make a control structure that loops 10 times always for instance. Or (as I saw in another language) a switch statement that randomizes between all the valid conditions.<br>
+In effect Dawn can be used as a test bed for ideas in this field.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Mon, 2009-01-19 11:39 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46691"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46691" class="active">Have a look at the BETA language</a></h3>
+ <div class="content"><p>made by the inventor of SIMULA.<br>
+BETA allows functions to return multiple values that can be passed to other functions or to a struct with the assignment operator -&gt;<br>
+And much more.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/5926" title="View user profile.">AtariFan</a> at Sat, 2009-01-24 05:50 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<a id="comment-46312"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46312" class="active">Perhaps I'm missing something...</a></h3>
+ <div class="content"><p>I hope you'll forgive me for saying so, but I fail to see how</p>
+<pre>(1,2) &gt;&gt; + &gt;&gt; a
+</pre><p>
+is any different from</p>
+<pre>a = 1+2;
+</pre><p>
+Just because these functions always take 1 argument and always return 1 value, or that the mechanics of invocation are peculiar doesn't really change the core behavior.</p>
+<p>And you'll still need boolean evaluation (or some other decision mechanism) in the language to make conditionals work.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6209" title="View user profile.">RM Schellhas</a> at Wed, 2009-01-14 15:42 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46320"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46320" class="active">Looks concatenative</a></h3>
+ <div class="content"><p>reminds me of Forth code: <code>1 2 + TO A</code></p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1762" title="View user profile.">slava</a> at Wed, 2009-01-14 19:54 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:50px;">
+<a id="comment-46444"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46444" class="active">isn't really concatenative</a></h3>
+ <div class="content"><p>If he is implementing true dataflow, it wont be concatenative.<br>
+i.e the below looks concatenative</p>
+<pre>(1,2) &gt;&gt; â€œ+â€ &gt;&gt; a 
+</pre><p>but (switching to the shell pipe syntax as an example of a dfl)</p>
+<pre>echo "1 2" |add &gt; a
+</pre><p>but if he plans to provide for streams as in a dfl<br>
+i.e</p>
+<pre>(assuming dup and add exists.)
+seq 1 100| dup |add &gt; a
+</pre><p>it becomes very different.</p>
+<pre>(in postscript it might be)
+1 100 seq [dup +] map /a swap def
+</pre><p>The difference (aside from syntax) is that the components would be concurrent in dfl. (All this is assuming it is true dataflow.)</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1397" title="View user profile.">Rahul Gopinath</a> at Fri, 2009-01-16 14:00 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46342"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46342" class="active">It is about scaling</a></h3>
+ <div class="content"><p>There is not really a difference in your example. The point of the construct is that functions becomes building blocks with multiple inputs and outputs - and the building mechanism is the same. In your example, with 2 inputs and 1 output it seems pointless to do so - but let me elaborate a bit on the example. If it was div (integer division) you would have 2 outputs - the result and the remainder. </p>
+<pre>(5,2) &gt;&gt; div.result &gt;&gt; division_result        // =2
+(5,2) &gt;&gt; div.remainder &gt;&gt; division_remainder  // =1
+(5,2) &gt;&gt; div &gt;&gt; "+" &gt;&gt; result      // = 3 i.e. result = 5 div 2 + 5 % 2
+</pre><p>Otherwise you would have to have 3 functions for optimization purposes. So the point of the exercise is to have a scaleable way of building expressions, which can be optimized by the compiler (if an output is not connected all code that is exclusive to this output can be optimized away - well thats not exactly the example)</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Thu, 2009-01-15 08:03 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:50px;">
+<a id="comment-46345"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46345" class="active">Continuing the</a></h3>
+ <div class="content"><p>Continuing the interpretation of this as a stack manipulation language, .result and .remainder seem like shortcuts for popping either the first or second element on the stack. The next question would be the definition of .result and .remainder: are they really a mapping of 'div.result' to to first and 'div.remainder' to second, and, if so, how is this determined? </p>
+<p>Finally, &gt;&gt; seems to be a naming mechanism for the top element of the stack. You seem to view it as a copy / message passing operator, though this distinction does not seem to be visible within the language as presented so far, and I'm trying to not think about the runtime :)</p>
+<p>You might want to read Backus' Turing Award speech ("Can Programming be Liberated from the von Neumann Style?") and perhaps the first few chapters of CTM (data flow variables) -- a mix of these is how I'm interpreting your language. </p>
+<p>You haven't demonstrated the usage of prototypes (as found in Self/JavaScript); you might want to also play with Max/MSP to see what many of us typically mean by data flow (as opposed to data flow variables or concatenative languages)</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2585" title="View user profile.">lmeyerov</a> at Thu, 2009-01-15 08:24 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:75px;">
+<a id="comment-46434"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46434" class="active">Tying</a></h3>
+ <div class="content"><p>I have only presented a very small part of the langauage insofar, and its definetely not playing by Neumann rules. The language can be viewed as an electronics diagram, that is (in these examples) represented by text. "&gt;&gt;" should more be interpreted like "tie", i.e. tie these together. This is the base of the type system, since "duck"-like rules control the tying.<br>
+It is not really of consequence if the data are passed by procedural calls, messages or other. </p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Fri, 2009-01-16 08:42 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:100px;">
+<a id="comment-46451"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46451" class="active">We have shown how to</a></h3>
+ <div class="content"><p>We have shown how to directly interpret your examples using stack manipulation semantics.</p>
+<p>I suggest presenting examples showing what's novel about your system, and, to benefit the current discussion, show dataflow manipulations that would appear differently in a stack language, and what you mean by prototypes.</p>
+<p>However, I'm done playing 20 questions.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2585" title="View user profile.">lmeyerov</a> at Fri, 2009-01-16 20:23 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:125px;">
+<a id="comment-46456"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46456" class="active">goodness</a></h3>
+ <div class="content"><p>From hostile comments like these, you wouldn't think this was a place for people who loved programming languages.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/4268" title="View user profile.">andhow</a> at Fri, 2009-01-16 22:45 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:150px;">
+<a id="comment-46458"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46458" class="active">To the contrary...</a></h3>
+ <div class="content"><p>If you didn't receive passionate criticism and argument, you could be sure you were talking to an apathetic audience.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6002" title="View user profile.">dmbarbour</a> at Fri, 2009-01-16 23:11 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:175px;">
+<a id="comment-46466"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46466" class="active">I am just tired of Paul not</a></h3>
+ <div class="content"><p>I am just tired of Paul not addressing the substance of our questions nor our attempts to understand what I thought he wanted to try to communicate -- if you reread the thread, you can see why I feel trolled.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2585" title="View user profile.">lmeyerov</a> at Sat, 2009-01-17 08:33 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:200px;">
+<a id="comment-46506"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46506" class="active">Im sorry if I failed to</a></h3>
+ <div class="content"><p>Im sorry if I failed to address the questions asked â€“ feeling â€œtrolledâ€ after a single post seems a little touchy to me, but well then I will just have to reply with a pretty long post to get closer to the substance. The point being that its not a language I can sum up in 3 sentences, and I was planning to do a series of posts.</p>
+<p>Anyhow â€“ trying to clarify what I mean with tie, here is an example of the coding style in C/C++ pseudo leading up to Dawn:</p>
+<pre>class file
+{
+  FILE* fileref;
+  string filename:
+  file* output;
+
+  file(string _filename)
+  {
+    filename = _filename;
+  }
+  ~file()
+  {
+   fclose(fileref);
+  }
+  
+ 
+  void begin()
+  {
+    fileref = fopen(filename, â€œrâ€);
+  }
+  void end()
+  {
+    fclose()
+  }
+  void write(char charToWrite);
+  
+  void go()
+  {
+    fileref = fopen(filename, â€œwâ€);
+      output-&gt;begin();
+      while (char in = fgetc(fileref))
+        output-&gt;write(in);
+      output-&gt;end();
+   fclose(fileref);
+  }
+
+  file&amp; operator &gt;&gt;(file&amp; outputToTieTo)
+  {
+   output = &amp;outputToTieTo;
+   return outputToTieTo;
+  }
+}
+
+
+(file(â€œinputfile.txtâ€) &gt;&gt; file(â€œoutputfil.txtâ€)).go();
+</pre><p>I hope its clear to everyone now that Im not talking about concatenative languages. The above example is NOT how Dawn is visualized implemented but shows the way objects are TIED together to achieve functionality. There is multiple calls between the 2 objects not just stacks.<br>
+It is a 2 step operation, when you interpret a line â€“ first build the line by tying the objects together, then run them. You might even go so far to say that it is declarative since you describe the pipe.<br>
+The central idea is that the objects in question can be implemented as threads, as processes, as processes on different machines or simply as methods in objects.<br>
+The example is using a class based language to illustrate one of the main ideas in Dawn.<br>
+Another main idea is the lookup of identifiers. In a â€œnormalâ€ language the compiler or interpreter decides how to lookup identifiers. In dawn all the objects inherit the lookup from the primordial object, and thus allows the lookup to be overridden. An example of this behavior is ruby's method_missing exception. But instead of hiding the lookup, and only throwing exceptions when methods are not found, Dawn allows the user to override the behavior complete.<br>
+This means that you can write (provided that libraries internet and file exist):</p>
+<pre>â€œinternet.http://google.com/search lambda-the.ultimateâ€œ &gt;&gt; file.searchresult.txt
+</pre><p>Dawn blurs the boundary between compiletime and runtime; the internet lookup example above can be performed at different times: at compile time, at runtime â€“ cached, or every time the statement is passed. This mean that you can include buildtime in your program automatically.<br>
+Dawn grows out of trying to get rid of all the external scripting languages to perform builds and all the internals extras like generics. Dawn tries to be its own scripting language and its own meta language. That is why it is difficult for me to sum it up in few words. That is why I need to finalize my prototype since there are a few practical problems still to be designed/resolved.<br>
+This post probably raises more questions than it answers, hopefully I have conveyed a little of my idea.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Mon, 2009-01-19 11:05 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:225px;">
+<a id="comment-46558"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46558" class="active">how to explain the parts of the elephant</a></h3>
+ <div class="content"><blockquote><p>Dawn tries to be its own scripting language and its own meta language. That is why it is difficult for me to sum it up in few words.</p></blockquote>
+<p>perhaps describe the layers from bottom to top, individually.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2292" title="View user profile.">raould</a> at Wed, 2009-01-21 20:02 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:225px;">
+<a id="comment-46633"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46633" class="active">Policy</a></h3>
+ <div class="content"><blockquote><p>Im sorry if I failed to address the questions asked â€“ feeling â€œtrolledâ€ after a single post seems a little touchy to me, but well then I will just have to reply with a pretty long post to get closer to the substance. The point being that its not a language I can sum up in 3 sentences, and I was planning to do a series of posts.</p></blockquote>
+<p>A series of posts is not appropriate.  A better way to present the information would be to put the information on a web page or blog and then post a link to it here and the questions you have.  This will improve the quality of the discussion.</p>
+<p>If you don't have anywhere to host it currently, it is easy enough to set up a blog or website for free.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1510" title="View user profile.">Derek Elkins</a> at Thu, 2009-01-22 23:09 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<a id="comment-46351"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46351" class="active">Prototypes, Owners and References</a></h3>
+ <div class="content"><p>Dawn does not have garbage collection, although it is possible to implement for memory only data. Dawn has the concept of an owner, that any object is owned by another object (except for the top one). All objects have a name, if an anonymous object is desired it is automatically given a name.<br>
+A reference to an object, can be translated into text (in the spirit of URL, based on the name). The owner reference is thus the package, the namespace and the scope.<br>
+A reference is not guaranteed to be valid, although the language will provide safeguard against crashes.<br>
+Reference types can be implemented in the library (this is the novel thing â€“ I was planning for OOPSLA  - more about that in a later post), so it is possible to reference other things than memory objects (well â€“ it looks like that for the user).</p>
+<p>So you can go:</p>
+<pre>â€œdawnâ€ &gt;&gt; â€œinternet.http://www.google.com//searchâ€ &gt;&gt; pdfConverter &gt;&gt; â€œlocalfile.pdfâ€
+</pre><p>..I know that this raises a lot of questions, but its hard to sum up years of considerations into a few posts. Hopefully I will soon have the prototype up and running, so I can be more concrete.</p>
+<p>I was myself a little surprised about not having garbage collection, but for GC you need to control all the resources, and I wanted to be able to reference a file, an internet site or a USB drive, and there is no guarantee that they are available. So I want the programmer to get use to using patterns to deal with inconsitent/unavaliable resources, regardless if they are internal or external.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Thu, 2009-01-15 10:18 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46360"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46360" class="active">Please use "reply"</a></h3>
+ <div class="content"><p>When replying to another comment, please click the "reply" link under the comment to maintain the conversation's thread.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/4902" title="View user profile.">James Iry</a> at Thu, 2009-01-15 14:43 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:25px;">
+<a id="comment-46519"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46519" class="active">I'm shooting in the dark,</a></h3>
+ <div class="content"><p>but can your language be described as "reactive"?</p>
+<p>You haven't described the behavioural semantics of your expressions, so which interpretation does this have?<br>
+<code><br>
+â€œinternet.http://www.google.com/â€ &gt;&gt; â€œlocalfile.htmâ€<br>
+</code><br>
+Does it mean:</p>
+<ol>
+<li>Poll "http://www.google.com/" for changes; when it changes, push the content into "localfile.htm"?</li>
+<li>Subscribe to some on-page-change event notifier for "http://www.google.com/", and when the page changes, the notifier will notify the node for "localfile.htm", which will then pull the content from "http://www.google.com/" and push it into "localfile.htm"?</li>
+<li>Pull "http://www.google.com/" and push it into "localfile.htm" once?</li>
+</ol>
+<p>The same goes for "if".  If I got it right, don't call it "if", which confuses your "if"'s semantics with tradition.  Call it "when":</p>
+<p>"When X, do Y"</p>
+<p>If I understand correctly, you want code to reactively execute in response to a condition becoming true.</p>
+<p>I must say!  An internet dataflow framework is a very handy-dandy idea (not to mention the desirability of having reactive file re-computations for automated content deployment).</p>
+<p>I had ideas for a "reactive" dataflow programming language a couple years back, but I had never considered messing with files, or actually leveraging the potential of the internet.  Nothing ever came of the idea (being lazy and all).</p>
+<p>Kudos for:</p>
+<ol>
+<li>Having fresh ideas.</li>
+<li>Not being too lazy to do something about them!</li>
+</ol>
+<p>I watch with interest!</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/4852" title="View user profile.">Winheim Raulsh</a> at Tue, 2009-01-20 04:36 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:50px;">
+<a id="comment-46520"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46520" class="active">An example from a library I</a></h3>
+ <div class="content"><p>An example from a library I wrote one summer for just that: http://www.flapjax-lang.org/demos/delicious/ (I don't like plugging my work when trying to discuss that of others, but your example was pretty close to some code I wrote).</p>
+<p>I think Poul's *intended* language is like Ptolemy, except ambiguous in defining how actors can be connected (impacting global guarantees), and also introduces an unsafe prototype-based language for building base actors (Ptolemy used C++ and switched to Java). Of course, the examples provided are insufficient to back up this claim. If this is accurate, I'd suggest Poul to check out Ptolemy: the team created a great modeling environment for actor/data flow languages that provides reusable IDEs and components, as well as shows a lot of the design space for semantics, including how to nest models. </p>
+<p>Finally, Winheim, some bio guys made a firefox extension for Ptolemy, which might give a flavor of how this might work in practice, if you're really need that itch scratched.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2585" title="View user profile.">lmeyerov</a> at Tue, 2009-01-20 05:20 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:75px;">
+<a id="comment-46521"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46521" class="active">Ptolemy</a></h3>
+ <div class="content"><p>Ptolemy is very much in family with Dawn. I aim for the posibility of a graphical frontend as an alternative way of editing, and Ptolemy's IDE looks pretty much like that. Will definitely be checking it out.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Tue, 2009-01-20 08:07 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:50px;">
+<a id="comment-46523"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46523" class="active">Reactive</a></h3>
+ <div class="content"><p>Well, I do not imply a permanent relationship. If is actually if - when the program counter passes that statement.<br>
+About the interpretation - in several steps:</p>
+<ol>
+<li>lookup id "internet.http://www.google.com/"<br>
+this calls the lookup method for the current scope.<br>
+Default behavior is to look through its own slots, its parents slots (inheritance), its owners slots and throughout all this lookup a relative path is used (.system).<br>
+So in the end it finds at the top an object called system.internet. This object "returns" a http object "constructed" with the http address - you can say that what comes after the . is used a parameters for the constructor.
+</li>
+<li>lookup id "file.localfile.htm" (there was a bug in my example)<br>
+Similar this one finds system.file with returns a file object constructed with localfile.htm
+</li>
+<li>these 2 objects are tied together (using a set of rules for matching inputs and outputs)
+</li>
+<li>the http object gets "called" - it will stream the http page bytewise to the file (they share the bytewise interface - but there may be other more highly interpreted interfaces - the http object will probably also support an xml interface - like SAX)
+</li>
+</ol>
+<p>About If - well yes it shouldnt have been called If in the example - but in the real Dawn syntax it SHOULD be called if - since it will be the implementation of if. </p>
+<p>There is several ideas embedded in Dawn - that you have only one mechanism (tie) you use, both if you tie the expression, the conditional and the "then" and "else" blocks in an "if", or if you tie an entire webpage (site even) with some other block of logic.</p>
+<p>You build fat objects with lots of outputs - the outputs can share computation, but the compiler can also trim unused computation away for unused outputs.</p>
+<p>Reuse should be encouraged since object get fatter and the programmer cannot choose how to "return" values.</p>
+<p>Finally the path in the lookup, allows for overriden fundamental behavior in a controlled manner. If you want to change the behavior of "if" in some object you just place an system.if object in your project root! This allows you to change the behavior of the black box without opening it!! It is an extremely powerful mechanism, that replaces the generics, aspectoriented and a lot of other features of langauges.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Tue, 2009-01-20 08:32 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:75px;">
+<a id="comment-46534"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46534" class="active">I think I get it now.</a></h3>
+ <div class="content"><p>Based on what I gleaned from your posts, your language is NOT an online system, but is simply like the Unix pipes: run-once.  (I feel silly now.)  Basically, you have invented a different syntax as a replacement for common procedural syntax, or for the unix pipes syntax.  As people have said before (and it didn't quite click before), your language is concatenative in the semantic sense.</p>
+<p>This:<br>
+<code><br>
+"internet.http://www.google.com/" &gt;&gt; "file.temp.txt"<br>
+</code><br>
+becomes this:<br>
+<code><br>
+save(readPage("http://www.google.com/"), "temp.txt")<br>
+</code><br>
+given the routines:<br>
+<code><br>
+function readPage(URL: string): TextData;<br>
+procedure save(input: TextData; filename: string);<br>
+</code></p>
+<p>The big difference is in the implementation of the interpreter.</p>
+<p>What's novel about your system is, as you say, your ability to override language constructs via your scope mechanism.  Your language essentially provides a scope hierarchy via prototypes.  Does it provide dynamic scope via mutable prototypes (at runtime)?  If so, that opens up a can of worms, but I like the idea, provided such insane cases are generally avoided in practice.</p>
+<p>This calls for a comparison between your method and that of generics, AOP, etc. for flexibility, expressiveness, power, etc.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/4852" title="View user profile.">Winheim Raulsh</a> at Tue, 2009-01-20 20:18 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:100px;">
+<a id="comment-46552"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46552" class="active">Concatenative</a></h3>
+ <div class="content"><p>Unix pipes is a big inspiration, yes. But there is a difference - maybe it is only semantic:</p>
+<pre>"internet.http://www.google.com/" &gt;&gt; "file.temp.txt"
+</pre><p>does not becomes this:</p>
+<pre>save(readPage("http://www.google.com/"), "temp.txt")
+</pre><p>because this uses a stack to transfer values There is not a single pipe, there is multiple outputs - the syntax covers the unix pipes, but is also covers an entire interface, such as OpenGL or SAX. It goes to the method of passing values.</p>
+<p>not</p>
+<pre>Integer function() {return 2);
+</pre><p>but</p>
+<pre>procedure() {output-&gt;setInteger(2);}
+</pre><p>This allows output to be directed to diffent places i.e:</p>
+<pre>(5,2) &gt;&gt; div.(.result &gt;&gt; console, (2, .remainder) &gt;&gt; add &gt;&gt; console)
+</pre><p>Here the console will print 2 and 3.<br>
+I may be wrong, but I dont see concatenative languages work like that? </p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Wed, 2009-01-21 08:11 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:125px;">
+<a id="comment-46555"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46555" class="active">"Only semantic"</a></h3>
+ <div class="content"><p>Confusingly, PL people use "semantics" differently from everyone else (or at least with a different emphasis).  In ordinary usage, "we're arguing semantics" means that we're just arguing over the mapping from words to concepts, but we both have the same concepts in mind.  In PL circles, "we're arguing semantics" generally means that we're arguing over the concepts themselves -- pretty much the opposite of its everyday meaning.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/3546" title="View user profile.">Matt M</a> at Wed, 2009-01-21 15:38 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:125px;">
+<a id="comment-46557"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46557" class="active">multiple return values</a></h3>
+ <div class="content"><p>Well, in FORTH (FORTH is concatenative?):</p>
+<pre>    5 2 /MOD . 2 + .
+</pre><br></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1639" title="View user profile.">e</a> at Wed, 2009-01-21 18:37 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:150px;">
+<a id="comment-46596"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46596" class="active">Multiple return values</a></h3>
+ <div class="content"><p>Well maybe im not clear in the destinction. It is NOT return values. Maybe the effect can be simulated by return values - but the whole point is that outputs are not nessecarily fired. The object performing "IF" fore instance, only calls "THEN" or "ELSE". It does not "return" anything. My bad is maybe with these small examples. If you take OpenGL as the input interface, you can have multiple objects "piping" into it:</p>
+<pre>triangle &gt;&gt; OpenGl
+"model.vrml" &gt;&gt; OpenGL
+0.5, "model.vrml" &gt;&gt; GLScale &gt;&gt; OpenGL
+"model.vrml" &gt;&gt; SortBlackPolygons.(.NonBlack &gt;&gt; OpenGl, .Black &gt;&gt; "file.txt")
+</pre><p>The last example would read model.txt from file, pipe it via the OpenGL calls (glBegin,glEnd,glVertex,glColor etc.). Nonblack polygons will be rendered, Black will go into the file.<br>
+The SortBlackPolygon may be an extremely fat function with hundreds of outputs where the user can connect to the outputs he need. The compiler can optimize functionality so only code needed for these outputs are generated - and functionality can be shared between these functions. An output does not nessecarily pass a value - it may just pass the program counter (IF) - return values would be a specialized boolean of sorts - execute this. This means that it will always have to evaluate the full function, and always return all "outputs" - ie. return values.<br>
+Well i can see that my concept is closely related to the concatenative, although im not exactly sure if they are conceptually identical.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Thu, 2009-01-22 08:36 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:175px;">
+<a id="comment-46635"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46635" class="active">I see.</a></h3>
+ <div class="content"><p>So, your expressions remind me alot of of Ruby, and its "fluid interfaces".  Your language has concatenative semantics only when you use simple expressions, but when you start using multiple "data-feeds", then your language does something that would have to be done very differently in a concatenative language, so your language is not strictly concatenative.  To say it is, is a stretch, at the least.  It can do concatenative stuff in the simple cases (when you're not using the multiple output parts of objects in an expression).  I'm not sure if your language would be considered a superset of a concatenative language, but I'm guessing not;  your language goes down a somewhat different branch of the language design space.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/4852" title="View user profile.">Winheim Raulsh</a> at Fri, 2009-01-23 00:24 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:200px;">
+<a id="comment-46645"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46645" class="active">Thanks</a></h3>
+ <div class="content"><p>Part of posting here is to get a little closer to established theory so I can talk the talk with other language people.<br>
+So its great help to get inputs about the different language theories.<br>
+Another example I think is not concatenative:</p>
+<pre>100 &gt;&gt; times &gt;&gt; {"hello world" &gt;&gt; console}
+</pre><p>Ruby is of course also a big influence.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Fri, 2009-01-23 08:07 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:225px;">
+<a id="comment-46647"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46647" class="active">Switch the two right</a></h3>
+ <div class="content"><p>Switch the two right expressions and it is :)</p>
+<p>(I'm not actually sure why it works in yours)</p>
+<p>The next thing I'd want to know is actually how it compares to Oz and how data flows are restricted (which is crucial fir many data flow compiler tricks). For the latter, looking at various Ptolemy semantic models is one way.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/2585" title="View user profile.">lmeyerov</a> at Fri, 2009-01-23 10:11 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:225px;">
+<a id="comment-46649"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46649" class="active">Semantics might help</a></h3>
+ <div class="content"><p>It might help if you provide a description of the intended semantics of a code fragment when you post it. You've done that in some of your posts, but not all of them. The posts where you <i>have</i> defined the intended meaning of a code fragment are the ones that have made it most clear what it is you're trying to get at.</p><p>The post to which this is a response is a good example of how <i>not</i> to present your language: I'm left to infer what I <i>think</i> the meaning of your code fragment is, based on the assumption that your intention is a Ruby-like result here (despite the fact that you're apparently reversing the Ruby would handle things, instead passing a "100" message to a "times" object). But if I don't make the assumption about Ruby-like semantics it's hard to know what to make of the code. You might be presenting a weird multiplication, or a strange way of concatenating "100" with the current time and sending the resulting string to the console, or...</p><p>By telling us what (in your mind) the code is intended to accomplish, and the mechanism used to do so, you're more likely to be able to communicate why Dawn is special. By just posting unexplained fragments of code, you leave people guessing, and mapping the syntax to their own semantic models (which can lead to confusing misinterpretations, and much talking past each other). It doesn't have to be a formal operational semantics. Just a brief description of what the string of symbols you're showing us is actually intended to do.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/1670" title="View user profile.">Allan McInnes</a> at Fri, 2009-01-23 11:13 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:250px;">
+<a id="comment-46725"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-46725" class="active">Wrong presentation</a></h3>
+ <div class="content"><p>Yes, I can see that it has not been presented in presented in the best of manners. It was probably premature of me to start presenting something in fragments, so I might stand down from the presentation until my prototype is done - then I can write a more in-depth description of the ideas.<br>
+Just hoping to convey a little extra information concerning the piping - historical and technical:</p>
+<p>The "piping" syntax of Dawn was invented because I have been programming in a manner, which I felt had some big benefits, but was tedious to do with current language syntax. Ideas come from Flow Based Programming, and electronic gates and block diagrams, but with an object oriented approach. My approach was first developed in 1995 at LEGO where I needed a way to transport LEGO models from one program to another. Several third party companies were developing LEGO games so how would I let them exchange models?<br>
+The standard way would be a XML DOM-like way where you build a memory model  of the LEGO model, and then lets 3rd party convert to-from this model. However in 1995 memory was very much an issue, especially for 3d games, so I came up with a SAX/OpenGL like model where I streamed data. This allowed for 3rd party IMPORTING data could build their own structures based on callbacks. When EXPORTING data they would sit on the other side of the interface and call the methods for building the model. The interface functions where like: beginModel(name),endModel(), position(x,y,z),rotation(x,y,z,t).<br>
+Models could be defined within models making it hierarchical.<br>
+I found that I could write processors which had that same interface for input and output that could manipulate the models and change their appearance in different manner. This lead to objects, stringed together in a pipe like manner, usually starting with an object reading a file, interpreting it and streaming it via the interface, through these objects, ending with an object writing a file - thus ending up with a converter.<br>
+Since 1995 I have developed this method to be totally general for data processing, still lacking a proper language to support it.<br>
+So when I write:</p>
+<pre>100 &gt;&gt; times &gt;&gt; {"hello world" &gt;&gt; console}
+</pre><p>I mean a default integer object constructed with 100, with an integer method passing output reference, this set to point to a class times object (which has a integer method to set the times parameter), calling the block method of the anonymous block, where a default string objects, with a string method passing output reference, set to point to the consoles method for passing strings.<br>
+I feel that current languages are not really supporting big blocks of code being tied together, and it is this type of hierarchical generality I am trying to achieve. </p>
+<p>Now I will look into Oz, which I havent quite gotten from the wikipedia entry (but the lazy/earger is apparently identical to Dawn), and ptolemy, try to finish my prototype.<br>
+And then Ill be back (don't know if its a threat or a promise :-)</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Mon, 2009-01-26 09:23 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:175px;">
+<a id="comment-47019"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-47019" class="active">Similar to Yahoo! Pipes?</a></h3>
+ <div class="content"><p>Would you say that this is almost a text representation of <a>Yahoo! Pipes</a>?  Multiple inputs that can into an aggregator, which may have multiple outputs that can get piped all over the place?</p>
+<p>Now, in this example, I don't see why "SortBlackPolygon" couldn't just be a generic function that returns a tuple (vector, hash, list, whatever you want).  I do, however, see the benefit when you have hundreds of possible outputs.  Unfortunately, I can't really think of an example where something might have a couple hundred outputs -- and when it might, it always seems better to aggregate them into a structure of some sort.  </p>
+<p>Where do you see the real benefit of this model?</p>
+<p>Also, what is the execution model?  When I pipe something into SortBlackPolygon, is it executed immediately?  Or only when I ask for the out pipe?  What if I ask for one out pipe then another later down in the program?  What happens if I want to use .NonBlack in the current line and connect the .Black pipe a couple lines down?</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6565" title="View user profile.">choffstein</a> at Thu, 2009-02-05 22:20 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+<div style="margin-left:200px;">
+<a id="comment-47022"></a>
+<div class="comment">
+ <h3 class="title"><a href="http://lambda-the-ultimate.org/node/3168#comment-47022" class="active">Yahoo! Pipes</a></h3>
+ <div class="content"><p>Yes, it is a textual representation of something like that. Im planning to hav multiple representations of the source and Yahoo! Pipes is definetly a good example of how the graphical representation can look like.</p>
+<p>Generally things are executed immediately. A single pipe can be specified to be a thread, allowing for a more "reactive" style.</p>
+<p>You cannot "ask" for the out pipe - the model is push, not pull. Conceptually you setup the pipe and call the first element of the pipe, which then "does its thing" and returns when done. If its a thread, the next pipe starts processing without waiting.</p>
+<p>The examples of 100's of outputs is maybe not at obvious as the 100's of inputs. OpenGL is a good example - the polygon interface is a small subset of the entire interface (=inputs).</p>
+<p>The point of using outputs and inputs is that outputs are not nessecarily "fired". You could return a tuple with objects or strings signifying the outputs called, but then it is an implementation issue.<br>
+Besides it is possible to "wire" outputs from an objects to different objects, so in the case of returning a single tuple, it would take a "administrator" to redirect outputs to the correct inputs.</p>
+<p>The benefits of this model IMHO is that you use the same method of relaying data/describing your functionality irregardless if you are making control structures, calling functions or tying together SOAP-like services, much higher in the hierarchy.</p>
+<p>I consider</p>
+<pre>Game &gt;&gt; OpenGl! // exclamation means thread
+1,1 &gt;&gt; Add
+100 &gt;&gt; Times &gt;&gt; PrintHello
+</pre><p>an advantage over most other languages which would have very different constructs for these.</p>
+<p>That said, I still have a number of practical issues to address, especially about using the prototypes as classes - i.e. when you refer to SortBlackPolygon, do you get the same instance or is it a copy - can you decide yourself if its a copy?<br>
+If its not a copy, I will have big challenges for multithreading, if it is a copy - well, how do I manipulate then the original?<br>
+Well a lot of this is implementation, and thus not for LtU discussion.</p></div>
+ <div class="links">By <a href="http://lambda-the-ultimate.org/user/6435" title="View user profile.">Poul Krogh</a> at Fri, 2009-02-06 09:07 | <a href="http://lambda-the-ultimate.org/user/login">login</a> or <a href="http://lambda-the-ultimate.org/user/register">register</a> to post comments</div>
+</div>
+</div>
+</div></form>
+<!-- end content -->
+ <div id="footer"><hr style="border-width: 0pt 0pt 1px;">
+Logs:
+          <a href="http://wmf.editthispage.com/">Hack The Planet</a>
+          ; <a href="http://www.javalobby.org/">JavaLobby</a>
+          ; <a href="http://www.pythonware.com/daily">Daily Python-URL</a>
+ ; <a href="http://thedailywtf.com/default.aspx">Daily WTF</a>
+ ; <a href="http://phplens.com/phpeverywhere/">PHP everywhere</a> ; <a href="http://lambda-the-ultimate.org/node/view/13">(more)</a><br>
+Wikis:
+         <a href="http://c2.com/cgi/wiki?RecentChanges">WikiWiki</a>
+         ; <a href="http://www.trapexit.org/Special:Recentchanges">Erlang</a>
+; <a href="http://www.cliki.net/Recent%20Changes">Common Lisp</a>
+
+
+         ; <a href="http://www.haskell.org/haskellwiki/Special:Recentchanges">Haskell</a>
+         ; <a href="http://wiki.squeak.org/squeak/recent">Squeak</a>
+         ; <a href="http://purl.org/thecliff/tcl/wiki">Tcl</a> ; <a href="http://www.program-transformation.org/Transform/WebChanges">Program Transformation</a>
+</div>
+   </td>
+   <td id="sidebar-right"><div class="block block-archive" id="block-archive-0">
+ <h2 class="title">Browse archives</h2>
+ <div class="content">
+<!-- calendar -->
+<div class="calendar"><table summary="A calendar to browse the archives.">
+ <caption><a href="http://lambda-the-ultimate.org/archive/2022/05/13" title="Previous month">«</a> June 2022 &nbsp;</caption>
+ <tbody><tr class="header-week">
+ <th abbr="Sunday">Su</th>
+ <th abbr="Monday">Mo</th>
+ <th abbr="Tuesday">Tu</th>
+ <th abbr="Wednesday">We</th>
+ <th abbr="Thursday">Th</th>
+ <th abbr="Friday">Fr</th>
+ <th abbr="Saturday">Sa</th>
+</tr>
+ <tr class="row-week"><td class="day-blank">&nbsp;</td>
+<td class="day-blank">&nbsp;</td>
+<td class="day-blank">&nbsp;</td>
+  <td class="day-normal">1</td>
+  <td class="day-normal">2</td>
+  <td class="day-normal">3</td>
+  <td class="day-normal">4</td>
+ </tr>
+ <tr class="row-week">
+  <td class="day-normal">5</td>
+  <td class="day-normal">6</td>
+  <td class="day-normal">7</td>
+  <td class="day-normal">8</td>
+  <td class="day-normal">9</td>
+  <td class="day-normal">10</td>
+  <td class="day-normal">11</td>
+ </tr>
+ <tr class="row-week">
+  <td class="day-normal">12</td>
+  <td class="day-today">13</td>
+  <td class="day-future">14</td>
+  <td class="day-future">15</td>
+  <td class="day-future">16</td>
+  <td class="day-future">17</td>
+  <td class="day-future">18</td>
+ </tr>
+ <tr class="row-week">
+  <td class="day-future">19</td>
+  <td class="day-future">20</td>
+  <td class="day-future">21</td>
+  <td class="day-future">22</td>
+  <td class="day-future">23</td>
+  <td class="day-future">24</td>
+  <td class="day-future">25</td>
+ </tr>
+ <tr class="row-week">
+  <td class="day-future">26</td>
+  <td class="day-future">27</td>
+  <td class="day-future">28</td>
+  <td class="day-future">29</td>
+  <td class="day-future">30</td>
+<td class="day-blank">&nbsp;</td>
+<td class="day-blank">&nbsp;</td>
+</tr>
+</tbody></table></div>
+
+</div>
+</div>
+<div class="block block-forum" id="block-forum-0">
+ <h2 class="title">Active forum topics</h2>
+ <div class="content"><div class="item-list"><ul><li><a href="http://lambda-the-ultimate.org/node/5646" title="4 comments">CUE: An open-source data validation language</a></li><li><a href="http://lambda-the-ultimate.org/node/5651">The hidden cost of exception handling</a></li><li><a href="http://lambda-the-ultimate.org/node/5650">My article on state machines and DSL evolution</a></li><li><a href="http://lambda-the-ultimate.org/node/5649" title="3 comments">Do we need exactly two binding constructs?</a></li><li><a href="http://lambda-the-ultimate.org/node/5644" title="1 comment">Shen Standard Library</a></li></ul></div><div class="more-link"><a href="http://lambda-the-ultimate.org/forum" title="Read the latest forum topics.">more</a></div></div>
+</div>
+<div class="block block-forum" id="block-forum-1">
+ <h2 class="title">New forum topics</h2>
+ <div class="content"><div class="item-list"><ul><li><a href="http://lambda-the-ultimate.org/node/5651">The hidden cost of exception handling</a></li><li><a href="http://lambda-the-ultimate.org/node/5650">My article on state machines and DSL evolution</a></li><li><a href="http://lambda-the-ultimate.org/node/5649" title="3 comments">Do we need exactly two binding constructs?</a></li><li><a href="http://lambda-the-ultimate.org/node/5647">Cicada language -- a new dependently typed language</a></li><li><a href="http://lambda-the-ultimate.org/node/5646" title="4 comments">CUE: An open-source data validation language</a></li></ul></div><div class="more-link"><a href="http://lambda-the-ultimate.org/forum" title="Read the latest forum topics.">more</a></div></div>
+</div>
+<div class="block block-comment" id="block-comment-0">
+ <h2 class="title">Recent comments</h2>
+ <div class="content"><div class="item-list"><ul><li><a href="http://lambda-the-ultimate.org/node/5646#comment-96895">ltu</a><br>1 week 2 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5649#comment-96894">It may be too subtle for me....</a><br>10 weeks 4 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5649#comment-96893">The question is about a potential subtle difference</a><br>10 weeks 6 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5649#comment-96892">There is no necessary difference. </a><br>11 weeks 15 hours ago</li><li><a href="http://lambda-the-ultimate.org/node/5644#comment-96891">Thesis-Antithesis</a><br>18 weeks 13 hours ago</li><li><a href="http://lambda-the-ultimate.org/node/5646#comment-96890">Nice references</a><br>23 weeks 5 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5646#comment-96889">Programming with lattice structure</a><br>23 weeks 6 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5646#comment-96888">A nice overview</a><br>24 weeks 5 days ago</li><li><a href="http://lambda-the-ultimate.org/node/1635#comment-96887">Updated link</a><br>27 weeks 3 days ago</li><li><a href="http://lambda-the-ultimate.org/node/5637#comment-96886">cutting the tower</a><br>28 weeks 6 days ago</li></ul></div></div>
+</div>
+</td>
+  </tr>
+ </tbody></table>
+ 
+
+</body></html>

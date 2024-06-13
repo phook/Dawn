@@ -1,4 +1,0 @@
-function program() {return [function(scope){return scope._lookup("Pipe:")._add(scope._lookup("List:")._add(scope._lookup("NewOutput:string") ,scope._lookup("Pipe:")._add(scope._lookup("Native.Javascript:self._value%20%3D%20string._value%3B")._bind(scope._lookup("NewInput:string_$"))) ,scope._lookup("Pipe:")._add(scope._lookup("Native.Javascript:if%20(this._out_string)%0D%0A%20%7B%20this._out_string(this)%3B%0D%0A%20%7D%0A%20if%20(this._out_resource)%0D%0A%20%7B%20this._out_resource(this)%3B%0D%0A%20%7D")._bind(scope._lookup("NewInput:go"))) ,scope._lookup("Pipe:")._add(scope._lookup("Native.Javascript:var%20newObject%20%3D%20this._clone()%3B%0D%0A%20return%20Object.assign(%7B_value%3AdecodeURIComponent(instanciate._value)%7D%2CnewObject)%3B")._bind(scope._lookup("NewInput:instanciate"))))._bind(scope._lookup("NewObject:String")))}];};function go(scope) {
-Dawn.return_program_go(program())(scope);
-};
-module.exports = go;

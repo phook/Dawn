@@ -1,17 +1,18 @@
 define Number
-  output number
-  input all number
+  output Number
+  input all Number
     native javascript
       this._value = number._value;
     endnative
   input go
     native javascript
-      if (this._out_number)
-        this._out_number(this);
+      if (this._out_Number)
+        this._out_Number(this);
     endnative
   input instanciate
     native javascript
          var newObject= this._clone();
-         newObject._value=new Dawn.bigRat(instanciate._value);
+         newObject._value=new Dawn.bigRat(this._value);
+         newObject._in_change_to_object();
          return newObject;
     endnative

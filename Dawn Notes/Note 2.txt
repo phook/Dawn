@@ -1,0 +1,43 @@
+
+
+
+
+Project source should have login/logout button (if viable) - should be for dawn server/github - localstorage no, 
+This would control read/write
+
+
+UIL Finished:
+
+Templates finished:
+dont delete :content, just hide it - to allow insertions the correct place - and a counter for number of children (before the :content tag)
+arguments - search for :xx in text node, and int uil-style arguments
+create setters to transfer selected to style, and update other arguments
+
+Layers finished:
+assign z value to children on add/remove
+
+rename row to rows
+rename col to columns
+rename uil-style to uil-arguments
+
+canvas element - maybe? like layers but not forcing children to fill - this is for x y placement
+for this transfer x and y arguments to top and left, consider allowing z to control z also
+
+---
+serverside uil - if uil is pointed to by url, then do server side
+
+DAWN
+- finish ide (flavors)
+- add color schemes
+- build library - files, dirs, localstorage, vars osv.
+- connect with uil
+- extend BNFT with namespaces and overrides
+- reimplement everything that can be replaced with dawn (i.e. minimize "hardcoded" javascript)
+
+- build banana melee
+- finish book with banana melee
+
+
+             {list-item value=dawn text="The folder dawn"     icon=folder              icon_show=flex action_icon=chevron_right  action_icon_text="Open Folder"}
+            {list-item value=add  text="The dawn script add" icon_img="dawn_icon.ico" img_show=flex  action_icon=play_arrow     action_icon_text="Run Script"}
+            {list-item value=index text="The uil file index" icon=text_snippet        icon_show=flex action_icon=launch         action_icon_text="Open in Browser"}

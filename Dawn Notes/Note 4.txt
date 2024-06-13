@@ -1,0 +1,34 @@
+Tiles:
+Compose workscreens by tiling apps
+
+Switching between workscreens
+Saving workscreens as apps
+Launching apps (fullscreen and into workscreen)
+
+Custom apps – no code builds 
+Automating tasks (inspiration maya)
+
+apps can offer different screens for the tiling – can be use to configure a single app
+
+
+
+
+-----
+
+Desktop is almost identical to uil editor (with the apps as tiles)
+
+consider a chromium fork to put native apps into this framework for the Dawn Desktop
+
+Dawn Desktop
+
+this is the app that can be used as startup for windows, linux
+
+
+------
+syntax color
+dawn is extension of javascript
+uil is extension of html
+bnft - needs own
+
+
+Eddy - uil spec? animated? or just hand coded html?

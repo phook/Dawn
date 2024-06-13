@@ -1,0 +1,4 @@
+define Tester
+  ouput out_string
+  input all string
+    [in String:foo]>>Concatenate:>>out_string
