@@ -19,22 +19,46 @@ function FlowProcessor(data)
             data._last._bind(bindee);
 		return bindee;
 	}
-	this._add = function(last)
+	this._pass_bind_function = function(outputName,fn)
 	{
-		var args = Array.prototype.slice.call(arguments);
-		var last = null;
-		var childIx=0;
+		if (data._last)
+			data._last_instanciate_processor()._bind_function(outputName,fn);
+	}
+
+	this._add = function()
+	{
+		let args = Array.prototype.slice.call(arguments);
+		let last = null;
+		let childIx=0;
         args.forEach(function(child) {
 	        if (typeof(child)=="string")
 	            child = data._lookup(child,true);
+	        if (typeof(child)=="function")
+			{
+				if (last)
+					last._bind_function(child._outputName,child);
+				child = child._boundThis; //NEW
+			}
+			else
 			if (last)
+			{
+				child = child._instanciate_processor();
 				last._bind(child);
+			}
 			else
 			{
+				/// THESE BOUND ONES SHOULD RESIDE IN THE PROCESSOR NOT THE RESOURCE
+				child = child._instanciate_processor();
 				data._first = child;
 				data._first["_in_begin@"] = true; // occupy _begin - previous function should not bind to these inputs
-		        data._first["_in_go@"]    = true; // occupy _go
+				if (data._first._in_begin)
+					data._first._in_begin = data._first._in_begin.bind(child);
+				data._first["_in_go@"]    = true; // occupy _go
+				if (data._first._in_go)
+					data._first._in_go = data._first._in_go.bind(child);
 		        data._first["_in_end@"]   = true; // occupy _end
+				if (data._first._in_end)
+					data._first._in_end = data._first._in_end.bind(child);
 			}
 			last= child;
 			data._children[childIx++]=child;			
@@ -42,27 +66,22 @@ function FlowProcessor(data)
 
 		return this;
 
-		/*
-        if (typeof(last)=="string")
-            last = this._lookup(last,true);
-        else
-        if (last._isHolder)
-        {
-            let bindee = last._bindee;
-            last = this._lookup(last._lookup,true);
-            last._bind(bindee);
-        }
+	}
 
-		data._last = last;
-		data._first = last._first();
-        data._first["_in_begin@"] = true; // occupy _begin - previous function should not bind to these inputs
-        data._first["_in_go@"]    = true; // occupy _go
-        data._first["_in_end@"]   = true; // occupy _end
-		return this;
-		*/
+	this._in_go = function(scope)
+	{
+  		if (data._first)
+		{
+			this._execute_fn(scope,
+			[
+				data._first._in_begin,
+				data._first._in_go,
+				data._first._in_end
+			]); 
+        }
 	}
 	
-    // SCOPE DECORATOR - override lookup so stack lookup os used - bind need to pass scope to push to stack
+/*
 	this._in_go = function(scope)
 	{
         // HERE DECOREATE SCOPE - NO SCOPE IS OPERATIONAL WHEN BINDING
@@ -77,8 +96,7 @@ function FlowProcessor(data)
             return scope._execute_next_function(scope);
         }
 	}
-
-
+*/
 	return this;
 }
 _Flow.Processor = FlowProcessor;

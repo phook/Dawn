@@ -2,6 +2,7 @@ const Resource = Dawn.require("./dawn/Resource.js");
 function List()
 {
 	Resource.call(this,"List");
+	// elements in resource holds resources
 	this._elements=[];
 	this.Processor = ListProcessor;
 	return this;
@@ -9,18 +10,27 @@ function List()
 function ListProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._elements = resource._elements.map(a => ({...a}));;
+	// elements in list holds processors
+	this._elements = resource._elements.map(a => ({...a})).map(a => a._instanciate_processor());
 	this._pass_bind = function(bindee)
 	{
 		this._bindee = bindee;
 		for(element in this._elements)
 		{
 	        //this._elements[element]._set_previous(this);
-			this._elements[element]._instanciate_processor()._bind(bindee);
+			this._elements[element]._bind(bindee);
 		}
 		bindee._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
 		return bindee;
 	}
+	this._pass_bind_function = function(outputName,fn)
+	{
+		for(element in this._elements)
+		{
+			this._elements[element]._bind_function(outputName,fn);
+		}
+	}
+
 	this._offer_bind = function(match)
 	{
 		for(b in this)
@@ -39,7 +49,7 @@ function ListProcessor(resource)
 
 		for(element in this._elements)
 		{
-			var input_bound = this._elements[element]._offer_bind(match);
+			let input_bound = this._elements[element]._offer_bind(match);
             
             // binding single output to multiple inputs?
             if (input_bound)
@@ -48,27 +58,28 @@ function ListProcessor(resource)
 	}
 	this._add = function()
 	{
-		var inputs="";
-        var args = Array.prototype.slice.call(arguments);
+		let inputs="";
+        let args = Array.prototype.slice.call(arguments);
         Dawn.debugInfo("list adding "+args.length+ " elements");
-        var self = this;
+        let self = this;
         args.forEach(function(element) {
 			if (typeof(element)=="string")
 	            element = resource._lookup(element,true);
-	        else
+	        else/*
 			if (typeof(element)=="function")
 	            element = element();
-	        else
+	        else*/
 	        if (element._isHolder)
 	        {
 	            let bindee = element._bindee;
 	            element = resource._lookup(element._lookup,true);
 	            element._bind(bindee);
 	        }
+			element = element._instanciate_processor(); //NEW
 			element._set_owner(self);
             element["_in_go@"] = true; // occupy _go
             resource._elements.push(element._get_resource());
-            self._elements.push(element._get_resource());
+            self._elements.push(element);
         });
 		return this;
 	}
@@ -83,7 +94,7 @@ function ListProcessor(resource)
 		  return new Resource("Input"); // should be created TODO NOTFIXED
 			
 
-      var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
+      let ref = {_value:identifier, _scope:this._scope}; // is _scope used?
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       let result;
@@ -150,6 +161,8 @@ function ListProcessor(resource)
 	this._in_go = function(scope)
 	{
         Dawn.debugInfo("list going");
+        return this._execute(scope,this._elements);
+		/*
 		for(element in this._elements)
 		{
 			if (this._elements[element])
@@ -157,13 +170,14 @@ function ListProcessor(resource)
                 scope._add_next_function(this._elements[element],this._elements[element]._in_go);
             }
 		}
-		/* do not propagate _go - the bound list members calls on if needed
-		if (this._bindee)
-        {
-            scope._add_next_function(this._bindee,this._bindee._in_go);
-        }
-		*/
+		// do not propagate _go - the bound list members calls on if needed
+		//if (this._bindee)
+        //{
+        //    scope._add_next_function(this._bindee,this._bindee._in_go);
+        //}
+		
         return scope._execute_next_function(scope);
+	    */
 	}
 }
 List.Processor = ListProcessor;

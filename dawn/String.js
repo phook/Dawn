@@ -4,18 +4,7 @@ const Resource = Dawn.require('./dawn/Resource.js');
 function _String()
 {
     Resource.call(this,"String"); // REMOVE NAMING - BUT LEAVE FOR DEBUG FOR NOW
-    //Value.call(this,"String");
-	this._value = new String("");
-	// instanciate value when creating resources
-    this._in_instanciate = function(input)
-    {   
-		 let newObject=Object.assign({}, this); // Clone
-		 if (input)
-	         newObject._value = decodeURIComponent(input._value);
-         return newObject._instanciate_processor();
-    }
-	this.Processor=StringProcessor;
-	return this;
+    this.Processor = StringProcessor;
 }
 
 // THIS IS THE PROCESSOR ASSOCIATED WITH STRING - EVERY FLOW ACCESSING STRING MUST INSTANCIATE ON OF THESE TO OPERATE ON THE VALUE
@@ -36,7 +25,16 @@ function StringProcessor(resource)
       if (this._out_Resource)
         this._out_Resource(resource);
     }
+    this._in_instanciate = function(input)
+    {   
+		 let newObject=this._get_resource()._clone(); // Clone
+		 if (input)
+	         newObject._value = decodeURIComponent(input._value);
+		 else
+			 newObject._value = "";
+         return newObject._instanciate_processor();
+    }
 	return this;
 }
-String.Processor=StringProcessor;
+_String.Processor=StringProcessor;
 module.exports=_String;

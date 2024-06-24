@@ -7,12 +7,11 @@ define Number
   input go
     native javascript
       if (this._out_Number)
-        this._out_Number(this);
+        this._out_Number(this._get_resource());
     endnative
   input instanciate
     native javascript
-         var newObject= this._clone();
-         newObject._value=new Dawn.bigRat(this._value);
-         newObject._in_change_to_object();
-         return newObject;
+         var newObject=this._get_resource()._clone();
+         newObject._value=new Dawn.bigRat(input_instanciate._value);
+         return newObject._instanciate_processor();
     endnative

@@ -8,7 +8,7 @@ Dawn = {
     {
         return !isBrowser();
     },
-    requireBySource : function(source)
+    requireBySource : function(source,context)
     {
         if (source.substr(0,10)==="(function(")
         { 
@@ -20,6 +20,8 @@ Dawn = {
         } 
         var module = { exports:exports }; 
         var anonFn = new Function("require", "exports", "module", source);
+		if (context)
+			anonFn.bind(context);
         anonFn(this.require, exports, module);
         return module.exports;
     },   

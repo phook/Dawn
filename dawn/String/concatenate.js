@@ -32,7 +32,7 @@ function concatenateProcessor(resource)
 	this._resource = resource;
 	this._out_String = null;
 	this._tempString = ""; // NOT CORRECT - MUST BE STRING
-	this._in_String = function(input)
+	this._in_String_$ = function(input)
     {   
       this._tempString += input._value;
     }

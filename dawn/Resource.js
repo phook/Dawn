@@ -37,12 +37,18 @@ function Resource(name,owner)
 	}
 	this.defaultProcessor = null;
 	
+    this._in_instanciate = function(input)
+    {
+		return this._instanciate_processor()._in_instanciate(input);
+    }
 	// instanciate value when creating resources
+	/* MOVED TO PROCESSOR
     this._in_instanciate = function(input)
     {   
 		 let newObject=Object.assign({}, this); // Clone
          return newObject._instanciate_processor();
     }
+	*/
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier, setOwner)
     {
@@ -50,9 +56,7 @@ function Resource(name,owner)
           throw "error lookup of "+identifier+": colon missing";
       if (identifier == ".")
           return this;
-	  if (identifier.indexOf("input") == 0)
-		  return new Resource("Input"); // should be created TODO NOTFIXED
-			
+
 	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
@@ -200,7 +204,7 @@ function Resource(name,owner)
 	this._in_lookup_child = function(string_name,from_owner,exclude)
 	{
         var identifier = string_name._value;
-           
+
         var keys = Object.keys(this._children);
         keys.sort(dawnSort);        
 
@@ -261,6 +265,24 @@ function ResourceProcessor(resource)
         }
     }
     */
+	this._lookup = function(name) {
+        var identifier = name;
+
+		if (identifier.indexOf("input:") == 0)
+		{
+			let name = identifier.replace("input:","");
+			if (this["__in_" + name + "_value"])
+				return this["__in_" + name + "_value"];
+		}
+		else
+		if (identifier.indexOf("output:") == 0)
+		{
+			let name = identifier.replace("output:","");
+			if (this["_out_" + name])
+				return this["_out_" + name]; 
+		}
+		return resource._lookup(name);
+	}
 	
     this._clone = function(){return clone(this);}
 	
@@ -347,10 +369,16 @@ function ResourceProcessor(resource)
 
     this._in_instanciate = function(input)
     {   
+		 let newObject=Object.assign({}, this); // Clone
+         return newObject._instanciate_processor();
+    }
+	/* OLD WHERE IT IS IN THE RESOURCE
+    this._in_instanciate = function(input)
+    {   
 		 
          return resource._in_instanciate(input);
     }
-
+	*/
 /*
     // javascript wrapper version for dawn defined function
     this._lookup = function(identifier, setOwner)
@@ -564,8 +592,12 @@ function ResourceProcessor(resource)
                     if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
                     {
                         this.inputs_bound[b] = true;
-                        return this[b].bind(this);
-                        break;
+                        
+						let newBoundFunction=this[b].bind(this);
+                        newBoundFunction._boundThis=this;
+						newBoundFunction._outputName= match.replace("_in_","");;
+						return newBoundFunction;
+						break;
                     }
                 }
             }
@@ -620,6 +652,19 @@ function ResourceProcessor(resource)
         return bindee;
     }    
 
+    this._bind_function = function(outputName,fn)
+    {
+
+		// pass bind skal flyttes til en List override ad bind
+        if (this._pass_bind_function)
+        {
+            let input_bound = this._pass_bind_function(fn._boundThis);
+            return;
+        }
+
+		if (("_out_"+outputName) in this)
+			this["_out_"+outputName] = fn;
+    }    
 
 
     this._in_native$ = function(data)
@@ -690,12 +735,14 @@ function ResourceProcessor(resource)
     this._nextFunction = [];
     this._add_next_function=function(context,fn)
     {
+		if (!fn)
+			fn=context._in_go; // default input to call
         if (fn)
-            this._nextFunction.splice(this._add_next_function_at,0,fn.bind(context)); // javscript bin to bind function to resource
-//            this._nextFunction.splice(this._add_next_function_at,0,fn._bind(context));
-//            this._nextFunction.push(fn.bind(context));
+            this._nextFunction.splice(this._add_next_function_at,0,fn.bind(context)); // javscript bind to bind function to resource
 		this._add_next_function_at++;
     }
+	
+	
     this._execute_next_function = function(scope)
     {
 		this._add_next_function_at = 0;
@@ -709,6 +756,48 @@ function ResourceProcessor(resource)
                 return result;
         }
     }
+
+
+	/*simple
+    this._execute = function(scope,array_of_lines)
+    {
+		array_of_lines.forEach(function(line){this._add_next_function(line);});
+		this._execute_next_function(scope);
+    }
+	*/
+	// NEW CONCEPT FOR LINES - CONTAINS FLOWS - CALLS _in_go, promise is return if async, if promise is returned - it sets execution to continue at resolve
+    this._execute = function(scope,array_of_lines)
+    {
+        while (array_of_lines.length)
+        {
+            let flowForThisLine = array_of_lines.shift(); 
+            let result = flowForThisLine._in_go(scope);
+            if (result)
+			{
+                return result.promise().then(function()
+				{
+					this.execute(scope,array_of_lines);
+				});
+			}
+        }
+    }
+
+    this._execute_fn = function(scope,array_of_lines)
+    {
+        while (array_of_lines.length)
+        {
+            let flowForThisLine = array_of_lines.shift(); 
+            let result = flowForThisLine(scope);
+            if (result)
+			{
+                result.promise().then(function()
+				{
+					return this.execute(scope,array_of_lines);
+				});
+			}
+        }
+    }
+
 	// little dirty - make sure that resources and processers are called correctly
 	this._instanciate_processor = function()
 	{

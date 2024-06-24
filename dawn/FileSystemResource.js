@@ -2,6 +2,7 @@ const Resource  = Dawn.require("./dawn/Resource.js");
 const fs   = Dawn.require('fs');
 const path = Dawn.require('path');
 const bnft = Dawn.require("./BNFT/BNFT.js");
+const DawnCompiler = Dawn.require("./DawnCompiler.js");
 function FileSystemResource(name, uri)
 {
     if (!fs.existsSync(uri))
@@ -98,8 +99,10 @@ function FileSystemResource(name, uri)
                 loaded_object._set_owner(this._owner);
 				loaded_object._children = this._children;
 				this._compiled_object = loaded_object;
+				/*
 				if (!this._compiled_object._in_instanciate) // if not precompiled
 					this._compiled_object._in_instanciate=this.$_compiled_object._in_instanciate();
+				*/
             }
             else
             if (compiledExtension == ".dawn.js")
@@ -137,10 +140,15 @@ function FileSystemResource(name, uri)
                     }
                 }
 
-			    var jsSource = Dawn.parser.parse(dawnSource,{alert:reportError,nonterminal:"MODULE"});
+				var jsSource = (new DawnCompiler).parseToModule(dawnSource);
+//			    var jsSource = Dawn.parser.parse(dawnSource,{alert:reportError,nonterminal:"MODULE"});
 				Dawn.debugInfo("DAWN_PARSE:"+jsSource);
                 if (jsSource != "ERROR")
                 {
+                    this._compiled_object = new Dawn.requireBySource(jsSource,Dawn)(uri)
+					this._compiled_object._owner = this._owner;
+					this._compiled_object._children = this._children;
+					/*
                     var compiled_object_constructor=Dawn.requireBySource(jsSource);
 	                var compiled_object = new compiled_object_constructor(this._owner); // create initial instance
 // DO NOT REPLACE	                this._owner._children[compiled_object._name]=compiled_object; // and register - replace FileObject - should it do this
@@ -151,7 +159,7 @@ function FileSystemResource(name, uri)
 					
 					if (!this._compiled_object._in_instanciate) // if not precompiled
 						this._compiled_object._in_instanciate=this.$_compiled_object._in_instanciate();
-
+					*/
 				}
 				else
 					throw "error in dawn file: " + this._get_qualified_name() + " " + jsSource;			
