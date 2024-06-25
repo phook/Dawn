@@ -10,26 +10,26 @@ function FlowProcessor(data)
 {
 	// THE POINT OF FLOW IS TO BREAK THE BACKCHAIN, SO GO EXECUTES FROM START OF FLOW
 	Resource.Processor.call(this,data);
-	data._first=null;
-	data._last=null;
-    data._bound = false;
+	data._children=[];
+	this._first=null;
+	this._last=null;
 	this._pass_bind = function(bindee)
 	{
-		if (data._last)
-            data._last._bind(bindee);
+		if (this._last)
+            this._last._bind(bindee);
 		return bindee;
 	}
 	this._pass_bind_function = function(outputName,fn)
 	{
-		if (data._last)
-			data._last_instanciate_processor()._bind_function(outputName,fn);
+		if (this._last)
+			this._last_instanciate_processor()._bind_function(outputName,fn);
 	}
 
 	this._add = function()
 	{
 		let args = Array.prototype.slice.call(arguments);
 		let last = null;
-		let childIx=0;
+		let self = this;
         args.forEach(function(child) {
 	        if (typeof(child)=="string")
 	            child = data._lookup(child,true);
@@ -49,20 +49,26 @@ function FlowProcessor(data)
 			{
 				/// THESE BOUND ONES SHOULD RESIDE IN THE PROCESSOR NOT THE RESOURCE
 				child = child._instanciate_processor();
-				data._first = child;
-				data._first["_in_begin@"] = true; // occupy _begin - previous function should not bind to these inputs
-				if (data._first._in_begin)
-					data._first._in_begin = data._first._in_begin.bind(child);
-				data._first["_in_go@"]    = true; // occupy _go
-				if (data._first._in_go)
-					data._first._in_go = data._first._in_go.bind(child);
-		        data._first["_in_end@"]   = true; // occupy _end
-				if (data._first._in_end)
-					data._first._in_end = data._first._in_end.bind(child);
+				self._first = child;
+				self._first["_in_begin@"] = true; // occupy _begin - previous function should not bind to these inputs
+				if (self._first._in_begin)
+					self._first._in_begin = self._first._in_begin.bind(child);
+				self._first["_in_go@"]    = true; // occupy _go
+				if (self._first._in_go)
+					self._first._in_go = self._first._in_go.bind(child);
+		        self._first["_in_end@"]   = true; // occupy _end
+				if (self._first._in_end)
+					self._first._in_end = self._first._in_end.bind(child);
 			}
 			last= child;
-			data._children[childIx++]=child;			
+			data._children.push(child);			
 		});
+
+		this._program = [
+				this._first._in_begin,
+				this._first._in_go,
+				this._first._in_end
+		];
 
 		return this;
 
@@ -70,14 +76,9 @@ function FlowProcessor(data)
 
 	this._in_go = function(scope)
 	{
-  		if (data._first)
+  		if (this._program)
 		{
-			this._execute_fn(scope,
-			[
-				data._first._in_begin,
-				data._first._in_go,
-				data._first._in_end
-			]); 
+			this._execute_fn(scope,this._program);
         }
 	}
 	

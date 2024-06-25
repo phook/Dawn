@@ -131,10 +131,6 @@ function ListProcessor(resource)
           result._set_owner(this);
       return result;
     }
-	this._in_instanciate = function()
-	{
-		return new List();
-	}
 	this._in_begin = function(scope)
 	{
 		for(element in this._elements)
@@ -179,6 +175,7 @@ function ListProcessor(resource)
         return scope._execute_next_function(scope);
 	    */
 	}
+	return this;
 }
 List.Processor = ListProcessor;
 module.exports=List;

@@ -61,7 +61,7 @@ function Resource(name,owner)
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       let result;
-    /*  
+      /*
       if (this._get_previous()) // inside flowscope
       {
           // if in a flow - look below and backwards in flow
@@ -71,7 +71,7 @@ function Resource(name,owner)
          result._scope = this._first()._get_owner(); // store scope of the flow scope
       }
       else
-	  */
+	 */
       {
           // otherwhise look in owner - move that here
          result= this._in_lookup_child(ref);
