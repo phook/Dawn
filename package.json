@@ -39,6 +39,6 @@
   },
   "homepage": "https://github.com/phook/Dawn#readme",
   "scripts": {
-    "dawn": "node dawn_run.js public/codeExamples/HelloWorld.dawn"
+    "dawn": "node dawn_run.js ./public/codeExamples/HelloWorld.dawn"
   }
 }
