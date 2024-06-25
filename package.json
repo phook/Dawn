@@ -37,5 +37,8 @@
   "engines": {
     "node": "12.x"
   },
-  "homepage": "https://github.com/phook/Dawn#readme"
+  "homepage": "https://github.com/phook/Dawn#readme",
+  "scripts": {
+    "dawn": "node dawn public/codeExamples/HelloWorld.dawn"
+  }
 }
