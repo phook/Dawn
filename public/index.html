@@ -177,11 +177,15 @@ function setSelectionRange(el, start, end, fullLength)
         var charCount = 0, endCharCount;
 
         var lastTextNode  =  getTextNodesIn(el).slice(-1)[0]
-
-        var ref = fullLength - lastTextNode.length;
-        range.setStart(lastTextNode, start - ref);
-        range.setEnd(lastTextNode,     end - ref);
-
+		
+		if (lastTextNode)
+		{
+			var ref = fullLength - lastTextNode.length;
+			range.setStart(lastTextNode, start - ref);
+			range.setEnd(lastTextNode,     end - ref);
+		}
+		
+		
         var sel = window.getSelection();
         sel.removeAllRanges();
         sel.addRange(range);

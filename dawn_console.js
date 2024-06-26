@@ -12,7 +12,8 @@ var app = express();
 var server = http.createServer(app);
 app.use(compression());
 
-var Dawn = require("./Dawn.js");
+let Dawn = require("./Dawn.js");
+let DawnCompiler = require("./DawnCompiler.js");
 
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
 
@@ -167,7 +168,7 @@ console.log("dawn parser loaded");
 
 
 
-
+/*
 function dawnCommand(command)
 {
     Dawn.returnResult = null;
@@ -199,6 +200,49 @@ function dawnCommand(command)
 			evalInContext.call(Dawn.root,source);
 
 			Dawn.debugInfo(Object.keys(Dawn.root._children));
+		}        
+	}
+    if (Dawn.returnResult)
+        return Dawn.returnResult;
+}
+*/
+
+function dawnCommand(command)
+{
+    Dawn.returnResult = null;
+    if (command == "exit")
+    {
+		server.clients.eval("window.close();");
+        process.exit(-1);
+	}
+    if (Dawn.parser)
+	{
+		Dawn.debugInfo("COMMAND:" + command);
+		if (command.indexOf("Console:") == -1)
+			command += ">>Console:";
+		let jsSource = (new DawnCompiler).parse(command);
+
+		console.log("COMMAND PARSED:" + command +" " + jsSource);
+		if (jsSource != "ERROR")
+		{
+			function evalInContext(js, context) {
+			  return function() {
+				return eval(js);
+			  }.call(context);
+			}
+
+			Dawn.print = function(string)
+            {
+                if (!Dawn.returnResult)
+                    Dawn.returnResult = "";
+
+                Dawn.returnResult += string + "\n";
+            }
+
+			let program_lines = evalInContext(jsSource,Dawn);
+			let processor = Dawn._instanciate_processor();
+			processor._execute(processor,program_lines);
+
 		}        
 	}
     if (Dawn.returnResult)

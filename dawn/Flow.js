@@ -13,13 +13,15 @@ function FlowProcessor(data)
 	data._children=[];
 	this._first=null;
 	this._last=null;
-	this._pass_bind = function(bindee)
+//	this._pass_bind = function(bindee)
+	this._bind = function(bindee)
 	{
 		if (this._last)
             this._last._bind(bindee);
 		return bindee;
 	}
-	this._pass_bind_function = function(outputName,fn)
+//	this._pass_bind_function = function(outputName,fn)
+	this._bind_function = function(outputName,fn)
 	{
 		if (this._last)
 			this._last_instanciate_processor()._bind_function(outputName,fn);

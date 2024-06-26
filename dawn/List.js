@@ -12,7 +12,8 @@ function ListProcessor(resource)
 	Resource.Processor.call(this,resource); 
 	// elements in list holds processors
 	this._elements = resource._elements.map(a => ({...a})).map(a => a._instanciate_processor());
-	this._pass_bind = function(bindee)
+//	this._pass_bind = function(bindee)
+	this._bind = function(bindee)
 	{
 		this._bindee = bindee;
 		for(element in this._elements)
@@ -23,7 +24,8 @@ function ListProcessor(resource)
 		bindee._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
 		return bindee;
 	}
-	this._pass_bind_function = function(outputName,fn)
+//	this._pass_bind_function = function(outputName,fn)
+	this._bind_function = function(outputName,fn)
 	{
 		for(element in this._elements)
 		{

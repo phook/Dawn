@@ -372,211 +372,10 @@ function ResourceProcessor(resource)
 		 let newObject=Object.assign({}, this); // Clone
          return newObject._instanciate_processor();
     }
-	/* OLD WHERE IT IS IN THE RESOURCE
-    this._in_instanciate = function(input)
-    {   
-		 
-         return resource._in_instanciate(input);
-    }
-	*/
-/*
-    // javascript wrapper version for dawn defined function
-    this._lookup = function(identifier, setOwner)
-    {
-      if (identifier.indexOf(":") == -1)
-          throw "error lookup of "+identifier+": colon missing";
-      if (identifier == ".")
-          return this;
-	  if (identifier.indexOf("input") == 0)
-		  return new Resource("Input"); // should be created TODO NOTFIXED
-			
-	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
-      // later set up output in ref and return the result of the output
-      // ref._out_fob = new call(this,this.result) - ish
-      let result;
-      
-      if (this._get_previous()) // inside flowscope
-      {
-          // if in a flow - look below and backwards in flow
-         result= this._in_lookup_child(ref,true);
-         if (!result)
-             result = this._get_previous()._lookup(identifier);
-         result._scope = this._first()._get_owner(); // store scope of the flow scope
-      }
-      else
-      {
-          // otherwhise look in owner - move that here
-         result= this._in_lookup_child(ref);
- 	     if (!result && this._scope)
-			result = this._scope._lookup(identifier,true);
-	     if (!result)
-	        throw "error lookup of "+identifier+": lookup failed";
-	     if (setOwner)
-           result._scope = this._get_owner(); 
-		 else
-            result._scope = this; // store the scope in which it was looked up - for var defs
-	  }
-      if (!result)
-          throw "error lookup of "+identifier+": lookup failed";
-      
-      if (setOwner)
-          result._set_owner(this);
-      return result;
-    }
 	
-	this._in_lookup = function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
-	{
-        if (string_name._value == resource._name)
-            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE FLOW RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
-        if (resource._name == "")
-            return this._in_lookup_child(string_name); // temp hack for root
-
-        var originalResource = string_name._value;
-
-        // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
-        var skip=false;
-        let deref = "";
-        if (resource._name.charAt(-1) != "." && string_name._value.indexOf(resource._name) == 0)
-        {
-            deref = string_name._value[resource._name.length];
-			if (deref == "?")
-	            string_name._value = string_name._value.substring(resource._name.length);
-	        else
-				string_name._value = string_name._value.substring(resource._name.length+1);
-            if (deref == ".")
-            {
-                let result = this._in_lookup_child(string_name,from_owner,exclude);
-                if (result)
-                    return result;
-            }
-            else if (deref == ":" || deref == "?")
-            {
-				let urlParametersToInputs = [];
-
-				if (string_name._value.indexOf("?") !== -1)
-                {
-			        let parameters = string_name._value.substring(string_name._value.indexOf("?"));
-			        string_name._value = string_name._value.substring(0,string_name._value.indexOf("?"));
-				    //if (string_name._value.indexOf("|") !== -1) // if parameters AND input parameters
-					{
-						const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
-	                    const matchAll = parameters.matchAll(URLparameters);
-	                    let addAmpersand = false;
-	                    for (const match of matchAll)
-	                    {
-	                        if (match[1].indexOf("|") === -1)
-	                        {
-	                            string_name._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
-	                            addAmpersand = true;
-	                        }
-	                        else
-	                        {
-	                            if (match[1].indexOf("|") === 0)
-	                            {
-									urlParametersToInputs.push({input:match[1].substring(1),value:match[2]});
-	                            }
-	                            else
-                                {
-	                                Dawn.error("illegal URI \"|\" only allowed as first charachter in input parameters");
-                                }
-	                        }
-	                    }
-					}
-                }
-                let result = this._in_instanciate(string_name);
-                if (result)
-				{
-					for(i in urlParametersToInputs)
-		            {
-						let type = "number";
-						let input = urlParametersToInputs[i].input;
-						let value = urlParametersToInputs[i].value;
-						if (value.indexOf("\"") == 0)
-						{
-							value.replace("\"","");
-							type="string";
-                            value =  this._lookup("String:" + value);
-						}
-                        else
-                        {
-                            value = this._lookup("Number:" + value);
-                        }
-						let inputname = "_in_" + type + "_" + input;
-						if (inputname in result)
-                        {
-							result[inputname](value);
-                            result.inputs_bound[inputname]=true; // to prevent bind errors
-                        }
-						else
-						if (inputname+"$e" in result)
-                        {
-							result[inputname+"$e"](value);
-                            result.inputs_bound[inputname+"$e"]=true; // to prevent bind errors
-                        }
-					}
-				}
-                return result;
-            }
- 		}
-                
-		if (resource._owner && !from_owner)
-		{
-            string_name._value = originalResource;
-			return resource._owner._in_lookup(string_name,from_owner,resource);
-		}
-		
-        return null;
-	}
-    this._lookup_child = function(identifier)
-    {
-      var ref = {_value:identifier};
-      return this._in_lookup_child(ref);
-    }
-	this._in_lookup_child = function(string_name,from_owner,exclude)
-	{
-        var identifier = string_name._value;
-           
-        var keys = Object.keys(resource._children);
-        keys.sort(dawnSort);        
-
-        for(testPath in resource._path) // needs the first element to be ""
-        {
-            var identifierToCheck = resource._path[testPath] + identifier;
-  		    string_name._value = identifierToCheck;
-            for(id in keys)
-            {
-				if (resource._children[keys[id]] != exclude)
-				{
-	                if (identifierToCheck.indexOf(keys[id]) == 0)
-	                {
-	                    var result = resource._children[keys[id]]._in_lookup(string_name,true);
-	                    if (result)
-	                        return result;
-	                }
-				}
-            }
-        }
-	    if (resource._owner && !from_owner)
-		   return resource._owner._in_lookup_child(string_name,false,resource);
-        return null;
-	}
-    */
 	this._offer_bind = function(match, origin)
 	{
         match = "_in_" + match;
-		for(let b in this)
-		{
-			if (b.indexOf("_$in_") == 0 && this[b]) // if not precompiled
-			{
-				let a=b.replace("$","");
-				//this[a]= Dawn.return_executable_function.call(this,this[b]());
-				var result = this[b]();
-				if (Array.isArray(result))
-					result = Dawn.return_executable_function.call(this,result);
-				this[a]=  result; // $ function should return executable function
-				this[b] = undefined; // not entirely correct - function should be saved to react to runtime lookup scope changes - but not a concern now
-			}
-		}
 		for(b in this)
 		{
             if (b.indexOf("_in_") == 0)
@@ -613,15 +412,12 @@ function ResourceProcessor(resource)
             bindee = result;
 		}
         
-//        var id = this._type;
-//        if (typeof(resource._value) != "undefined")
-//            id+=resource._value;
 
         bindee._set_previous(this);
         this.bindee = bindee;		
 
         Dawn.debugInfo("trying to bind " + resource._name + " to " +  bindee._name);
-
+/*
 		// pass bind skal flyttes til en List override ad bind
         if (this._pass_bind)
         {
@@ -629,7 +425,7 @@ function ResourceProcessor(resource)
             // bindee._scope._add_to_flowscope(this);
             return bindee;
         }
-
+*/
         for(let a in this)
         {
             if (a.indexOf("_out_") == 0)
@@ -654,14 +450,14 @@ function ResourceProcessor(resource)
 
     this._bind_function = function(outputName,fn)
     {
-
+/*
 		// pass bind skal flyttes til en List override ad bind
         if (this._pass_bind_function)
         {
-            let input_bound = this._pass_bind_function(fn._boundThis);
+            let input_bound = this._pass_bind_function(outputName, fn);
             return;
         }
-
+*/
 		if (("_out_"+outputName) in this)
 			this["_out_"+outputName] = fn;
     }    

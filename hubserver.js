@@ -1,10 +1,10 @@
-var Socket = require('socket.io');
+var { Server } = require('socket.io');
 exports.createServer = function(server, passedEval)
 {
 
   // listen with socket.io
-  var io = Socket.listen(server);
-  io.set("origins", "*:*");
+  var io = new Server(server, {origins : "*:*"});
+  
 
   var returnMap = {};
   server.clients = {};
