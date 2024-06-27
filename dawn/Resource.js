@@ -50,6 +50,7 @@ function Resource(name,owner)
     }
 	*/
     // javascript wrapper version for dawn defined function
+/*
     this._lookup = function(identifier, setOwner)
     {
       if (identifier.indexOf(":") == -1)
@@ -61,17 +62,15 @@ function Resource(name,owner)
       // later set up output in ref and return the result of the output
       // ref._out_fob = new call(this,this.result) - ish
       let result;
-      /*
-      if (this._get_previous()) // inside flowscope
-      {
-          // if in a flow - look below and backwards in flow
-         result= this._in_lookup_child(ref,true);
-         if (!result)
-             result = this._get_previous()._lookup(identifier);
-         result._scope = this._first()._get_owner(); // store scope of the flow scope
-      }
-      else
-	 */
+  //    if (this._get_previous()) // inside flowscope
+  //    {
+  //        // if in a flow - look below and backwards in flow
+  //       result= this._in_lookup_child(ref,true);
+  //       if (!result)
+  //           result = this._get_previous()._lookup(identifier);
+  //       result._scope = this._first()._get_owner(); // store scope of the flow scope
+  //    }
+  //    else
       {
           // otherwhise look in owner - move that here
          result= this._in_lookup_child(ref);
@@ -229,7 +228,7 @@ function Resource(name,owner)
 		   return this._owner._in_lookup_child(string_name,false,this);
         return null;
 	}
-
+*/
 	this._get_resource = function()
 	{
 		return this;
@@ -265,8 +264,33 @@ function ResourceProcessor(resource)
         }
     }
     */
+/*
 	this._lookup = function(name) {
         var identifier = name;
+
+		if (identifier.indexOf("input:") == 0)
+		{
+			let name = identifier.replace("input:","");
+			if (this["__in_" + name + "_value"])
+				
+				return this["__in_" + name + "_value"];
+		}
+		else
+		if (identifier.indexOf("output:") == 0)
+		{
+			let name = identifier.replace("output:","");
+			if (this["_out_" + name])
+				return this["_out_" + name]; 
+		}
+		return resource._lookup(name);
+	}
+*/
+    this._lookup = function(identifier, setOwner)
+    {
+      if (identifier.indexOf(":") == -1)
+          throw "error lookup of "+identifier+": colon missing";
+      if (identifier == ".")
+          return this;
 
 		if (identifier.indexOf("input:") == 0)
 		{
@@ -281,7 +305,177 @@ function ResourceProcessor(resource)
 			if (this["_out_" + name])
 				return this["_out_" + name]; 
 		}
-		return resource._lookup(name);
+
+	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
+      // later set up output in ref and return the result of the output
+      // ref._out_fob = new call(this,this.result) - ish
+      let result;
+  //    if (this._get_previous()) // inside flowscope
+  //    {
+  //        // if in a flow - look below and backwards in flow
+  //       result= this._in_lookup_child(ref,true);
+  //       if (!result)
+  //           result = this._get_previous()._lookup(identifier);
+  //       result._scope = this._first()._get_owner(); // store scope of the flow scope
+  //    }
+  //    else
+      {
+          // otherwhise look in owner - move that here
+         result= this._in_lookup_child(ref);
+ 	     if (!result && this._scope)
+			result = this._scope._lookup(identifier,true);
+	     if (!result)
+			 return null;
+	     //   throw "error lookup of "+identifier+": lookup failed";
+	     if (setOwner)
+           result._scope = this._get_owner(); 
+		 else
+            result._scope = this; // store the scope in which it was looked up - for var defs
+	  }
+      if (!result)
+          throw "error lookup of "+identifier+": lookup failed";
+      
+      //if (setOwner)
+      //    result._set_owner(this);
+      return result;
+    }
+	
+	this._in_lookup = function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
+	{
+		let myName = this._get_resource()._name;
+        if (string_name._value == myName)
+            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE FLOW RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
+        if (myName == "")
+            return this._in_lookup_child(string_name); // temp hack for root
+
+        var originalResource = string_name._value;
+
+        // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
+        var skip=false;
+        let deref = "";
+        if (myName.charAt(-1) != "." && string_name._value.indexOf(myName) == 0)
+        {
+            deref = string_name._value[myName.length];
+			if (deref == "?")
+	            string_name._value = string_name._value.substring(myName.length);
+	        else
+				string_name._value = string_name._value.substring(myName.length+1);
+            if (deref == ".")
+            {
+                let result = this._in_lookup_child(string_name,from_owner,exclude);
+                if (result)
+                    return result;
+            }
+            else if (deref == ":" || deref == "?")
+            {
+				let urlParametersToInputs = [];
+
+				if (string_name._value.indexOf("?") !== -1)
+                {
+			        let parameters = string_name._value.substring(string_name._value.indexOf("?"));
+			        string_name._value = string_name._value.substring(0,string_name._value.indexOf("?"));
+				    //if (string_name._value.indexOf("|") !== -1) // if parameters AND input parameters
+					{
+						const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
+	                    const matchAll = parameters.matchAll(URLparameters);
+	                    let addAmpersand = false;
+	                    for (const match of matchAll)
+	                    {
+	                        if (match[1].indexOf("|") === -1)
+	                        {
+	                            string_name._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2]; 
+	                            addAmpersand = true;
+	                        }
+	                        else
+	                        {
+	                            if (match[1].indexOf("|") === 0)
+	                            {
+									urlParametersToInputs.push({input:match[1].substring(1),value:match[2]});
+	                            }
+	                            else
+                                {
+	                                Dawn.error("illegal URI \"|\" only allowed as first charachter in input parameters");
+                                }
+	                        }
+	                    }
+					}
+                }
+                let result = this._in_instanciate(string_name);
+                if (result)
+				{
+					for(let i in urlParametersToInputs)
+		            {
+						let type = "number";
+						let input = urlParametersToInputs[i].input;
+						let value = urlParametersToInputs[i].value;
+						if (value.indexOf("\"") == 0)
+						{
+							value.replace("\"","");
+							type="string";
+                            value =  this._lookup("String:" + value);
+						}
+                        else
+                        {
+                            value = this._lookup("Number:" + value);
+                        }
+						let inputname = "_in_" + type + "_" + input;
+						if (inputname in result)
+                        {
+							result[inputname](value);
+                            result.inputs_bound[inputname]=true; // to prevent bind errors
+                        }
+						else
+						if (inputname+"$e" in result)
+                        {
+							result[inputname+"$e"](value);
+                            result.inputs_bound[inputname+"$e"]=true; // to prevent bind errors
+                        }
+					}
+				}
+                return result;
+            }
+ 		}
+                
+		if (this._get_resource()._owner && !from_owner)
+		{
+            string_name._value = originalResource;
+			return this._get_resource()._owner._in_lookup(string_name,from_owner,this);
+		}
+		
+        return null;
+	}
+    this._lookup_child = function(identifier)
+    {
+      var ref = {_value:identifier};
+      return this._in_lookup_child(ref);
+    }
+	this._in_lookup_child = function(string_name,from_owner,exclude)
+	{
+        var identifier = string_name._value;
+
+        var keys = Object.keys(this._get_resource()._children);
+        keys.sort(dawnSort);        
+
+        for(testPath in this._get_resource()._path) // needs the first element to be ""
+        {
+            var identifierToCheck = this._get_resource()._path[testPath] + identifier;
+  		    string_name._value = identifierToCheck;
+            for(let id in keys)
+            {
+				if (this._get_resource()._children[keys[id]] != exclude)
+				{
+	                if (identifierToCheck.indexOf(keys[id]) == 0)
+	                {
+	                    var result = this._get_resource()._children[keys[id]]._instanciate_processor()._in_lookup(string_name,true);
+	                    if (result)
+	                        return result;
+	                }
+				}
+            }
+        }
+	    if (this._owner && !from_owner)
+		   return this._get_resource()._owner._in_lookup_child(string_name,false,this);
+        return null;
 	}
 	
     this._clone = function(){return clone(this);}

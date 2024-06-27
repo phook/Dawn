@@ -239,8 +239,8 @@ function dawnCommand(command)
                 Dawn.returnResult += string + "\n";
             }
 
-			let program_lines = evalInContext(jsSource,Dawn);
 			let processor = Dawn._instanciate_processor();
+			let program_lines = evalInContext(jsSource,processor);
 			processor._execute(processor,program_lines);
 
 		}        

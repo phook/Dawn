@@ -32,6 +32,13 @@ function ListProcessor(resource)
 			this._elements[element]._bind_function(outputName,fn);
 		}
 	}
+	
+    this._in_instanciate = function(input)
+    {   
+		 let newObject=Object.assign({}, this); // Clone
+		 newObject._elements=[]; // Instanciate and empty list
+         return newObject._instanciate_processor();
+    }
 
 	this._offer_bind = function(match)
 	{
