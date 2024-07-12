@@ -34,8 +34,11 @@ function FlowProcessor(data)
 		let self = this;
         args.forEach(function(child) {
 	        if (typeof(child)=="string")
-	            child = data._lookup(child,true);
-	        if (typeof(child)=="function")
+			{
+				// find all _out types and search. - maybe scopes gets added to lookup as array
+	            child = data._instanciate_processor()._lookup(child);
+	        }
+			if (typeof(child)=="function")
 			{
 				if (last)
 					last._bind_function(child._outputName,child);

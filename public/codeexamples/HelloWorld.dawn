@@ -1,3 +1,4 @@
+String:Hello>>Tester:>>Console:
 Number:42>>Console:
 String:Hello>>Console:
 [String:Hello String:World]>>String.concatenate:>>Console:

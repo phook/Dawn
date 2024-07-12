@@ -524,7 +524,7 @@ let DawnCompiler = function () {
 			return this.tokenizer.unPeek(false);
 		}
 		this.tokenizer.stopPeek();
-		this.insertAndPopMark("[","]");
+		this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
 		this._opt_newline();
 		return true;
 	}

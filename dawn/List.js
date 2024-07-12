@@ -73,7 +73,7 @@ function ListProcessor(resource)
         let self = this;
         args.forEach(function(element) {
 			if (typeof(element)=="string")
-	            element = resource._lookup(element,true);
+	            element = resource._instanciate_processor()._lookup(element);
 	        else/*
 			if (typeof(element)=="function")
 	            element = element();
@@ -110,30 +110,14 @@ function ListProcessor(resource)
 
   	  for(element in resource._elements)
 	  {
-		result = resource._elements[element]._in_lookup_child(ref,true);
+		result = resource._elements[element]._instanciate_processor()._in_lookup_child(ref,true);
 		if (result)
 			return result;
 	  }
-      if (this._get_previous()) // inside flowscope
-      {
-          // if in a flow - look below and backwards in flow
-         result= this._get_resource()._in_lookup_child(ref,true);
-         if (!result)
-             result = this._get_previous()._lookup(identifier);
-         result._scope = this._first()._get_owner(); // store scope of the flow scope
-      }
-      else
-      {
           // otherwhise look in owner - move that here
-         result= this._get_resource()._in_lookup_child(ref);
-		  /*
-	     if (setOwner)
-           result._scope = this._get_owner(); 
-		 else
-            result._scope = this; // store the scope in which it was looked up - for var defs
-	      */
-      }
-      if (!result)
+       result= this._get_resource()._instanciate_processor()._in_lookup_child(ref);
+	   
+	   if (!result)
           throw "error lookup of "+identifier+": lookup failed";
       
       if (setOwner)

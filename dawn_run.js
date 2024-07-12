@@ -39,8 +39,8 @@ function evalInContext(js, context) {
 let jsSource = (new DawnCompiler).parse(source);
 if (jsSource != "ERROR")
 {
-	let program_lines = evalInContext(jsSource,Dawn);
 	let processor = Dawn._instanciate_processor();
+	let program_lines = evalInContext("["+jsSource+"]",processor);
 	processor._execute(processor,program_lines);
 }
 

@@ -1,27 +1,9 @@
-/*
-define concatenate
-  output String
-  input begin
-    native javascript
-      this.data = {};
-      this.data._value = "";
-    endnative
-  input go
-    native javascript
-      if (this._out_String)
-        this._out_String(this)
-    endnative
-  input all String
-    native javascript
-      this.data._value += input.data._value;
-    endnative
-*/
-//  define concatenate
+
 const Resource = Dawn.require('./dawn/Resource.js');
 
 function concatenate()
 {
-	Resource.call(this,"concatenate"); // REMOVE NAMING - BUT LEAVE FOR DEBUG FOR NOW
+	Resource.call(this,"concatenate");
 	this.Processor=concatenateProcessor;
 	return this;
 }
@@ -32,7 +14,8 @@ function concatenateProcessor(resource)
 	this._resource = resource;
 	this._out_String = null;
 	this._in_begin = function()
-		this._tempString = ""; // NOT CORRECT - MUST BE STRING
+	{
+		this._tempString = ""; 
     }
 	this._in_String_$ = function(input)
     {   
@@ -41,7 +24,7 @@ function concatenateProcessor(resource)
 	this._in_end = function()
     {
 	  if (this._out_String)
-        this._out_String({_value:this._tempString}); // WRONG - MUST BE STRING
+        this._out_String({_value:this._tempString}); 
     }
 }
 concatenate.Processor=concatenateProcessor;
