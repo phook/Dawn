@@ -1,0 +1,16 @@
+define subtract
+  native javascript
+    this._out_number = null
+    this._in_begin = function()
+        if (!this.inputs_bound["_in_number_minuend"])
+            this._bind_error("subtracion input minuend not bound");       
+        if (!this.inputs_bound["_in_number_subtrahend"])
+            this._bind_error("subtracion input subtrahend not bound");       
+    this._in_go = function()
+      if (this._out_number)
+        this._out_number(this)
+    this._in_number_minuend = function(number)
+      this.data._value = number.data._value
+    this._in_number_subtrahend = function(number)
+      this.data._value = this.data._value.subtract(number._value)
+  endnative

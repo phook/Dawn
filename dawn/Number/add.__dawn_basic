@@ -1,0 +1,42 @@
+/*
+define add
+  native javascript
+    this._out_number = null;
+    this._in_begin = function()
+        this._value = new Dawn.bigRat();
+    this._in_go = function()
+      if (this._out_number)
+        this._out_number(this);
+    this._in_number_$ = function(number)
+      this._value = this._value.add(number._value);
+  endnative
+*/
+const Resource = Dawn.require('./dawn/Resource.js');
+
+function add()
+{
+	Resource.call(this,"add"); // REMOVE NAMING - BUT LEAVE FOR DEBUG FOR NOW
+	this.Processor=addProcessor;
+	return this;
+}
+
+function addProcessor(resource)
+{
+	Resource.Processor.call(this,resource); 
+	this._resource = resource;
+	this._out_Number = null;
+	this._in_begin = function()
+		this._tempNumber = new Dawn.bigRat(0);; // NOT CORRECT - MUST BE STRING
+    }
+	this._in_Number_$ = function(input)
+    {   
+      this._tempNumber.add(input._value);
+    }
+	this._in_end = function()
+    {
+	  if (this._out_Number)
+        this._out_Number({_value:this._tempNumber}); // WRONG - MUST BE STRING
+    }
+}
+add.Processor=addProcessor;
+module.exports=add;
