@@ -240,7 +240,7 @@ function dawnCommand(command)
             }
 
 			let processor = Dawn._instanciate_processor();
-			let program_lines = evalInContext(jsSource,processor);
+			let program_lines = evalInContext("["+jsSource+"]",processor);
 			processor._execute(processor,program_lines);
 
 		}        
