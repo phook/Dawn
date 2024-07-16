@@ -154,6 +154,9 @@ Dawn = {
             return fs.readFileSync(url, {option:'utf8', function(err, source) {console.log("error reading "+url);throw err;}}).toString();
         }
     },
+	debugInfo : function(text)
+	{
+	},
     initialize : function(rootUrl,evaluate, debug, consoleOutputFunction)
     {
         var evalInContext = function(str){

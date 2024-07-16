@@ -1,4 +1,5 @@
 var id = 1;
+var id = 1;
 
 function clone(src) {
 	var clone=Object.assign({}, src);
@@ -59,6 +60,7 @@ function Resource(name,owner)
 }
 function ResourceProcessor(resource)
 {
+	this._children_processors = {};
 	this._get_resource = function()
 	{
 		return resource;
@@ -291,26 +293,21 @@ function ResourceProcessor(resource)
 	{
         var args = Array.prototype.slice.call(arguments);
         var self = this;
-        args.forEach(function(child) {
-	        child = child._get_resource(); // nonoptimal - but coerce child to be the resource - if its a processor
-            if (child=="string")
-                child = resource._lookup(child);
-            else
-            if (child._isHolder)
-            {
-                let bindee = child._bindee;
-                child = resource._lookup(child._lookup);
-                child._instanciate_processor()._bind(bindee); // nonoptimal
-            }
-            
-            child._set_owner(self._get_resource()); //nonoptimal
-			var name = "";
-			if (child._name)
-				name = child._name;
-			else
-				name = "Ix" + resource._it++;
-			resource._children[name] = child;
-        });
+		args.forEach(function(child)
+			{
+				if (child=="string")
+					child = resource._lookup(child);
+				
+				child._set_owner(self._get_resource()); //nonoptimal
+				var name = "";
+				if (child._name)
+					name = child._name;
+				else
+					name = "Ix" + resource._it++;
+				resource._children[name] = child._get_resource();
+//				self._children_processors[name] = child._instanciate_processor(); SHOULD BE LIKE THIS
+			}
+		);
 		return this;
 	}
 

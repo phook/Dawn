@@ -2,3 +2,4 @@ String:Hello>>Tester:>>Console:
 Number:42>>Console:
 String:Hello>>Console:
 [String:Hello String:World]>>String.concatenate:>>Console:
+[Number:0.1 Number:0.2]>>Number.add:>>Console:

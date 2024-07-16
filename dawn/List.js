@@ -74,16 +74,6 @@ function ListProcessor(resource)
         args.forEach(function(element) {
 			if (typeof(element)=="string")
 	            element = resource._instanciate_processor()._lookup(element);
-	        else/*
-			if (typeof(element)=="function")
-	            element = element();
-	        else*/
-	        if (element._isHolder)
-	        {
-	            let bindee = element._bindee;
-	            element = resource._lookup(element._lookup,true);
-	            element._bind(bindee);
-	        }
 			element = element._instanciate_processor(); //NEW
 			element._set_owner(self);
             element["_in_go@"] = true; // occupy _go

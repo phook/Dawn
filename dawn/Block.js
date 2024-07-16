@@ -7,7 +7,7 @@ function Block()
 }
 function BlockProcessor(data)
 {
-	Resource.ResourceProcessor.call(this,data);
+	Resource.Processor.call(this,data);
 	this._pass_bind = function(bindee)
 	{
 		this._bindee = bindee;
