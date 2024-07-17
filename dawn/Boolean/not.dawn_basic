@@ -1,8 +1,0 @@
-define and
-  native javascript
-    this._out_boolean = null;
-    this._in_boolean = function(boolean)
-      this._value = !boolean._value;
-      if (this._out_boolean)
-        this._out_boolean(this);
-  endnative
