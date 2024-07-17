@@ -21,7 +21,7 @@ function ConsoleProcessor(resource)
     }
 	this._in_Boolean_$ = function(input)
     {   
-        Dawn.print(input_value?"True":"False")
+        Dawn.print(input._value?"true":"false")
     }
 	return this;
 }

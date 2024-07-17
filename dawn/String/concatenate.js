@@ -23,8 +23,7 @@ function concatenateProcessor(resource)
     }
 	this._in_end = function()
     {
-	  if (this._out_String)
-        this._out_String({_value:this._tempString}); 
+        this?._out_String({_value:this._tempString}); 
     }
 }
 concatenate.Processor=concatenateProcessor;

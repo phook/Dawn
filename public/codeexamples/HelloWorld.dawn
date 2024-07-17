@@ -3,3 +3,6 @@ Number:42>>Console:
 String:Hello>>Console:
 [String:Hello String:World]>>String.concatenate:>>Console:
 [Number:0.1 Number:0.2]>>Number.add:>>Console:
+Boolean:True>>Boolean.not:>>Console:
+[Boolean:True Boolean:False]>>Boolean.or:>>Console:
+[Boolean:True Boolean:False]>>Boolean.and:>>Console:

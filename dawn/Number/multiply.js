@@ -23,8 +23,7 @@ function mulProcessor(resource)
     }
 	this._in_end = function()
     {
-	  if (this._out_Number)
-        this._out_Number({_value:this._tempNumber}); // WRONG - MUST BE STRING
+        this?._out_Number({_value:this._tempNumber}); // WRONG - MUST BE STRING
     }
 }
 mul.Processor=mulProcessor;
