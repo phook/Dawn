@@ -3,10 +3,9 @@ function Identifier()
 {
     Resource.call(this,"Identifier");
     let _offer_connection = this._offer_connection;
-	this._offer_connection = function(match, origin)
+	this._offer_connection = function(match)
 	{
-        this._origin = origin;
-        return _offer_connection.call(this,match,origin);
+        return _offer_connection.call(this,match);
     }
     this._in_begin = function()
     {   

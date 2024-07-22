@@ -40,14 +40,15 @@ function ListProcessor(resource)
 
 	this._offer_connection = function(match)
 	{
-		for(b in this)
+		if (!this._input_list)
+			this._build_input_list();
+		for(b in this._input_list)
 		{
 			if ((b == "_in_" + match) || (b.indexOf("_in_"+match+"_") == 0))
 			{
 				if ((b.indexOf("$")==(b.length-2)) || typeof(this[b+"@"]) == "undefined")
 				{
 					this[b+"@"] = true;
-					//return new _call(this,this[b]);
 					return this[b].bind(this);
 					break;
 				}

@@ -321,33 +321,41 @@ function ResourceProcessor(resource)
          return newObject._instanciate_processor();
     }
 	
-	this._offer_connection = function(match, origin)
+	this._input_list=null;
+	this._build_input_list=function()
 	{
-        match = "_in_" + match;
+		this._input_list = {};
 		for(b in this)
+           if (b.indexOf("_in_") == 0)
+				this._input_list[b]=this[b];
+	}
+	this._offer_connection = function(match)
+	{
+		if (!this._input_list)
+			this._build_input_list();
+
+        match = "_in_" + match;
+		for(b in this._input_list)
 		{
-            if (b.indexOf("_in_") == 0)
-            {
-                let explicit = b.endsWith("$e");
-                let all_outputs = b.endsWith("$");
-                if ((b == match) ||                                   // perfect match
-                    (b == match + "$") ||                             // catchall
-                    (!explicit && b.indexOf(match+"_") == 0) ||       // type match 
-                    (explicit && b == match+"$e"))                    // explicit match
-                {
-                       // inputs ending with $ takes all outputs
-                    if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
-                    {
-                        this.inputs_bound[b] = true;
-                        
-						let newBoundFunction=this[b].bind(this);
-                        newBoundFunction._boundThis=this;
-						newBoundFunction._outputName= match.replace("_in_","");;
-						return newBoundFunction;
-						break;
-                    }
-                }
-            }
+			let explicit = b.endsWith("$e");
+			let all_outputs = b.endsWith("$");
+			if ((b == match) ||                                   // perfect match
+				(b == match + "$") ||                             // catchall
+				(!explicit && b.indexOf(match+"_") == 0) ||       // type match 
+				(explicit && b == match+"$e"))                    // explicit match
+			{
+				   // inputs ending with $ takes all outputs
+				if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
+				{
+					this.inputs_bound[b] = true;
+					
+					let newBoundFunction=this[b].bind(this);
+					newBoundFunction._boundThis=this;
+					newBoundFunction._outputName= match.replace("_in_","");;
+					return newBoundFunction;
+					break;
+				}
+			}
 		}
 	}
     this._connect = function(resource_to_connect_to)
@@ -370,8 +378,11 @@ function ResourceProcessor(resource)
             if (a.indexOf("_out_") == 0)
             {
                 match = a.substr(5);
-                
-                let input_bound = resource_to_connect_to._offer_connection(match,this)
+
+				// HERE DETECT IF resource_to_connect_to IS ResourceNotFound
+				// IF IT IS DEDUCT THE OUTPUT TYPE AND LOOKUP IN THAT SCOPE WITH URI FROM ResourceNotFound 
+				
+                let input_bound = resource_to_connect_to._offer_connection(match)
                 
                 if (input_bound)
                 {
