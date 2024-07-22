@@ -3,7 +3,7 @@ const Resource = Dawn.require('./dawn/Resource.js');
 function _if()
 {
 	Resource.call(this,"if");
-	this.Processor=notProcessor;
+	this.Processor=ifProcessor;
 	return this;
 }
 

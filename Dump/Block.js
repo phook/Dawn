@@ -14,7 +14,7 @@ function BlockProcessor(data)
 		bindee._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
 		return bindee;
 	}
-	this._offer_bind = function(match)
+	this._offer_connection = function(match)
 	{
 		for(b in this)
 		{

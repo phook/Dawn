@@ -28,7 +28,7 @@ _NewResource = function() // SHOULD BE CALLED NEW RESOURCE
 		}
 		else
 			this._newObject = this.clone();
-		if (!this._bindee)
+		if (!this._connectee)
 			string._scope._add(this._newObject);
 		else
 			this.bindee._add(this._newObject);

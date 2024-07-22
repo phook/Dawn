@@ -65,7 +65,6 @@ function ResourceProcessor(resource)
 	{
 		return resource;
 	}	
-    this._output_bind_error = null;
     this._lookup = function(identifier)
     {
       if (identifier.indexOf(":") == -1)
@@ -322,7 +321,7 @@ function ResourceProcessor(resource)
          return newObject._instanciate_processor();
     }
 	
-	this._offer_bind = function(match, origin)
+	this._offer_connection = function(match, origin)
 	{
         match = "_in_" + match;
 		for(b in this)
@@ -351,43 +350,41 @@ function ResourceProcessor(resource)
             }
 		}
 	}
-    this._bind = function(bindee)
+    this._connect = function(resource_to_connect_to)
     {
-        if (typeof(bindee)=="string")
+        if (typeof(resource_to_connect_to)=="string")
 		{
-			let result = resource._lookup(bindee,true);
+			let result = resource._lookup(resource_to_connect_to,true);
 			if (!result)
-				result = this._get_resource()._lookup(bindee); //nonoptimal
-            bindee = result;
+				result = this._get_resource()._lookup(resource_to_connect_to); //nonoptimal
+            resource_to_connect_to = result;
 		}
         
 
-        bindee._set_previous(this);
-        this.bindee = bindee;		
+        resource_to_connect_to._set_previous(this);
+        this._connectee = resource_to_connect_to;		
 
-        Dawn.debugInfo("trying to bind " + resource._name + " to " +  bindee._name);
+        Dawn.debugInfo("trying to bind " + resource._name + " to " +  resource_to_connect_to._name);
         for(let a in this)
         {
             if (a.indexOf("_out_") == 0)
             {
                 match = a.substr(5);
                 
-                let input_bound = bindee._offer_bind(match,this)
+                let input_bound = resource_to_connect_to._offer_connection(match,this)
                 
                 if (input_bound)
                 {
-                    Dawn.debugInfo("binding " + resource._name + " to " +  bindee._name);
+                    Dawn.debugInfo("binding " + resource._name + " to " +  resource_to_connect_to._name);
                     this[a] = input_bound;
                 }
             }
         }
-        if (typeof(bindee._end_bind) != "undefined")
-            bindee._end_bind();
         
-        return bindee;
+        return resource_to_connect_to;
     }    
 
-    this._bind_function = function(outputName,fn)
+    this._connect_function = function(outputName,fn)
     {
 		if (("_out_"+outputName) in this)
 			this["_out_"+outputName] = fn;
@@ -448,14 +445,6 @@ function ResourceProcessor(resource)
         {
           return this;   
         }
-    }
-
-    this._bind_error = function(errorMessage)
-    {
-        if (this._output_bind_error)
-            this._output_bind_error(errorMessage);
-        else
-            this.call(this._get_owner(),errorMessage);
     }
 
 	this._add_next_function_at = 0;

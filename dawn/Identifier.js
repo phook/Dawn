@@ -2,11 +2,11 @@ const Resource = Dawn.require('./dawn/Resource.js');
 function Identifier()
 {
     Resource.call(this,"Identifier");
-    let _offer_bind = this._offer_bind;
-	this._offer_bind = function(match, origin)
+    let _offer_connection = this._offer_connection;
+	this._offer_connection = function(match, origin)
 	{
         this._origin = origin;
-        return _offer_bind.call(this,match,origin);
+        return _offer_connection.call(this,match,origin);
     }
     this._in_begin = function()
     {   

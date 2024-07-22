@@ -174,8 +174,8 @@ Dawn = {
 
         this.passedEval = evaluate ? evaluate : evalInContext;
 
-        this.parser = null;
-        this.parser = new bnft(this.resourceAsString("./dawn/Flavors/dawn.bnft"), {alert:console.log,fileToString: Dawn.resourceAsString,path:"dawn/Flavors/",useCache:true});
+//        this.parser = null;
+//        this.parser = new bnft(this.resourceAsString("./dawn/Flavors/dawn.bnft"), {alert:console.log,fileToString: Dawn.resourceAsString,path:"dawn/Flavors/",useCache:true});
 
         
         if (this.isBrowser())

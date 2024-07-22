@@ -18,7 +18,7 @@ define http
           if (!promise.isSettled())
             // late binding example - here the received is treated as a string and bound to next during run - mime type should be detected
             let dataAsString = scope._get_owner()._lookup("String:"+encodeURIComponent(data));
-            dataAsString._bind(bindee);
+            dataAsString._connect(bindee);
             scope._add_next_function(dataAsString,dataAsString._in_go);
             promise.resolve();
         );

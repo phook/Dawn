@@ -12,24 +12,22 @@ function ListProcessor(resource)
 	Resource.Processor.call(this,resource); 
 	// elements in list holds processors
 	this._elements = resource._elements.map(a => ({...a})).map(a => a._instanciate_processor());
-//	this._pass_bind = function(bindee)
-	this._bind = function(bindee)
+	this._connect = function(resource_to_connect_to)
 	{
-		this._bindee = bindee;
+		this._connectee = resource_to_connect_to;
 		for(element in this._elements)
 		{
 	        //this._elements[element]._set_previous(this);
-			this._elements[element]._bind(bindee);
+			this._elements[element]._connect(resource_to_connect_to);
 		}
-		bindee._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
-		return bindee;
+		resource_to_connect_to._set_previous(this);  // VERY IMPORTANT - OVERRIDE SO REWIND DOESENT GO "INTO" LIST
+		return resource_to_connect_to;
 	}
-//	this._pass_bind_function = function(outputName,fn)
-	this._bind_function = function(outputName,fn)
+	this._connect_function = function(outputName,fn)
 	{
 		for(element in this._elements)
 		{
-			this._elements[element]._bind_function(outputName,fn);
+			this._elements[element]._connect_function(outputName,fn);
 		}
 	}
 	
@@ -40,7 +38,7 @@ function ListProcessor(resource)
          return newObject._instanciate_processor();
     }
 
-	this._offer_bind = function(match)
+	this._offer_connection = function(match)
 	{
 		for(b in this)
 		{
@@ -58,7 +56,7 @@ function ListProcessor(resource)
 
 		for(element in this._elements)
 		{
-			let input_bound = this._elements[element]._offer_bind(match);
+			let input_bound = this._elements[element]._offer_connection(match);
             
             // binding single output to multiple inputs?
             if (input_bound)
@@ -119,44 +117,24 @@ function ListProcessor(resource)
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				if (this._elements[element]._in_begin)
-					this._elements[element]._in_begin();
+				this._elements[element]?._in_begin();
 		}
-		if (this._bindee)
-			this._bindee._in_begin(scope);
+		this._connectee?._in_begin(scope);
 	}
 	this._in_end = function(scope)
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				if (this._elements[element]._in_end)
-					this._elements[element]._in_end(scope);
+				this._elements[element]?._in_end(scope);
 		}
-		if (this._bindee)
-			this._bindee._in_end(scope);
-        this.input_bound={};
+		this._connectee._in_end(scope);
+        //this.input_bound={}; must be wrong?
 	}
 	this._in_go = function(scope)
 	{
         Dawn.debugInfo("list going");
         return this._execute(scope,this._elements);
-		/*
-		for(element in this._elements)
-		{
-			if (this._elements[element])
-            {
-                scope._add_next_function(this._elements[element],this._elements[element]._in_go);
-            }
-		}
-		// do not propagate _go - the bound list members calls on if needed
-		//if (this._bindee)
-        //{
-        //    scope._add_next_function(this._bindee,this._bindee._in_go);
-        //}
-		
-        return scope._execute_next_function(scope);
-	    */
 	}
 	return this;
 }

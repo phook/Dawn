@@ -13,18 +13,16 @@ function FlowProcessor(data)
 	data._children=[];
 	this._first=null;
 	this._last=null;
-//	this._pass_bind = function(bindee)
-	this._bind = function(bindee)
+	this._connect = function(resource_to_connect_to)
 	{
 		if (this._last)
-            this._last._bind(bindee);
-		return bindee;
+            this._last._connect(resource_to_connect_to);
+		return resource_to_connect_to;
 	}
-//	this._pass_bind_function = function(outputName,fn)
-	this._bind_function = function(outputName,fn)
+	this._connect_function = function(outputName,fn)
 	{
 		if (this._last)
-			this._last_instanciate_processor()._bind_function(outputName,fn);
+			this._last_instanciate_processor()._connect_function(outputName,fn);
 	}
 
 	this._add = function()
@@ -41,14 +39,14 @@ function FlowProcessor(data)
 			if (typeof(child)=="function")
 			{
 				if (last)
-					last._bind_function(child._outputName,child);
+					last._connect_function(child._outputName,child);
 				child = child._boundThis; //NEW
 			}
 			else
 			if (last)
 			{
 				child = child._instanciate_processor();
-				last._bind(child);
+				last._connect(child);
 			}
 			else
 			{
