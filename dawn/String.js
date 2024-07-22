@@ -14,7 +14,7 @@ function StringProcessor(resource)
     Resource.Processor.call(this,resource); 
 	this._resource = resource;
 	this._out_String = null;
-    this._in_String = function(input)
+    this._in_String_$ = function(input)
     {   
       resource._value = input._value;
     }

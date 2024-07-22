@@ -371,7 +371,7 @@ let DawnCompiler = function () {
 			this.inputName    == "" &&
 			this.outputName   == "")
 			this.compilation+=",";
-		this._opt_whitespace(); 
+		this._opt_whitespace();		
 		if (this._uri())  
 		{
 			let identifier = this.tokenizer.identifier();
@@ -400,6 +400,11 @@ let DawnCompiler = function () {
 			}*/
 			else
 				this.unmark();
+			return this.tokenizer.stopPeek(true); // return true;
+		}
+		if (this._flow_list(module))
+		{
+			this.unmark();
 			return this.tokenizer.stopPeek(true); // return true;
 		}
 		if (this._flow(module))

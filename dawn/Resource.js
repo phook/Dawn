@@ -338,11 +338,15 @@ function ResourceProcessor(resource)
 		for(b in this._input_list)
 		{
 			let explicit = b.endsWith("$e");
-			let all_outputs = b.endsWith("$");
-			if ((b == match) ||                                   // perfect match
-				(b == match + "$") ||                             // catchall
-				(!explicit && b.indexOf(match+"_") == 0) ||       // type match 
-				(explicit && b == match+"$e"))                    // explicit match
+			let all_outputs = b.endsWith("_$");
+			let fullmatch = (b == match);
+			let catchall = (b == match + "_$");
+			let type_match = (match.indexOf(b) == 0);
+			let explicit_match = (explicit && b == match+"$e");
+			if (fullmatch  || 
+				catchall   ||     
+				type_match ||     
+				explicit_match)        
 			{
 				   // inputs ending with $ takes all outputs
 				if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined")
