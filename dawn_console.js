@@ -215,36 +215,33 @@ function dawnCommand(command)
 		server.clients.eval("window.close();");
         process.exit(-1);
 	}
-    if (Dawn.parser)
+	Dawn.debugInfo("COMMAND:" + command);
+	if (command.indexOf("Console:") == -1)
+		command += ">>Console:";
+	let jsSource = (new DawnCompiler).parse(command);
+
+	console.log("COMMAND PARSED:" + command +" " + jsSource);
+	if (jsSource != "ERROR")
 	{
-		Dawn.debugInfo("COMMAND:" + command);
-		if (command.indexOf("Console:") == -1)
-			command += ">>Console:";
-		let jsSource = (new DawnCompiler).parse(command);
+		function evalInContext(js, context) {
+		  return function() {
+			return eval(js);
+		  }.call(context);
+		}
 
-		console.log("COMMAND PARSED:" + command +" " + jsSource);
-		if (jsSource != "ERROR")
+		Dawn.print = function(string)
 		{
-			function evalInContext(js, context) {
-			  return function() {
-				return eval(js);
-			  }.call(context);
-			}
+			if (!Dawn.returnResult)
+				Dawn.returnResult = "";
 
-			Dawn.print = function(string)
-            {
-                if (!Dawn.returnResult)
-                    Dawn.returnResult = "";
+			Dawn.returnResult += string + "\n";
+		}
 
-                Dawn.returnResult += string + "\n";
-            }
+		let processor = Dawn._instanciate_processor();
+		let program_lines = evalInContext("["+jsSource+"]",processor);
+		processor._execute(processor,program_lines);
 
-			let processor = Dawn._instanciate_processor();
-			let program_lines = evalInContext("["+jsSource+"]",processor);
-			processor._execute(processor,program_lines);
-
-		}        
-	}
+	}        
     if (Dawn.returnResult)
         return Dawn.returnResult;
 }
