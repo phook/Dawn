@@ -20,10 +20,7 @@ function BooleanProcessor(resource)
     }
     this._in_go = function()
     {
-      if (this._out_Boolean)
-        this._out_Boolean(resource);
-      if (this._out_Resource)
-        this._out_Resource(resource);
+        return this?._out_Boolean(resource);
     }
     this._in_instanciate = function(input)
     {   

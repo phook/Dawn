@@ -20,10 +20,7 @@ function StringProcessor(resource)
     }
     this._in_go = function()
     {
-      if (this._out_String)
-        this._out_String(resource);
-      if (this._out_Resource)
-        this._out_Resource(resource);
+        return this?._out_String(resource);
     }
     this._in_instanciate = function(input)
     {   

@@ -27,6 +27,7 @@
         innerElement.textField = new mdc.textField.MDCTextField(textElement);
         innerElement.addEventListener('input',moveData);
         tooltipElement.tooltipElement = new mdc.tooltip.MDCTooltip(tooltipElement);
-        
+		innerElement.addEventListener("mouseleave", (event) => {console.log(tooltipElement.style.display);tooltipElement.tooltipElement.hide();tooltipElement.style.display="none";});
+		innerElement.addEventListener("mouseenter", (event) => {tooltipElement.style.display="block";});
     }
 }
