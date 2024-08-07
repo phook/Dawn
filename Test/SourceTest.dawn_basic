@@ -1,0 +1,5 @@
+input go 
+ 5^(1+1001#2)>> console
+ x >> console
+ "y" >> console
+ ["x" "y"] >> console
