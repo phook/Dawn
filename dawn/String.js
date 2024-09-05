@@ -11,7 +11,7 @@ function _String()
 // SINCE STRING IS AN OBJECT, MULTIPLE PROCESSORS FOR THE DATA CAN BE CREATED, EACH POINTING TO THE ORIGINAL PIECE OF DATA
 function StringProcessor(resource)
 {
-    Resource.Processor.call(this,resource); 
+  Resource.Processor.call(this,resource); 
 	this._resource = resource;
 	this._out_String = null;
     this._in_String_$ = function(input)
