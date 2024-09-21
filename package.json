@@ -12,7 +12,7 @@
     "@webcomponents/webcomponentsjs": "^2.6.0",
     "big-rational": "^0.10.9",
     "compression": "^1.7.4",
-    "express": "^4.17.1",
+    "express": "^4.20.0",
     "express-fileupload": "^1.2.1",
     "express-transform-bare-module-specifiers": "^1.0.4",
     "express-upload": "^0.1.0",
