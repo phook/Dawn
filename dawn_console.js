@@ -155,6 +155,11 @@ let environment =
 
 app.get("*",async function (request, result, next) {
   let { url } = request;
+  if (url==="environment.json" && request.hostname === "localhost")
+  {
+     result.status(200).setHeader("Content-Type","text/json").send(JSON.stringify(environment));
+  }
+  else
   if (url.indexOf("/file:///") === 0 && request.hostname === "localhost")
   {
     filepath = url.replace("/file:///","");
