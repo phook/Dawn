@@ -14,8 +14,8 @@ app.use(cors());
 
 //app.use(compression());
 
-let Dawn = require("./Dawn.js");
-let DawnCompiler = require("./DawnCompiler.dawn.js");
+let Dawn = require("./public/dawn.js");
+let DawnCompiler = require("./dawn/DawnCompiler.dawn.js");
 
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
 
