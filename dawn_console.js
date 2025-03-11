@@ -192,7 +192,7 @@ app.get("*",async function (request, result, next) {
     }
     catch (exception)
     {
-      result.status(204).send();
+      result.status(404).send(exception);
     }
   }
   else
