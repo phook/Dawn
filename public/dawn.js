@@ -173,7 +173,7 @@ let Dawn = {
 	  if (command.indexOf("Console:") == -1)
         command += ">>Console:";
       
-      let jsSource = (new this.compiler()).parse(command);
+      let jsSource = this.compiler.parse(command);
 
       if (jsSource != "ERROR")
       {
@@ -226,7 +226,7 @@ let Dawn = {
         
         // hardcode - change
 //        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");
-        this.compiler = Dawn.require("DawnCompiler");
+        this.compiler = new (Dawn.require("DawnCompiler"))();
 
 
         
@@ -238,7 +238,7 @@ let Dawn = {
                 //    console.log(s);
             }
         }
-        else
+        els
         {
             this.debugInfo = function(s)
             {
