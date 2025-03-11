@@ -3,6 +3,7 @@ const express = require('express');
 const http = require('http');
 //const transformMiddleware = require('express-transform-bare-module-specifiers').default;
 const path = require('path')
+const os = require('os')
 const fs = require('fs')
 const fileUpload = require('express-fileupload');
 const checkForLocalHost = require('./checkForLocalHost.js');
@@ -144,6 +145,12 @@ app.head("*",async function (request, result, next) {
     next();
 });
 */
+
+let environment = 
+{
+  "dawnPath" : ("file:///"+__dirname+"/dawn").replace("\\","/"),
+  "userPath" : "file:///"+os.homedir().replace("\\","/")
+}
 
 
 app.get("*",async function (request, result, next) {
