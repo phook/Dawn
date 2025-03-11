@@ -22,7 +22,7 @@ function FlowProcessor(data)
 	this._connect_function = function(outputName,fn)
 	{
 		if (this._last)
-			this._last_instanciate_processor()._connect_function(outputName,fn);
+			this._last._instanciate_processor()._connect_function(outputName,fn);
 	}
 
 	this._add = function()
@@ -77,30 +77,15 @@ function FlowProcessor(data)
 
 	}
 
-	this._in_go = function(scope)
+	this._in_go = function()
 	{
   		if (this._program)
 		{
-			this._execute_fn(scope,this._program);
+			this._execute_fn(this._program);
         }
 	}
 	
-/*
-	this._in_go = function(scope)
-	{
-        // HERE DECOREATE SCOPE - NO SCOPE IS OPERATIONAL WHEN BINDING
-        
-        
-        //_go returns the promises if applicable... this means the end call will have to go into other function to be called later - just let the caller await
-		if (data._first)
-		{
-            scope._add_next_function(data._first,data._first._in_begin);
-            scope._add_next_function(data._first,data._first._in_go) 
-            scope._add_next_function(data._first,data._first._in_end) 
-            return scope._execute_next_function(scope);
-        }
-	}
-*/
+
 	return this;
 }
 _Flow.Processor = FlowProcessor;

@@ -1,7 +1,9 @@
-const Resource = Dawn.require('./dawn/Resource.js');
+const Resource  = Dawn.require("Content-Type/data/Resource");
+const Number    = Dawn.require("Content-Type/data/Number");
 
 function add()
 {
+  this.Number = new Number();
 	Resource.call(this,"add"); // REMOVE NAMING - BUT LEAVE FOR DEBUG FOR NOW
 	this.Processor=addProcessor;
 	return this;
@@ -12,10 +14,10 @@ function addProcessor(resource)
 	Resource.Processor.call(this,resource); 
 	this._resource = resource;
 	this._out_Number = null;
-	this._tempNumber = new Dawn.bigRat(0,10);
+	this._tempNumber = new resource.Number.bigRat(0,10);
 	this._in_begin = function()
 	{
-		this._tempNumber=Dawn.bigRat(0, 10)
+		this._tempNumber=resource.Number.bigRat(0, 10)
     }
 	this._in_Number_$ = function(input)
     {   

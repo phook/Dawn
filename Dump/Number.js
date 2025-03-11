@@ -45,7 +45,10 @@ function _NumberProcessor(resource)
         base = new Dawn.bigRat(base);
         for(let x=0; x<val.length; x++)
         {
-          let ch = val[x];
+          let ch = val[x].toUpperCase()
+          
+          
+          ;
           let nx = val[x+1];
           if (ch == "E" && (nx=="+" || nx=="-"))
           {

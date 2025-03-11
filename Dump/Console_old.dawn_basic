@@ -1,0 +1,13 @@
+define Console
+  input all String
+    native javascript
+        Dawn.print(input.data._value)
+    endnative
+  input all Number
+    native javascript
+        Dawn.print(input.data._value.toDecimal())
+    endnative
+  input all Boolean
+    native javascript
+        Dawn.print(input.data._value?"True":"False")
+    endnative

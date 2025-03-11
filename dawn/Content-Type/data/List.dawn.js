@@ -1,4 +1,4 @@
-const Resource = Dawn.require("./dawn/Resource.js");
+const Resource = Dawn.require("Content-Type/data/Resource");
 function List()
 {
 	Resource.call(this,"List");
@@ -92,9 +92,7 @@ function ListProcessor(resource)
 		  return new Resource("Input"); // should be created TODO NOTFIXED
 			
 
-      let ref = {_value:identifier, _scope:this._scope}; // is _scope used?
-      // later set up output in ref and return the result of the output
-      // ref._out_fob = new call(this,this.result) - ish
+      let ref = {_value:identifier}; 
       let result;
 
   	  for(element in resource._elements)
@@ -113,29 +111,30 @@ function ListProcessor(resource)
           result._set_owner(this);
       return result;
     }
-	this._in_begin = function(scope)
+	this._in_begin = function()
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
 				this._elements[element]?._in_begin();
 		}
-		this._connectee?._in_begin(scope);
+		this._connectee?._in_begin();
 	}
-	this._in_end = function(scope)
+	this._in_end = function()
 	{
 		for(element in this._elements)
 		{
 			if (this._elements[element])
-				this._elements[element]?._in_end(scope);
+				this._elements[element]?._in_end();
 		}
-		this._connectee._in_end(scope);
+		this._connectee._in_end();
         //this.input_bound={}; must be wrong?
 	}
-	this._in_go = function(scope)
+  
+	this._in_go = function()
 	{
         Dawn.debugInfo("list going");
-        return this._execute(scope,this._elements);
+        return this._execute(this._elements);
 	}
 	return this;
 }

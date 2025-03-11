@@ -1,0 +1,13 @@
+
+
+
+
+
+
+for x = 1 to 10
+  if x modulus 2 == 1
+	  print "wait"
+	  wait 2
+	  print "done waiting"
+  else
+    print "passthrough"

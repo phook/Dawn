@@ -1,7 +1,16 @@
-function require(url)
+function require(url, path)
 {
-    if (url.toLowerCase().substr(-3)!=='.js') 
-      url+='.js'; 
+    if (path)
+    {
+      if (path.substr(-1) !== "/")
+      {
+        path += "/";
+      }
+      url=path+url;
+    }
+    if (url.toLowerCase().substr(-5)!=='.json') 
+      if (url.toLowerCase().substr(-3)!=='.js') 
+        url+='.js'; 
     if (!require.cache) 
       require.cache=[];
     var exports=require.cache[url]; 
@@ -24,11 +33,18 @@ function require(url)
                     if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
                     source = source.slice(moduleStart+1,moduleEnd-1); 
                 } 
-                source="//@ sourceURL="+window.location.origin+url+"\n" + source;
-                var module = { id: url, uri: url, exports:exports }; 
-                var anonFn = new Function("require", "exports", "module", source);
-                anonFn(require, exports, module);
-                require.cache[url]  = exports = module.exports; 
+                if (url.toLowerCase().substr(-5)!=='.json') 
+                {
+                  source="//@ sourceURL="+window.location.origin+url+"\n" + source;
+                  var module = { id: url, uri: url, exports:exports }; 
+                  var anonFn = new Function("require", "exports", "module", source);
+                  anonFn(require, exports, module);
+                  require.cache[url]  = exports = module.exports; 
+                }
+                else
+                {
+                  require.cache[url]  = exports = JSON.parse(source); 
+                }
             } 
             catch (err) 
             {

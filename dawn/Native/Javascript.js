@@ -8,12 +8,12 @@ function _Javascript()
     {
        return Object.assign({data:{_value:decodeURIComponent(identifier.data._value)}},new _Javascript());
     }
-    this._in_go = function(scope)
+    this._in_go = function()
     {
         if (this._out_native)
             this._out_native(this);
         if (this._out_go)
-            this._out_go(scope);
+            this._out_go();
     }
 } 
 module.exports = _Javascript;

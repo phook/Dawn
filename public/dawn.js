@@ -1,4 +1,5 @@
-Dawn = {
+let Dawn = {
+    rootUrl : null,
     promises : [],
     isBrowser : function()
     {
@@ -6,7 +7,7 @@ Dawn = {
     },
     isServer : function()
     {
-        return !isBrowser();
+        return !Dawn.isBrowser();
     },
     requireBySource : function(source,context)
     {
@@ -18,53 +19,71 @@ Dawn = {
             if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
             source = source.slice(moduleStart+1,moduleEnd-1); 
         } 
-        var module = { exports:exports }; 
+        var module = { exports:source }; 
         var anonFn = new Function("require", "exports", "module", source);
-		if (context)
-			anonFn.bind(context);
-        anonFn(this.require, exports, module);
+        if (context)
+          anonFn.bind(context);
+          anonFn(Dawn.require, module.exports, module);
         return module.exports;
     },   
-    require : function(url, async_callback) 
+    require : function(url, path) 
     {
-        var loadUrl = url;
+        if (!path)
+          if (url.indexOf("/file:///") !== 0)
+            if (this.rootUrl)
+              path = this.rootUrl;
+//        var loadUrl = url;
         if (this.isBrowser())
         {
+            if (url.indexOf("file:") === 0)
+              url = "/" + url;
+            else
+            if (url.indexOf("http:") !== 0)
+            {
+              if (path)
+              {
+                if (path.substr(-1) !== "/")
+                {
+                  path += "/";
+                }
+                url=path+url;
+              }
+            }
+            if (url.toLowerCase().substr(-5)!=='.json') 
+              if (url.toLowerCase().substr(-3)!=='.js') 
+	              if (url.indexOf(".") === -1 && url.substr(-1) !== "/") 
+	                url+='.dawn.js';                           
             if (!this.cache) 
               this.cache=[];
             var exports=this.cache[url]; 
             if (!exports) 
-            {
+            {   
+                /*
                 if (url.indexOf(".") !== 0)
                 {
                     loadUrl = "https://jspm.dev/"+url;
                 }
+                */
                 try 
                 {
+/*
                     if (!async_callback)
                     {
+*/
                         exports={};
                         var X=new XMLHttpRequest();
-                        X.open("GET", loadUrl, 0); // sync
+                        X.open("GET", url, 0); // sync
                         X.send();
                         if (X.status && X.status !== 200)
                           throw new Error(X.statusText);
                         var source = X.responseText;
-                        /*
-                        if (source.substr(0,10)==="(function(")
-                        { 
-                            var moduleStart = source.indexOf('{');
-                            var moduleEnd = source.lastIndexOf('})');
-                            var CDTcomment = source.indexOf('//@ ');
-                            if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
-                            source = source.slice(moduleStart+1,moduleEnd-1); 
-                        } 
-                        source="//@ sourceURL="+window.location.origin+url+"\n" + source;
-                        var module = { id: url, uri: url, exports:exports }; 
-                        var anonFn = new Function("require", "exports", "module", source);
-                        anonFn(require, exports, module);
-                        require.cache[url]  = exports = module.exports; */
-                        this.cache[url]  = exports = this.requireBySource(source); 
+                        
+                        if (url.toLowerCase().substr(-5) ==='.json' || url.substr(-1) === "/") // json or dir
+                          this.cache[url]  = exports = JSON.parse(source); 
+                        else
+                          this.cache[url]  = exports = this.requireBySource(source); 
+
+                    /*
                     }
                     else
                     {
@@ -94,10 +113,12 @@ Dawn = {
                         X.open("GET", loadUrl); 
                         X.send();
                     }
+                    */
                 } 
                 catch (err) 
                 {
-                    throw new Error("Error loading module "+url+": "+err);
+                    /*throw new Error("Error loading module "+url+": "+err);*/
+					return null;
                 }
             }
             return exports;
@@ -105,24 +126,8 @@ Dawn = {
         else
             return require(url);
     },
-    Root : function(url)
-    {
-        if (Dawn.isBrowser())
-        {
-            const DawnWebDirectory = require("./dawn/DawnWebDirectory.js");
-            this._instanciate_processor()._add(new DawnWebDirectory("dawn","dawn"));
-        }
-        else
-        {
-            const FileSystemResource = require("./dawn/FileSystemResource.js");
-            this._instanciate_processor()._add(new FileSystemResource("dawn","dawn"));
-        }
-        this._path.push("dawn.");
-        this._children["dawn"]._path.push("Operators.");
-        this._children["dawn"]._path.push("Number.");
-    },
     saveStringResource : function(url,string,overwrite) {
-        if (Dawn.isBrowser())
+        if (this.isBrowser())
         {
             throw new Error("save not supported in browser");
         }
@@ -139,7 +144,7 @@ Dawn = {
     },
     resourceAsString : function(url)
     {
-        if (Dawn.isBrowser())
+        if (this.isBrowser())
         {
             var X=new XMLHttpRequest();
             X.open("GET", url, 0); // sync
@@ -154,58 +159,92 @@ Dawn = {
             return fs.readFileSync(url, {option:'utf8', function(err, source) {console.log("error reading "+url);throw err;}}).toString();
         }
     },
-	debugInfo : function(text)
-	{
-	},
-    initialize : function(rootUrl,evaluate, debug, consoleOutputFunction)
+    debugInfo : function(text)
     {
-        var evalInContext = function(str){
-            return eval(str);
-        };
+    },
+    execute : function(command, context, print)
+    {
+		/*
+      if (context)
+        context = Dawn._instanciate_processor()._lookup(context);
+      else
+	  */
+        context = Dawn;	
+	  if (command.indexOf("Console:") == -1)
+        command += ">>Console:";
+      
+      let jsSource = (new this.compiler).parse(command);
 
-        const Resource = require("./dawn/Resource.js");
+      if (jsSource != "ERROR")
+      {
+        function evalInContext(js, context) {
+          return function() {
+          return eval(js);
+          }.call(context);
+        }
+
+        Dawn.print = function(string)
+        {
+          if (!Dawn.returnResult)
+            Dawn.returnResult = "";
+
+          Dawn.returnResult += string + "\n";
+          
+          if (print)
+            print(string + "\n");
+        }
+
+        // ALL THIS COULD PROBABLY BE List._go() ??? so execute is hidden
+
+        // Should get processor from context and eval in it
+        let processor = context._instanciate_processor();
+//        let program_lines = evalInContext("async function command() {let self=this; await "+jsSource+"}; command.call(this);",processor).then(foo => {
+        evalInContext("let self=this;"+jsSource+"",processor).then(command => {
+            processor._execute([command]);
+        });
+
+      }        
+    },
+    initialize : async function(rootUrl)
+    {
+        if (this.isBrowser() && rootUrl.indexOf("file:///")===0)
+           rootUrl="/"+rootUrl;
+         
+        this.rootUrl = rootUrl;
+
+        const Resource = Dawn.require("Content-Type/data/Resource"); 
 
         Resource.call(this,"");
-        this.Root(rootUrl);
 
-        const bnft = this.require("./BNFT/BNFT.js");
+        const file = new (Dawn.require("protocol/file"))("dawn",rootUrl);
+        const FileProtocolProcessor = file._instanciate_processor();
+        let dawnResource = (await FileProtocolProcessor._in_instanciate())._get_resource();
+        this._instanciate_processor()._add(dawnResource);
+        this._path.push("dawn.");
+        this._children["dawn"]._path.push("Protocol."); // find protocols
+        this._children["dawn"]._path.push("Content-Type.data."); // find data types
+        
+        // hardcode - change
+//        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");
+        this.compiler = Dawn.require("DawnCompiler");
 
-        this.bigRat = this.require("./BigInt_BigRat.min.js");
-
-        this.passedEval = evaluate ? evaluate : evalInContext;
-
-//        this.parser = null;
-//        this.parser = new bnft(this.resourceAsString("./dawn/Flavors/dawn.bnft"), {alert:console.log,fileToString: Dawn.resourceAsString,path:"dawn/Flavors/",useCache:true});
 
         
         if (this.isBrowser())
         {
             this.debugInfo = function(s)
             {
-                if (debug)
-                    console.log(s);
+                //if (debug)
+                //    console.log(s);
             }
         }
         else
         {
             this.debugInfo = function(s)
             {
-                if (debug)
-                    console.log(s);
+                //if (debug)
+                //    console.log(s);
             }
-/*
-            const fs = require("fs");
-
-            // clear log
-            if (debug)
-                fs.writeFile('log.txt', '', function(){});
-
-            this.debugInfo = function(s)
-            {
-                if (debug)
-                    root.appendFile('log.txt', s+"\n", function(){});
-            }
-            */
         }
     },
     Promise: function()
@@ -338,4 +377,5 @@ Dawn = {
 		}
     }
 }
-module.exports = Dawn;
+if (Dawn.isServer())
+  module.exports = Dawn;

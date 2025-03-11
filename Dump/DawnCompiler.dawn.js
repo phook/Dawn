@@ -108,14 +108,15 @@ let DawnCompiler = function () {
         this.position = mark;
       };
 	  
-	  this.mark=function()
-	  {
-		this.rememberPosition = this.position;
-	  }
-	  this.identifier=function()
-	  {
-		  return this.source.substring(this.rememberPosition,this.position);
-	  }
+      this.mark=function()
+      {
+        this.rememberPosition = this.position;
+      }
+
+      this.identifier=function()
+      {
+        return this.source.substring(this.rememberPosition,this.position);
+      }
     };
 	
 	this.compilation="";
@@ -133,9 +134,9 @@ let DawnCompiler = function () {
 		let centerSection = this.compilation.substring(this.rememberPosition.at(-1));
 		if (removeList)
 		{
-			if (centerSection.indexOf("this._lookup(\"List:\")._add(") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+			if (centerSection.indexOf("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
 			{
-				centerSection = centerSection.replace("this._lookup(\"List:\")._add(","").slice(0, -1); ;
+				centerSection = centerSection.replace("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(list);}))".length);
 			}
 		}
 		if (qualifyInput)
@@ -252,12 +253,12 @@ let DawnCompiler = function () {
 
  	this._uri = function()
 	{
-		this.tokenizer.mark();
+		this.tokenizer.mark(); // put mark in tokenizer to be able to retrieve identifiers (uris)
 		if (!this._xalpha()) return false;
 		while (this._xalpha())
 		{
 		}
-		this.compilation += "this._lookup(\"" + this.tokenizer.identifier() + "\")";
+		this.compilation += "self._lookup(\"" + this.tokenizer.identifier() + "\")";
 		return true;
 	}
 
@@ -357,7 +358,8 @@ let DawnCompiler = function () {
 			this.outputName       != "")
 			this.unmark();
 		else
-			this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
+			this.insertAndPopMark("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
+//			this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
 		return true;
 	}
 
@@ -479,19 +481,19 @@ let DawnCompiler = function () {
 		else
 		if (this.inputName!="")
 			this.insertAndPopMark("this._in_"+this.inputName+"=function(input_"+this.inputName+")\n{\nthis.__in_"+this.inputName+"_value = input_"+this.inputName+"._instanciate_processor();\nthis._in_"+this.inputName+"_lines = [",
-		                          "];\nthis._in_"+this.inputName+" = function(input_"+this.inputName+")\n{\nthis.__input_"+this.inputName+"_value = input_"+this.inputName+"._instanciate_processor();\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\n",true,this.inputName);
+		                        "];\nthis._in_"+this.inputName+" = function(input_"+this.inputName+")\n{\nthis.__input_"+this.inputName+"_value = input_"+this.inputName+"._instanciate_processor();\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\n",true,this.inputName);
 		else
 		if (this.outputName!="")
 			this.insertAndPopMark("this._out_"+this.outputName+"=null;\n",
-		                          "");
+		                        "");
 		else
 		if (this.nativeJavascript!="")
 			this.insertAndPopMark("",
-		                          this.nativeJavascript);
+		                        this.nativeJavascript);
 		else
 		if (this.currentNumberOfResources()>1) 
-			this.insertAndPopMark("this._lookup(\"Flow:\")._add(",
-		                          ")");
+			this.insertAndPopMark("new Promise((async resolve => {flow = await self._lookup('Flow:');flow._add(...Array.from(await Promise.all([",
+                            "])));return await resolve(flow);}))");
 		else
 			this.unmark();
 		this.numberOfResourcesInFlow.pop();
@@ -529,7 +531,8 @@ let DawnCompiler = function () {
 			return this.tokenizer.unPeek(false);
 		}
 		this.tokenizer.stopPeek();
-		this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
+		//this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
+	  this.insertAndPopMark("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
 		this._opt_newline();
 		return true;
 	}

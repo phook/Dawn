@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/jquery.terminal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/xml_formatting.js"></script>
+<script src="dawn.js"></script>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.terminal/css/jquery.terminal.min.css"/>
+<style>
+.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
+   --size: 2;
+}
+
+.closed {
+  transform: rotate(0deg);
+  transition: transform 0.3s;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.open {
+  transform: rotate(90deg);
+  transition: transform 0.3s;
+}
+
+
+terminal, .cmd .cmd-prompt {
+  padding-left 20px;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+
+
+</style>
+</head>
+<body>
+</body>
+<script>
+let environment = Dawn.require("environment.json");
+Dawn.initialize(environment.dawnPath);
+
+/*
+let Dawn         = require("Dawn");
+let DawnCompiler = require("DawnCompiler");
+
+// GET DAWNROOT FROM SERVER     File:///C:/blahblah 
+// GET USER ROOT FROM SERVER    on Server: const homedir = require('os').homedir();
+// FORMAT BOTH IN FILE SYNTAX
+
+
+Dawn.initialize(".",null,false);
+Dawn.print = console.log;
+*/
+/*
+let Hub = require("hubclient");
+let hub = Hub.createClient();
+*/
+let index=0;
+
+
+
+
+let terminal = $('body').terminal(function(text){
+
+  // HERE COMPILE AND EXECUTE DAWN  STRING:text>>Run    - Run performs the magic 
+
+  function returnPrintFunction(index)
+  {
+    let myIndex=index;
+    return function(text)
+    {
+      var elm = document.getElementsByClassName("output" + myIndex)[0];
+      elm.innerHTML += text;
+    }
+  }
+
+
+  this.echo('<div class="output'+index+'"></div>',{raw:true});
+
+  Dawn.execute(text,environment.userPath, returnPrintFunction(index));
+
+  attachToggleFunction(index, true)
+  index++;
+  attachToggleFunction(index);
+  
+
+},{
+  greetings:false,
+});
+
+function attachToggleFunction(index, dont)
+{
+  if (!dont)
+    terminal.set_prompt('<span class="toggle'+index+' closed open">&#x25B6;</span>&nbsp;$ ', {raw:true});
+  $(".toggle"+index).click((event) => 
+  {
+     $(".toggle"+index).toggleClass("open");
+     if ($(".toggle"+index).hasClass("open"))
+        $(".output"+index).slideDown(300);
+     else
+        $(".output"+index).slideUp(300);
+  });
+}
+
+document.body.onload= () => attachToggleFunction(index);
+
+
+
+
+</script>
+</html>

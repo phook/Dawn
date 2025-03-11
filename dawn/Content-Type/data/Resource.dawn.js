@@ -1,5 +1,4 @@
 var id = 1;
-var id = 1;
 
 function clone(src) {
 	var clone=Object.assign({}, src);
@@ -65,12 +64,12 @@ function ResourceProcessor(resource)
 	{
 		return resource;
 	}	
-    this._lookup = function(identifier)
-    {
-      if (identifier.indexOf(":") == -1)
-          throw "error lookup of "+identifier+": colon missing";
-      if (identifier == ".")
-          return this;
+  this._lookup = async function(identifier)
+  {
+    if (identifier.indexOf(":") == -1)
+      throw "error lookup of "+identifier+": colon missing";
+    if (identifier == ".")
+      return this;
 
 		if (identifier.indexOf("input:") == 0)
 		{
@@ -86,20 +85,16 @@ function ResourceProcessor(resource)
 				return this["_out_" + name]; 
 		}
 
-	  var ref = {_value:identifier, _scope:this._scope}; // is _scope used?
-      // later set up output in ref and return the result of the output
-      // ref._out_fob = new call(this,this.result) - ish
-      let result;
-          // otherwhise look in owner - move that here
-	 result= this._in_lookup_child(ref);
+	  var ref = {_value:identifier}; 
+    let result = await this._in_lookup_child(ref);
 	
-      if (!result)
-          throw "error lookup of "+identifier+": lookup failed";
+    if (!result)
+        throw "error lookup of "+identifier+": lookup failed";
       
-      return result;
-    }
+    return result;
+  }
 	
-	this._in_lookup = function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
+	this._in_lookup = async function(string_name,from_owner,exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
 	{
 		let myName = this._get_resource()._name;
         if (string_name._value == myName)
@@ -121,7 +116,7 @@ function ResourceProcessor(resource)
 				string_name._value = string_name._value.substring(myName.length+1);
             if (deref == ".")
             {
-                let result = this._in_lookup_child(string_name,from_owner,exclude);
+                let result = await this._in_lookup_child(string_name,from_owner,exclude);
                 if (result)
                     return result;
             }
@@ -159,7 +154,7 @@ function ResourceProcessor(resource)
 	                    }
 					}
                 }
-                let result = this._in_instanciate(string_name);
+                let result = await this._in_instanciate(string_name);
                 if (result)
 				{
 					for(let i in urlParametersToInputs)
@@ -171,11 +166,11 @@ function ResourceProcessor(resource)
 						{
 							value.replace("\"","");
 							type="string";
-                            value =  this._lookup("String:" + value);
+                            value =  await this._lookup("String:" + value);
 						}
                         else
                         {
-                            value = this._lookup("Number:" + value);
+                            value = await this._lookup("Number:" + value);
                         }
 						let inputname = "_in_" + type + "_" + input;
 						if (inputname in result)
@@ -198,19 +193,22 @@ function ResourceProcessor(resource)
 		if (this._get_resource()._owner && !from_owner)
 		{
             string_name._value = originalResource;
-			return this._get_resource()._owner._in_lookup(string_name,from_owner,this);
+			return await this._get_resource()._owner._in_lookup(string_name,from_owner,this);
 		}
 		
         return null;
 	}
-    this._lookup_child = function(identifier)
+    this._lookup_child = async function(identifier)
     {
       var ref = {_value:identifier};
-      return this._in_lookup_child(ref);
+      return await this._in_lookup_child(ref);
     }
-	this._in_lookup_child = function(string_name,from_owner,exclude)
+	this._in_lookup_child = async function(string_name,from_owner,exclude)
 	{
         var identifier = string_name._value;
+
+        if (this._populate_children)
+          await this._populate_children(string_name);
 
         var keys = Object.keys(this._get_resource()._children);
         keys.sort(dawnSort);        
@@ -225,7 +223,7 @@ function ResourceProcessor(resource)
 				{
 	                if (identifierToCheck.indexOf(keys[id]) == 0)
 	                {
-	                    var result = this._get_resource()._children[keys[id]]._instanciate_processor()._in_lookup(string_name,true);
+	                    var result = await this._get_resource()._children[keys[id]]._instanciate_processor()._in_lookup(string_name,true);
 	                    if (result)
 	                        return result;
 	                }
@@ -233,7 +231,7 @@ function ResourceProcessor(resource)
             }
         }
 	    if (this._get_resource()._owner && !from_owner)
-		   return this._get_resource()._owner._instanciate_processor()._in_lookup_child(string_name,false,this);
+		   return await this._get_resource()._owner._instanciate_processor()._in_lookup_child(string_name,false,this);
         return null;
 	}
 	
@@ -292,21 +290,23 @@ function ResourceProcessor(resource)
 	{
         var args = Array.prototype.slice.call(arguments);
         var self = this;
-		args.forEach(function(child)
-			{
+		//args.forEach(function(child)
+			for(childix in args)
+      {
+        let child = args[childix];
 				if (child=="string")
 					child = resource._lookup(child);
 				
-				child._set_owner(self._get_resource()); //nonoptimal
+				child._get_resource()._set_owner(self._get_resource()); //nonoptimal
 				var name = "";
-				if (child._name)
-					name = child._name;
+				if (child._get_resource()._name)
+					name = child._get_resource()._name;
 				else
 					name = "Ix" + resource._it++;
 				resource._children[name] = child._get_resource();
 //				self._children_processors[name] = child._instanciate_processor(); SHOULD BE LIKE THIS
 			}
-		);
+		//);
 		return this;
 	}
 
@@ -411,21 +411,21 @@ function ResourceProcessor(resource)
         Function(data._value).call(this);
     }
 
-	this._in_begin = function(scope)
+	this._in_begin = function()
 	{
 		if (this._out_begin)
-			this._out_begin(scope);
+			this._out_begin();
 	}
 
-	this._in_end = function(scope)
+	this._in_end = function()
 	{
 		if (this._out_end)
-			this._out_end(scope);
+			this._out_end();
         this.inputs_bound={};
         this.bindee=null;
         this.previous=null;
 	}
-	this._in_go = function(scope)
+	this._in_go = function()
 	{
 	}
     this._get_qualified_name = function()
@@ -474,15 +474,13 @@ function ResourceProcessor(resource)
     }
 	
 	
-    this._execute_next_function = function(scope)
+    this._execute_next_function = function()
     {
-		this._add_next_function_at = 0;
-        // flowScope = new FlowScope(scope);
+        this._add_next_function_at = 0; 
         while (this._nextFunction.length)
         {
-            // flowScope._reset() - sets array to length 1
             let fn = this._nextFunction.shift(); 
-            let result = fn(scope); //flowScope
+            let result = fn(); 
             if (result)
                 return result;
         }
@@ -490,33 +488,33 @@ function ResourceProcessor(resource)
 
 
 	// NEW CONCEPT FOR LINES - CONTAINS FLOWS - CALLS _in_go, promise is return if async, if promise is returned - it sets execution to continue at resolve
-    this._execute = function(scope,array_of_lines)
+    this._execute = function(array_of_lines)
     {
         while (array_of_lines.length)
         {
             let flowForThisLine = array_of_lines.shift(); 
-            let result = flowForThisLine._in_go(scope);
+            let result = flowForThisLine._in_go();
             if (result)
 			{
                 return result.promise().then(function()
 				{
-					this.execute(scope,array_of_lines);
+					this.execute(array_of_lines);
 				});
 			}
         }
     }
 
-    this._execute_fn = function(scope,array_of_lines)
+    this._execute_fn = function(array_of_lines)
     {
         while (array_of_lines.length)
         {
             let flowForThisLine = array_of_lines.shift(); 
-            let result = flowForThisLine(scope);
+            let result = flowForThisLine();
             if (result)
 			{
                 result.promise().then(function()
 				{
-					return this.execute(scope,array_of_lines);
+					return this.execute(array_of_lines);
 				});
 			}
         }
