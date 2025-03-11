@@ -160,7 +160,7 @@ app.get("*",async function (request, result, next) {
      result.status(200).setHeader("Content-Type","text/json").send(JSON.stringify(environment));
   }
   else
-  if (url.indexOf("/file:///") === 0 && request.hostname === "localhost")
+  if (url.indexOf("/file:///") === 0 /*&& request.hostname === "localhost"*/)
   {
     filepath = url.replace("/file:///","");
     try {
@@ -261,7 +261,6 @@ app.use(function (req, res, next) {
 server.listen(process.env.PORT || 5000, function () {
 })
 
-console.log("dawn parser loaded");
 
 
 
