@@ -178,6 +178,9 @@ app.get("*",async function (request, result, next) {
         if (extension == ".dawn")
             mimetype = "text/dawn";
         else
+        if (filepath.endsWith(".dawn.js"))
+            mimetype = "application/dawn";
+        else
         {
           let defaultmimetype = await mime(extension);
           let mimeresult = (await mime(createReadStream(filepath), defaultmimetype))
