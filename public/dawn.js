@@ -173,7 +173,7 @@ let Dawn = {
 	  if (command.indexOf("Console:") == -1)
         command += ">>Console:";
       
-      let jsSource = (new this.compiler).parse(command);
+      let jsSource = (new this.compiler()).parse(command);
 
       if (jsSource != "ERROR")
       {
