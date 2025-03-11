@@ -1,439 +1,117 @@
+<!DOCTYPE html>
 <html>
-<link rel="apple-touch-icon" sizes="57x57" href="/favicon/apple-icon-57x57.png">
-<link rel="apple-touch-icon" sizes="60x60" href="/favicon/apple-icon-60x60.png">
-<link rel="apple-touch-icon" sizes="72x72" href="/favicon/apple-icon-72x72.png">
-<link rel="apple-touch-icon" sizes="76x76" href="/favicon/apple-icon-76x76.png">
-<link rel="apple-touch-icon" sizes="114x114" href="/favicon/apple-icon-114x114.png">
-<link rel="apple-touch-icon" sizes="120x120" href="/favicon/apple-icon-120x120.png">
-<link rel="apple-touch-icon" sizes="144x144" href="/favicon/apple-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="152x152" href="/favicon/apple-icon-152x152.png">
-<link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-icon-180x180.png">
-<link rel="icon" type="image/png" sizes="192x192"  href="/favicon/android-icon-192x192.png">
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="96x96" href="/favicon/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/favicon/favicon-16x16.png">
-<link rel="manifest" href="/favicon/manifest.json">
-<meta name="msapplication-TileColor" content="#ffffff">
-<meta name="msapplication-TileImage" content="/favicon/ms-icon-144x144.png">
-<meta name="theme-color" content="#ffffff">
 <head>
-<title>
-Dawn Console
-</title>
-</head>
+<script src="https://cdn.jsdelivr.net/npm/jquery"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/jquery.terminal.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery.terminal/js/xml_formatting.js"></script>
+<script src="dawn.js"></script>
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jquery.terminal/css/jquery.terminal.min.css"/>
 <style>
-  body,html
-  {
-    background-color:black;
-    margin:0;
-	padding:0;
-  }
-  @font-face { 
-	font-family: 'Inconsolata'; 
-	src: url('/font/Inconsolata.eot?#iefix') 
-	format('embedded-opentype'), url('/font/Inconsolata.otf') 
-	format('opentype'), url('/font/Inconsolata.woff') 
-	format('woff'), url('/font/Inconsolata.ttf') 
-	format('truetype'), url('/font/Inconsolata.svg#Inconsolata') 
-	format('svg'); 
-	font-weight: 
-	normal; 
-	font-style:
-	normal; 
-  }
-  #console, textarea 
-  {
-    display:block;
-	padding:0;
-	 padding-left: 1px;
-    margin:0;
-    background-color: transparent;
-	border-style: none; 
-    border-color: transparent;   
-	resize: none;
-    outline: none;
-	color: gray;
-	font-family: Inconsolata;
-	font-size: 12pt;
-    position:absolute; 
-    width:100%;
-    top:0; 
-	bottom:0;
-	caret-color: gray;
-  }
+.terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
+   --size: 2;
+}
+
+.closed {
+  transform: rotate(0deg);
+  transition: transform 0.3s;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+.open {
+  transform: rotate(90deg);
+  transition: transform 0.3s;
+}
+
+
+terminal, .cmd .cmd-prompt {
+  padding-left 20px;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+}
+
+
+
 </style>
-<script src="require.js"></script>
-<body onload="autoFocus()">
-<form method="post" action="query.php">
-<!--<textarea id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
-</textarea>-->
-
-<div contentEditable id="console" autofocus="autofocus" type="text" name="txtarea" onkeydown="processKey(event, this)" onpaste="processPaste(event, this)">
-<div contentEditable id="history"></div>
-<div contentEditable id="commandline"></div>
-</div>
-
-
-</form>
- <script>
- /*
-  allowCopyAndPaste = function(e){
-      e.stopImmediatePropagation();
-      return true;
-    };
-  document.addEventListener('copy', allowCopyAndPaste, true);
-  document.addEventListener('paste', allowCopyAndPaste, true);
-  document.addEventListener('onpaste', allowCopyAndPaste, true);
-*/ 
- 
- 
-  Hub = require("hubclient");
-  var hub = Hub.createClient();
-
-  String.prototype.html_worthy = function()
-  {
-	return this.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/ /g, "&nbsp;").replace(/\n/g, "<br\/>");
-
-  }
-  String.prototype.html_unworthy = function()
-  {
-	return this.replace(/&nbsp;/g, " ").replace(/<br\/>/g, "\n");
-  }
-  String.prototype.html_newline_gone = function()
-  {
-	return this.replace(/\n/g, "");
-  }
-
-function getTextNodesIn(node) 
-{
-    var textNodes = [];
-    if (node.nodeType == 3) 
-	{
-        textNodes.push(node);
-    } 
-	else 
-	{
-        var children = node.childNodes;
-        for (var i = 0, len = children.length; i < len; ++i) 
-		{
-            textNodes.push.apply(textNodes, getTextNodesIn(children[i]));
-        }
-    }
-    return textNodes;
-}
-/*
-function setSelectionRange(el, start, end) 
-{
-    if (document.createRange && window.getSelection) 
-	{
-        var range = document.createRange();
-        range.selectNodeContents(el);
-        var textNodes = getTextNodesIn(el);
-        var foundStart = false;
-        var charCount = 0, endCharCount;
-
-        var bothSet  = false;
-        for (var i = 0, textNode; textNode = textNodes[i++]; ) 
-		{
-            endCharCount = charCount + textNode.length;
-            if (!foundStart && start >= charCount && 
-			      (start < endCharCount ||
-                    (start == endCharCount && i <= textNodes.length))) 
-			{
-                range.setStart(textNode, start - charCount);
-                foundStart = true;
-            }
-            if (foundStart && end <= endCharCount) {
-                range.setEnd(textNode, end - charCount);
-                bothSet = true;
-				break;
-            }
-            charCount = endCharCount;
-        }
-		if (!bothSet)
-		{
-			lastNode = textNodes.slice(-1)[0];
-			if (lastNode.length < charCount)
-				charCount = lastNode.length;
-		    if (!foundStart)
-				range.setStart(lastNode, charCount);
-            range.setEnd(lastNode, charCount);
-		}
-
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    } 
-	else 
-	if (document.selection && document.body.createTextRange) 
-	{
-        var textRange = document.body.createTextRange();
-        textRange.moveToElementText(el);
-        textRange.collapse(true);
-        textRange.moveEnd("character", end);
-        textRange.moveStart("character", start);
-        textRange.select();
-    }
-}
-*/
-
-// Simplified because last text node is always where the range can be set
-function setSelectionRange(el, start, end, fullLength)
-{
-    if (document.createRange && window.getSelection) 
-	{
-        var range = document.createRange();
-        //range.selectNodeContents(el);
-        var foundStart = false;
-        var charCount = 0, endCharCount;
-
-        var lastTextNode  =  getTextNodesIn(el).slice(-1)[0]
-		
-		if (lastTextNode)
-		{
-			var ref = fullLength - lastTextNode.length;
-			range.setStart(lastTextNode, start - ref);
-			range.setEnd(lastTextNode,     end - ref);
-		}
-		
-		
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    } 
-}
-
-function checkCursorPosition(el)
-{
-        var sel = window.getSelection();
-        
-        if (sel.toString() == "") // cursor - must be on commandline
-        {
-            if (!sel.containsNode(el,true)) // is cursor on the line
-                updateSelection();     // no, move it back
-            else
-            {
-                console_cursor_position = sel.focusOffset - console_prefix.length;
-                console_selection_start_position = sel.focusOffset - console_prefix.length;
-            }
-        }
-}
-
-
-
-function scrollToBottom()
-{
-	console_element.scrollTop = console_element.scrollHeight - console_element.clientHeight;
-}
-
-var lastHistoryLength = 0;
-function updateHistory()
-{
-    if (lastHistoryLength != console_history.length)
-        console_history_element.insertAdjacentHTML('beforeend', console_history.slice(lastHistoryLength-console_history.length).html_worthy());
-    lastHistoryLength = console_history.length;
-    console_commandline_element.innerHTML = "";
-}
-
-function updateSelection()
-{
-   var full_length = console_history.html_newline_gone().length + console_prefix.length + console_command.length;
-    var cursor_position = console_history.html_newline_gone().length + console_prefix.length + console_cursor_position;
-    var selection_start_position = console_history.html_newline_gone().length + console_prefix.length + console_selection_start_position;
-	//console_element.selectionStart = cursor_position; // consider allowing shift selections and cut copy paste
-	//console_element.selectionEnd   = cursor_position;
- 
-	if (selection_start_position < cursor_position)
-		setSelectionRange(console_commandline_element,selection_start_position,cursor_position,full_length, console_command);
-	else
-		setSelectionRange(console_commandline_element,cursor_position,selection_start_position,full_length, console_command);
- }
-
-function updateConsole()
-{
-
-    if (!console_element)
-	   console_element  = document.getElementById('console');
-
-    if (!console_history_element)
-	   console_history_element = document.getElementById('history');
-
-    if (!console_commandline_element)
-	   console_commandline_element  = document.getElementById('commandline');
-
-    updateHistory();
-	
-    console_commandline_element.innerHTML = (console_prefix + console_command).html_worthy();
-
-    updateSelection();
-
-    scrollToBottom();
-}
-
-var console_element = null;
-var console_history = new String("");
-var console_history_element = null;
-var console_selection_start_position = 0;
-var console_cursor_position = 0;
-var console_prefix = "#> ";
-var console_commandline_element = null;
-var console_command = new String("");
-var console_command_history = [];
-var console_command_history_position = -1;
-var newline = "\n";
-
-updateConsole();
-
-async function processKey(e) {
-    var code = (e.keyCode ? e.keyCode : e.which);
-	      e.preventDefault();
-    
-    if (!console_commandline_element)
-	   console_commandline_element  = document.getElementById('commandline');
-    checkCursorPosition(console_commandline_element);
-    
-    if (code == 8 && console_cursor_position > 0) // backspace
-	{
-	    console_cursor_position -=1;
- 		console_command = console_command.substring(0,console_cursor_position) + console_command.substring(console_cursor_position+1);
-        console_selection_start_position = console_cursor_position;
-	}
-	else
-    if (code == 37 && console_cursor_position > 0) // left
-	{
-		console_cursor_position -=1;
-	    if (!e.shiftKey)
-			console_selection_start_position = console_cursor_position;
-    }
-	else
-    if (code == 39 && console_cursor_position < console_command.length) // right
-	{
-		console_cursor_position +=1;
-	    if (!e.shiftKey)
-			console_selection_start_position = console_cursor_position;
-    }
-	else
-    if (code == 38 || (code == 9 && !e.shiftKey)) // up or unshifted tab
-	{
-		if (console_command_history_position == -1 || ++console_command_history_position >= console_command_history.length)
-			console_command_history_position = 0;
-		if (console_command_history.length > 0)
-			console_command = console_command_history[console_command_history_position];
-		console_cursor_position = console_command.length;
-        console_selection_start_position = console_cursor_position;
-    }
-	else
-    if (code == 40 || (code == 9 && e.shiftKey)) // down or shifted tab
-	{
-		if (console_command_history_position == -1 || --console_command_history_position < 0)
-			console_command_history_position = console_command_history.length-1;
-		if (console_command_history.length > 0)
-			console_command = console_command_history[console_command_history_position];
-		console_cursor_position = console_command.length;
-        console_selection_start_position = console_cursor_position;
-    }
-	else
-	if (code == 13) // return 
-	{ 
-	    var eval_command = console_command.replace(/\"/g,"\\\""); // escape double quotes
-		console.log(eval_command);
-		console_history += console_prefix + console_command + newline;
-        updateHistory();
-        if (console_command_history.length == 0 || console_command != console_command_history[0])
-			console_command_history.unshift(console_command);
-        console_command_history_position = -1;		
-		console_command = new String("");
-		console_cursor_position = 0;
-        console_selection_start_position = console_cursor_position;
-		var result = await hub.server.evalAsync("dawnCommand(\"" + eval_command + "\")");
-        if (result)
-        {
-            console_history += result;
-            updateConsole();	
-        }
- 	}
-	else
-	if (code == 36) // home 
-	{
-		console_cursor_position = 0;
-		if (!e.shiftKey)
-			console_selection_start_position = console_cursor_position;
-	}
-	else
-	if (code == 35) // end 
-	{ 
-		console_cursor_position = console_command.length;
-		if (!e.shiftKey)
-			console_selection_start_position = console_cursor_position;
-	}
-	else
-	if (e.key == "v" && e.ctrlKey)
-	{
-		if (console_selection_start_position > console_cursor_position)
-			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
-		navigator.clipboard.readText()
-		  .then(text => {
-				console_command = console_command.substring(0,console_selection_start_position) + text + console_command.substring(console_cursor_position);
-				console_cursor_position += text.length;
-                updateConsole();
-		  })
-        console_cursor_position = console_selection_start_position;
-	}
-	else
-	if ((e.key == "c" || e.key == "x") && e.ctrlKey)
-	{
-		if (console_selection_start_position > console_cursor_position)
-			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
-        let textToCopy = console_command.substring(console_selection_start_position,console_cursor_position);
-		if (e.key == "x")
-		{
-			console_command = console_command.substring(0,console_selection_start_position) + console_command.substring(console_cursor_position);
-			console_cursor_position = console_selection_start_position;
-		}
-		navigator.clipboard.writeText(textToCopy);
-	}
-	else
-	if (e.key.length === 1 && !e.ctrlKey)
-	{
-		if (console_selection_start_position > console_cursor_position)
-			[console_selection_start_position, console_cursor_position] = [console_cursor_position, console_selection_start_position];
-			
-		console_command = console_command.substring(0,console_selection_start_position) + e.key + console_command.substring(console_cursor_position);
-        //console_cursor_position += 1;
-		console_cursor_position = console_selection_start_position + 1 ;
-		console_selection_start_position = console_cursor_position;
-	}
-	else
-	  console.log(code);
-    updateConsole();
-}
-
-function processPaste(e)
-{
-   e.stopPropagation();
-   e.preventDefault();
-   // remember to delete any selection when pasting
-   // also consider splitting it by newlines and applying commands one by one
-   pastedData = (e.clipboardData || window.clipboardData).getData('text');
-   console_command = console_command.substring(0,console_cursor_position) + pastedData + console_command.substring(console_cursor_position);
-   console_cursor_position += pastedData.length;
-   updateConsole();
-}
-
-function print(s)
-{
- s =  decodeURIComponent(s);
- console_history += s + newline; 	
-  updateConsole();
-  console.log("print called");
-}
-
-function autoFocus()
-{
-    if (!console_element)
-	   console_element  = document.getElementById('console');
-    console_element.focus();
-}
-</script>
+</head>
+<body>
 </body>
+<script>
+let environment = Dawn.require("environment.json");
+Dawn.initialize(environment.dawnPath);
+
+/*
+let Dawn         = require("Dawn");
+let DawnCompiler = require("DawnCompiler");
+
+// GET DAWNROOT FROM SERVER     File:///C:/blahblah 
+// GET USER ROOT FROM SERVER    on Server: const homedir = require('os').homedir();
+// FORMAT BOTH IN FILE SYNTAX
+
+
+Dawn.initialize(".",null,false);
+Dawn.print = console.log;
+*/
+/*
+let Hub = require("hubclient");
+let hub = Hub.createClient();
+*/
+let index=0;
+
+
+
+
+let terminal = $('body').terminal(function(text){
+
+  // HERE COMPILE AND EXECUTE DAWN  STRING:text>>Run    - Run performs the magic 
+
+  function returnPrintFunction(index)
+  {
+    let myIndex=index;
+    return function(text)
+    {
+      var elm = document.getElementsByClassName("output" + myIndex)[0];
+      elm.innerHTML += text;
+    }
+  }
+
+
+  this.echo('<div class="output'+index+'"></div>',{raw:true});
+
+  Dawn.execute(text,environment.userPath, returnPrintFunction(index));
+
+  attachToggleFunction(index, true)
+  index++;
+  attachToggleFunction(index);
+  
+
+},{
+  greetings:false,
+});
+
+function attachToggleFunction(index, dont)
+{
+  if (!dont)
+    terminal.set_prompt('<span class="toggle'+index+' closed open">&#x25B6;</span>&nbsp;$ ', {raw:true});
+  $(".toggle"+index).click((event) => 
+  {
+     $(".toggle"+index).toggleClass("open");
+     if ($(".toggle"+index).hasClass("open"))
+        $(".output"+index).slideDown(300);
+     else
+        $(".output"+index).slideUp(300);
+  });
+}
+
+document.body.onload= () => attachToggleFunction(index);
+
+
+
+
+</script>
 </html>
