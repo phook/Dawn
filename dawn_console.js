@@ -173,6 +173,7 @@ app.get("*",async function (request, result, next) {
       else
       if (stats.isFile())
       {
+        filepath = path.resolve(filepath);
         console.log(filepath);
         let extension = path.extname(filepath);
         let mimetype = ""
