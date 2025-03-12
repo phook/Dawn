@@ -33,8 +33,7 @@ async function read_dir(dirpath, hidden) {
     files = fs.readdirSync(dirpath)
     for(fileno in files)
     {
-      let file = files[fileno];
-        console.log(file);
+        let file = files[fileno];
         filepath = path.resolve(dirpath, file);
         if (!/^\./.test(file) || hidden)
             try {
@@ -45,7 +44,6 @@ async function read_dir(dirpath, hidden) {
                   file = file.replace(".dawn","");
                   jsdir[file] = Object.assign({},fdat);
                   jsdir[file].mimetype = "application/dawn";
-                  console.log(".dawn");
                 }
                 else
                 if (file.endsWith(".dawn.js")) // if there is a dawn.js file there is an executable
@@ -53,7 +51,6 @@ async function read_dir(dirpath, hidden) {
                   file = file.replace(".dawn.js","");
                   jsdir[file] = Object.assign({},fdat);
                   jsdir[file].mimetype = "application/dawn";
-                  console.log(".dawn.js");
                 }
                 else
                 {
@@ -63,7 +60,6 @@ async function read_dir(dirpath, hidden) {
                     jsdir[file].mimetype = "text/directory-json";
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
-                    console.log(".dir json");
                   } 
                   else 
                   {
@@ -81,7 +77,6 @@ async function read_dir(dirpath, hidden) {
                     jsdir[file].mimetype = mimetype;
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
-                    console.log(mimetype);
                   }
                 }
             } catch (e) {}
@@ -178,6 +173,7 @@ app.get("*",async function (request, result, next) {
       else
       if (stats.isFile())
       {
+        console.log(filepath);
         let extension = path.extname(filepath);
         let mimetype = ""
         if (extension == ".dawn")
