@@ -191,7 +191,9 @@ app.get("*",async function (request, result, next) {
           else
             mimetype = "file/" + extension.substring(1);
         }
+        try {
         result.status(200).setHeader("Content-Type",mimetype).sendFile(filepath);      
+        } catch (ex) {console.log("sendfile problem" + ex);}
       }
     }
     catch (exception)
