@@ -164,11 +164,16 @@ app.get("*",async function (request, result, next) {
   {
     filepath = url.replace("/file:///","");
     try {
-      let stats = fs.statSync(filepath);
+   
+      try {
+          let stats = fs.statSync(filepath);
+      } catch (exception) {result.status(404).send("fs.statsync error");}
       if (stats.isDirectory())
       {
+        try {
         let dir = await read_dir(filepath,request.query.hidden);
-        result.status(200).setHeader("Content-Type","text/directory-json").send(JSON.stringify(dir));
+        } catch (exception) {result.status(404).send("read_dir error");}
+      ifresult.status(200).setHeader("Content-Type","text/directory-json").send(JSON.stringify(dir));
       }
       else
       if (stats.isFile())
@@ -182,8 +187,10 @@ app.get("*",async function (request, result, next) {
             mimetype = "application/dawn";
         else
         {
+          try {
           let defaultmimetype = await mime(extension);
           let mimeresult = (await mime(createReadStream(filepath), defaultmimetype))
+          } catch (exception) {result.status(404).send("mime error");}
 
           if (mimeresult)
             mimetype = mimeresult.mime;
