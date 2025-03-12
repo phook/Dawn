@@ -34,6 +34,7 @@ async function read_dir(dirpath, hidden) {
     for(fileno in files)
     {
       let file = files[fileno];
+        console.log(file);
         filepath = path.resolve(dirpath, file);
         if (!/^\./.test(file) || hidden)
             try {
@@ -44,6 +45,7 @@ async function read_dir(dirpath, hidden) {
                   file = file.replace(".dawn","");
                   jsdir[file] = Object.assign({},fdat);
                   jsdir[file].mimetype = "application/dawn";
+                  console.log(".dawn");
                 }
                 else
                 if (file.endsWith(".dawn.js")) // if there is a dawn.js file there is an executable
@@ -51,6 +53,7 @@ async function read_dir(dirpath, hidden) {
                   file = file.replace(".dawn.js","");
                   jsdir[file] = Object.assign({},fdat);
                   jsdir[file].mimetype = "application/dawn";
+                  console.log(".dawn.js");
                 }
                 else
                 {
@@ -60,6 +63,7 @@ async function read_dir(dirpath, hidden) {
                     jsdir[file].mimetype = "text/directory-json";
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
+                    console.log(".dir json");
                   } 
                   else 
                   {
@@ -77,6 +81,7 @@ async function read_dir(dirpath, hidden) {
                     jsdir[file].mimetype = mimetype;
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
+                    console.log(mimetype);
                   }
                 }
             } catch (e) {}
@@ -164,16 +169,11 @@ app.get("*",async function (request, result, next) {
   {
     filepath = url.replace("/file:///","");
     try {
-   
-      try {
-          let stats = fs.statSync(filepath);
-      } catch (exception) {result.status(404).send("fs.statsync error");}
+      let stats = fs.statSync(filepath);
       if (stats.isDirectory())
       {
-        try {
         let dir = await read_dir(filepath,request.query.hidden);
-        } catch (exception) {result.status(404).send("read_dir error");}
-      ifresult.status(200).setHeader("Content-Type","text/directory-json").send(JSON.stringify(dir));
+        result.status(200).setHeader("Content-Type","text/directory-json").send(JSON.stringify(dir));
       }
       else
       if (stats.isFile())
@@ -187,10 +187,8 @@ app.get("*",async function (request, result, next) {
             mimetype = "application/dawn";
         else
         {
-          try {
           let defaultmimetype = await mime(extension);
           let mimeresult = (await mime(createReadStream(filepath), defaultmimetype))
-          } catch (exception) {result.status(404).send("mime error");}
 
           if (mimeresult)
             mimetype = mimeresult.mime;
