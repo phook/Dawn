@@ -510,6 +510,7 @@ let DawnCompiler = function () {
 	
 	this._program = function(module)
 	{
+    this.compilation = "";
 		if (!this.tokenizer.nextIs("[")) return false;
 		this.mark();
 		this.tokenizer.peek();
