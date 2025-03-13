@@ -216,7 +216,7 @@ let Dawn = {
 
         Resource.call(this,"");
 
-        const file = new (Dawn.require("protocol/file"))("dawn",rootUrl);
+        const file = new (Dawn.require("Protocol/file"))("dawn",rootUrl);
         const FileProtocolProcessor = file._instanciate_processor();
         let dawnResource = (await FileProtocolProcessor._in_instanciate())._get_resource();
         this._instanciate_processor()._add(dawnResource);
