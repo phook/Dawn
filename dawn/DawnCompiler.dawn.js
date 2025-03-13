@@ -134,9 +134,9 @@ let DawnCompiler = function () {
 		let centerSection = this.compilation.substring(this.rememberPosition.at(-1));
 		if (removeList)
 		{
-			if (centerSection.indexOf("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+			if (centerSection.indexOf("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
 			{
-				centerSection = centerSection.replace("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(list);}))".length);
+				centerSection = centerSection.replace("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(list);}))".length);
 			}
 		}
 		if (qualifyInput)
@@ -358,7 +358,7 @@ let DawnCompiler = function () {
 			this.outputName       != "")
 			this.unmark();
 		else
-			this.insertAndPopMark("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
+			this.insertAndPopMark("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
 //			this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
 		return true;
 	}
@@ -492,7 +492,7 @@ let DawnCompiler = function () {
 		                        this.nativeJavascript);
 		else
 		if (this.currentNumberOfResources()>1) 
-			this.insertAndPopMark("new Promise((async resolve => {flow = await self._lookup('Flow:');flow._add(...Array.from(await Promise.all([",
+			this.insertAndPopMark("new Promise((async resolve => {let flow = await self._lookup('Flow:');flow._add(...Array.from(await Promise.all([",
                             "])));return await resolve(flow);}))");
 		else
 			this.unmark();
@@ -533,7 +533,7 @@ let DawnCompiler = function () {
 		}
 		this.tokenizer.stopPeek();
 		//this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
-	  this.insertAndPopMark("new Promise((async resolve => {list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
+	  this.insertAndPopMark("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
 		this._opt_newline();
 		return true;
 	}
