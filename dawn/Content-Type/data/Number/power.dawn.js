@@ -1,9 +1,11 @@
-const Resource = Dawn.require('./dawn/Resource.js');
+const Resource  = Dawn.require("Content-Type/data/Resource");
+const Number    = Dawn.require("Content-Type/data/Number");
 
 function power()
 {
+  this.Number = new Number();
 	Resource.call(this,"power"); // REMOVE NAMING - BUT LEAVE FOR DEBUG FOR NOW
-	this.Processor=powProcessor;
+	this.Processor=powerProcessor;
 	return this;
 }
 
@@ -12,10 +14,10 @@ function powerProcessor(resource)
 	Resource.Processor.call(this,resource); 
 	this._resource = resource;
 	this._out_Number = null;
-	this._tempNumber = null; // NOT CORRECT - MUST BE STRING
-	this._in_begin = function()
-	{
-		this._tempNumber=null;
+	this._tempNumber = new resource.Number.bigRat(0,10);
+	this._in_Number_base = function(input)
+    { // raise error if not called?  
+      this._tempNumber = input._value;
     }
 	this._in_Number_$ = function(input)
     {  
@@ -26,7 +28,7 @@ function powerProcessor(resource)
     }
 	this._in_end = function()
     {
-        this?._out_Number({_value:this._tempNumber}); // WRONG - MUST BE STRING
+        this?._out_Number({_value:this._tempNumber}); 
     }
 }
 power.Processor=powerProcessor;

@@ -101,10 +101,13 @@ function FileResourceProcessor(resource) {
     {
       if (Object.keys(this._get_resource()._children).length == 0)
       {
-        resource.contentType = await read_contenttype(resource.url);
+        resource.contentType = this._get_owner()._children[resource.url.split("/").at(-1)].contentType;
+        
+        if (!resource.contentType)
+            resource.contentType = await read_contenttype(resource.url);
         
           console.log(resource.contentType);
-          if (resource.contentType.indexOf("text/directory-json") == 0)
+          if (resource.contentType.indexOf("text/directory-json") == 0 || resource.contentType.indexOf("application/dawn") == 0)
           {
             let json = await read_dir(resource.url)
               console.log(json);
@@ -134,7 +137,13 @@ function FileResourceProcessor(resource) {
         // REPLACE FILE TYPE WITH CORRECT AND INSTANCIATE THAT
         console.log(resource.url);
         let resourceSource = new (Dawn.require(resource.url))();
-        return resourceSource._in_instanciate(data);
+        let instance = resourceSource._in_instanciate(data); 
+        instance._set_owner(this); // set as owner to inherit scope but do not become child
+        if (resource.contentType == "application/dawn" || resource.contentType == "text/directory-json")
+          await this._populate_children();
+        if (this._get_resource()._children)
+          instance._get_resource()._children = this._get_resource()._children; // reference same children for back lookup 
+        return instance;
       }
       
       return this;

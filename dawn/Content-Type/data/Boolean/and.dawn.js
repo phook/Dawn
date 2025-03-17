@@ -1,4 +1,4 @@
-const Resource = Dawn.require('./dawn/Resource.js');
+const Resource  = Dawn.require("Content-Type/data/Resource");
 
 function and()
 {

@@ -134,9 +134,11 @@ let DawnCompiler = function () {
 		let centerSection = this.compilation.substring(this.rememberPosition.at(-1));
 		if (removeList)
 		{
-			if (centerSection.indexOf("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+//			if (centerSection.indexOf("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+			if (centerSection.indexOf("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
 			{
-				centerSection = centerSection.replace("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(list);}))".length);
+//				centerSection = centerSection.replace("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(self);}))".length);
+				centerSection = centerSection.replace("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})".length);
 			}
 		}
 		if (qualifyInput)
@@ -258,7 +260,8 @@ let DawnCompiler = function () {
 		while (this._xalpha())
 		{
 		}
-		this.compilation += "self._lookup(\"" + this.tokenizer.identifier() + "\")";
+		this.compilation += "await self._lookup(\"" + this.tokenizer.identifier() + "\")";
+		//this.compilation += "\"" + this.tokenizer.identifier() + "\"";
 		return true;
 	}
 
@@ -315,7 +318,7 @@ let DawnCompiler = function () {
 			if (this.resourceName == "" &&
 				this.inputName    == "" &&
 				this.outputName   == "")
-				this.compilation+=",";
+				this.compilation+="); await self._add(";
 			if (this._flow(module))
 			{
 				this.unmark();
@@ -358,8 +361,8 @@ let DawnCompiler = function () {
 			this.outputName       != "")
 			this.unmark();
 		else
-			this.insertAndPopMark("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
-//			this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
+//			this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+			this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})");
 		return true;
 	}
 
@@ -372,7 +375,8 @@ let DawnCompiler = function () {
 		if (this.resourceName == "" &&
 			this.inputName    == "" &&
 			this.outputName   == "")
-			this.compilation+=",";
+//			this.compilation+=",";
+			this.compilation+="); await self._add(";
 		this._opt_whitespace();		
 		if (this._uri())  
 		{
@@ -492,8 +496,8 @@ let DawnCompiler = function () {
 		                        this.nativeJavascript);
 		else
 		if (this.currentNumberOfResources()>1) 
-			this.insertAndPopMark("new Promise((async resolve => {let flow = await self._lookup('Flow:');flow._add(...Array.from(await Promise.all([",
-                            "])));return await resolve(flow);}))");
+//			this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('Flow:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+			this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('Flow:');await self._add(",");return await resolve(self);})");
 		else
 			this.unmark();
 		this.numberOfResourcesInFlow.pop();
@@ -532,8 +536,8 @@ let DawnCompiler = function () {
 			return this.tokenizer.unPeek(false);
 		}
 		this.tokenizer.stopPeek();
-		//this.insertAndPopMark("this._lookup(\"List:\")._add(",")");
-	  this.insertAndPopMark("new Promise((async resolve => {let list = await self._lookup('List:');list._add(...Array.from(await Promise.all([","])));return await resolve(list);}))");
+//	  this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+	  this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})");
 		this._opt_newline();
 		return true;
 	}

@@ -199,7 +199,7 @@ let Dawn = {
         // Should get processor from context and eval in it
         let processor = context._instanciate_processor();
 //        let program_lines = evalInContext("async function command() {let self=this; await "+jsSource+"}; command.call(this);",processor).then(foo => {
-        evalInContext("let self=this;"+jsSource+"",processor).then(command => {
+        evalInContext("let self=this;"+jsSource.replace("await","")+"",processor).then(command => {
             processor._execute([command]);
         });
 
@@ -238,7 +238,7 @@ let Dawn = {
                 //    console.log(s);
             }
         }
-        els
+        else
         {
             this.debugInfo = function(s)
             {
