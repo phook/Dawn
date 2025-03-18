@@ -101,7 +101,7 @@ function ResourceProcessor(resource) {
         // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
         var skip = false;
         let deref = "";
-        a
+        
         if (string_name._value[0] === "*" || (myName.charAt(-1) != "." && string_name._value.indexOf(myName) == 0)) {
             if (string_name._value[0] === "*")
                 myName = "*";
