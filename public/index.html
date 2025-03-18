@@ -47,6 +47,8 @@ terminal, .cmd .cmd-prompt {
 </style>
 </head>
 <body>
+<div id="terminal" style="height:100%;">
+</div>
 </body>
 <script>
 let environment = Dawn.require("environment.json");
@@ -73,7 +75,7 @@ let index=0;
 
 
 
-let terminal = $('body').terminal(function(text){
+let terminal = $('#terminal').terminal(function(text){
 
   // HERE COMPILE AND EXECUTE DAWN  STRING:text>>Run    - Run performs the magic 
 
