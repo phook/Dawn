@@ -10,22 +10,23 @@ function Console()
 
 function ConsoleProcessor(resource)
 {
+  this.print = Dawn.print;
 	Resource.Processor.call(this,resource); 
 	this.in_String_$all = function(input)
     {   
-        Dawn.print(input.value)
+        this.print(input.value)
     }
 	this.in_Number_$all = function(input)
     {   
-        Dawn.print(input.value.toDecimal())
+        this.print(input.value.toDecimal())
     }
 	this.in_Boolean_$all = function(input)
     {   
-        Dawn.print(input.value?"true":"false")
+        this.print(input.value?"true":"false")
     }
 	this.in_error_$all = function(input)
     {   
-        Dawn.print(input.value)
+        this.print(input.value)
     }
 	return this;
 }

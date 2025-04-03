@@ -22,9 +22,9 @@ function timesProcessor(resource)
         this.out_go?.();
         let thisTime = new Date().getTime() - startTime;
         if (thisTime>10) //msecs
-          return new Promise(()=>{
-            this.continueTimes();
-          });
+          return new Promise((resolve)=>{
+            setTimeout(() => {resolve();},0);
+          }).then(()=>{this.continueTimes();});;
       }     
   }
 	this.in_Number_$all = function(input)

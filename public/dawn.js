@@ -183,6 +183,8 @@ let Dawn = {
           }.call(context);
         }
 
+        Dawn.print = print;
+/*
         Dawn.print = function(string)
         {
           if (!Dawn.returnResult)
@@ -193,7 +195,7 @@ let Dawn = {
           if (print)
             print(string + "\n");
         }
-
+*/
         // ALL THIS COULD PROBABLY BE List.go() ??? so execute is hidden
 
         // Should get processor from context and eval in it
