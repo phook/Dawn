@@ -99,23 +99,21 @@ function FileResourceProcessor(resource) {
 
     this.populate_children = async function()
     {
-      if (Object.keys(this.get_resource().children).length == 0)
+      if (Object.keys(this.get_resource().children).length == 0 && !this.get_resource().json)
       {
         resource.contentType = this.get_owner().children[resource.url.split("/").at(-1)].contentType;
         
         if (!resource.contentType)
             resource.contentType = await read_contenttype(resource.url);
         
-          console.log(resource.contentType);
           if (resource.contentType.indexOf("text/directory-json") == 0 || resource.contentType.indexOf("application/dawn") == 0)
           {
-            let json = await read_dir(resource.url)
-              console.log(json);
-              for(resourcename in json)
-              {          
-                this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename].mimetype));
-                console.log(resourcename);
-              }
+            let json = await read_dir(resource.url);
+            for(resourcename in json)
+            {          
+              this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename].mimetype));
+            }
+            this.get_resource().json=json;
           }
       }
     }
@@ -135,7 +133,6 @@ function FileResourceProcessor(resource) {
       {
         // FIND CONTENT TYPE 
         // REPLACE FILE TYPE WITH CORRECT AND INSTANCIATE THAT
-        console.log(resource.url);
         this.resourceSource = new (Dawn.require(resource.url))();
       }
       
