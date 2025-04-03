@@ -136,8 +136,12 @@ function FileResourceProcessor(resource) {
         // FIND CONTENT TYPE 
         // REPLACE FILE TYPE WITH CORRECT AND INSTANCIATE THAT
         console.log(resource.url);
-        let resourceSource = new (Dawn.require(resource.url))();
-        let instance = resourceSource.in_instanciate(data); 
+        this.resourceSource = new (Dawn.require(resource.url))();
+      }
+      
+      if (this.resourceSource)
+      {
+        let instance = this.resourceSource.in_instanciate(data); 
         instance.set_owner(this); // set as owner to inherit scope but do not become child
         if (resource.contentType == "application/dawn" || resource.contentType == "text/directory-json")
           await this.populate_children();
