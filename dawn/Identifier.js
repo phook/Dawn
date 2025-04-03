@@ -14,7 +14,7 @@ function Identifier()
     this._in_instanciate = function(string)
     {
         var instance = this._clone();
-        instance._name = string.data._value;
+        instance._name = string.data.value;
         return instance;
     }
 }

@@ -10,19 +10,19 @@ function concatenate()
 function concatenateProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_String = null;
-	this._in_begin = function()
+	this.resource = resource;
+	this.out_String = null;
+	this.in_begin = function()
 	{
-		this._tempString = ""; 
+		this.tempString = ""; 
     }
-	this._in_String_$ = function(input)
+	this.in_String_$all = function(input)
     {   
-      this._tempString += input._value;
+      this.tempString += input.value;
     }
-	this._in_end = function()
+	this.in_end = function()
     {
-        this?._out_String({_value:this._tempString}); 
+        this?.out_String({value:this.tempString}); 
     }
 }
 concatenate.Processor=concatenateProcessor;

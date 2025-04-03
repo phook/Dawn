@@ -12,20 +12,20 @@ function Data()
 function DataProcessor(resource)
 {
   Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Data = null;
-    this._in_Data = function(input)
+	this.resource = resource;
+	this.out_Data = null;
+    this.in_Data = function(input)
     {   
-      resource._value = input._value;
+      resource.value = input.value;
     }
-    this._in_go = function()
+    this.in_go = function()
     {
-        return this?._out_Data(resource);
+        return this?.out_Data(resource);
     }
-    this._in_instanciate = function(input)
+    this.in_instanciate = function(input)
     {   
-		 let newObject=this._get_resource()._clone(); // Clone
-     return newObject._instanciate_processor();
+		 let newObject=this.get_resource().clone(); // Clone
+     return newObject.instanciate_processor();
     }
 	return this;
 }

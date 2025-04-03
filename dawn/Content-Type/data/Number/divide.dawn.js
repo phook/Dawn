@@ -12,20 +12,20 @@ function div()
 function divProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Number = null;
-	this._tempNumber = new resource.Number.bigRat(0,10);
-	this._in_Number_dividend = function(input)
+	this.resource = resource;
+	this.out_Number = null;
+	this.tempNumber = new resource.Number.bigRat(0,10);
+	this.in_Number_dividend = function(input)
     { // raise error if not called?  
-      this._tempNumber = input._value;
+      this.tempNumber = input.value;
     }
-	this._in_Number_$ = function(input)
+	this.in_Number_$all = function(input)
     {   
-      this._tempNumber = this._tempNumber.divide(input._value);
+      this.tempNumber = this.tempNumber.divide(input.value);
     }
-	this._in_end = function()
+	this.in_end = function()
     {
-        this?._out_Number({_value:this._tempNumber}); 
+        this?.out_Number({value:this.tempNumber}); 
     }
 }
 div.Processor=divProcessor;

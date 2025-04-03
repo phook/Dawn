@@ -2,7 +2,6 @@ var id = 1;
 
 function clone(src) {
     var clone = Object.assign({}, src);
-    clone.inputs_bound = {};
     clone.previous = null;
     return clone;
 }
@@ -18,443 +17,477 @@ function dawnSort(a, b) {
 }
 
 function Resource(name, owner) {
-    this._id = id++;
-    this._path = [""];
-
-    this._name = name;
-    this._type = "Resource";
-    this._it = 0;
-    this._children = {};
-    this._owner = owner ? owner : null;
-
     this.Processor = ResourceProcessor;
-    this._instanciate_processor = function() {
+
+    this.path = [""];
+    this.name = name;
+    this.type = "Resource";
+
+    this.children = {};
+    this.owner = owner ? owner : null;
+
+    this.instanciate_processor = function() {
         return new this.Processor(this);
     }
-    this.defaultProcessor = null;
 
-    this._in_instanciate = function(input) {
-        return this._instanciate_processor()._in_instanciate(input);
+    this.in_instanciate = function(input) {
+        return this.instanciate_processor().in_instanciate(input);
     }
-    this._get_resource = function() {
+    this.get_resource = function() {
         return this;
     }
-    this._set_owner = function(owner) {
-        this._owner = owner;
+    this.set_owner = function(owner) {
+        this.owner = owner;
     }
-    this._get_owner = function(owner) {
-        return this._owner;
+    this.get_owner = function(owner) {
+        return this.owner;
     }
-    this._clone = function() {
+    this.clone = function() {
         return clone(this);
     }
 
     return this;
 }
 
+
+/*
+
+  Build list of input functions
+  Build list of outut functions
+
+  at lookup:
+  build list of possible inputs
+  build list of possible outputs
+  build list of possible outputs types (build from the possible outputs list)
+  
+  lookup builds list of all inputs, if inputs are not excplicitly listed: foo.bar/bleh?input&input&input
+  explicitely specified inputs gets group removed
+  foo.bar/bleh?input=1 only removes input from posible list
+  possible list can replace connection array (catchall($) are not removed)
+  
+  lookup builds list of all outputs, if outputs are not excplicitly listed: foo.bar/bleh#output&output&output
+  explicitely specified outputs gets group removed
+  lookup can be overidden for excel, csv files to support http://example.com/data.csv#row=5-7 format (would be redirected to inputs in dawn)
+  
+  
+  at connect:
+  offer possible outputs to device connecting to
+  accept outputs that matches the possible inputs
+  
+  groups outputs should be offered in orders
+  include rules for groups - concept - first input connecting fixes the group number so now fewer are available
+  same rule for outputs first output connecting fixes the group number so fewer are available
+  
+  group 0 (or no group) are always possible - begin, end, error, go?
+  explicits are only available when mentioned in the in or output lists (lookup?)
+
+  _$all               - does not disappear from input list when connected
+  _$explicit          - does only appear in list if explicitly mentioned
+  _$group_name        - groups inputs, so if one is connected all other groups are removed
+
+  >>NewInput:Boolean:minuend&tag=all
+  >>NewInput:Boolean:minuend&group=name
+*/
+const isInput    = "in_";
+const isOutput   = "out_";
+const isExplicit = "_$explicit";
+const isCatchAll = "_$all";
+const isGroup    = "_$group_";
+
+const protectedFunctions = ["in_go","in_begin","in_end","in_error","out_begin","out_end","out_error"];
+
 function ResourceProcessor(resource) {
-    this._children_processors = {};
-    this._get_resource = function() {
+    this.get_resource = function() {
         return resource;
     }
-    this._lookup = async function(identifier) {
-        if (identifier.indexOf(":") == -1)
-            throw "error lookup of " + identifier + ": colon missing";
-        if (identifier == ".")
-            return this;
 
-        if (identifier.indexOf("input:") == 0) {
-            let name = identifier.replace("input:", "");
-            if (this["__in_" + name + "_value"])
-                return this["__in_" + name + "_value"];
-        } else
-        if (identifier.indexOf("output:") == 0) {
-            let name = identifier.replace("output:", "");
-            if (this["_out_" + name])
-                return this["_out_" + name];
-        }
-
-        var ref = {
-            _value: identifier
-        };
-        let result = await this._in_lookup_child(ref);
-
-        if (!result) {
-            if (identifier[0] != "*")
-                console.log("error lookup of " + identifier + ": lookup failed");
-            // send error to error output
-            //throw "error lookup of " + identifier + ": lookup failed";
-        }
-        return result;
+    this.mythen = function(possiblePromise, fn) {
+        if (possiblePromise)
+            return possiblePromise.then(fn);
+        else
+            return fn();
     }
 
-    this._in_lookup = async function(string_name, from_owner, exclude) // if lookup should use _out_lookup instead of return - tail recursion should be used
-    {
-        let myName = this._get_resource()._name;
-        if (string_name._value == myName)
-            return this; //// NO THIS SHOULD BE A REFERENCE HOLDING THE FLOW RELATED INFO - BUT VALUE RETAINED IN ORIGINAL Resource
-        if (myName == "")
-            return this._in_lookup_child(string_name); // temp hack for root
 
-        var originalResource = string_name._value;
-
-        // remove own name from identifier - including delimeter/separator in this case "." (could be "/","\",":" etc.)
-        var skip = false;
-        let deref = "";
+    this.inputList = {};
+    this.outputList = {};
+    this.output_types = null;
+    this.endParameters = {};
+ 
+    this.lookup = async function(identifier) {
+        return await this.lookup_new("*."+identifier,true);
+      }
+    this.lookup_new = async function(identifier, searchToRoot) {
+        if (typeof(searchToRoot)=="undefined")
+            searchToRoot=true;
+        if (identifier.indexOf(":") == -1) {
+            this.out_error?.({
+                value: "Colon missing from identifier: " + identifier
+            });
+            return null;
+        }
         
-        if (string_name._value[0] === "*" || (myName.charAt(-1) != "." && string_name._value.indexOf(myName) == 0)) {
-            if (string_name._value[0] === "*")
-                myName = "*";
-            deref = string_name._value[myName.length];
-            if (deref == "?")
-                string_name._value = string_name._value.substring(myName.length);
-            else
-                string_name._value = string_name._value.substring(myName.length + 1);
-            if (deref == ".") {
-                let result = await this._in_lookup_child(string_name, from_owner, exclude);
-                if (result)
-                    return result;
-            } else if (deref == ":" || deref == "?") {
-                let urlParametersToInputs = [];
+        let deref = "";
+        let name = resource.name;
+        let nextIdentifier = "";
+        let wildcard = identifier.indexOf("*.") === 0;
+        if (wildcard || identifier.indexOf(resource.name) == 0) {
+        if (wildcard)
+            name = "*";
+        deref = identifier[name.length]; // first character after name is derefence
 
-                if (string_name._value.indexOf("?") !== -1) {
-                    let parameters = string_name._value.substring(string_name._value.indexOf("?"));
-                    string_name._value = string_name._value.substring(0, string_name._value.indexOf("?"));
-                    //if (string_name._value.indexOf("|") !== -1) // if parameters AND input parameters
-                    {
-                        const URLparameters = /(?:\?|&|;)([^=]+)=([^&|;]*)/g;
-                        const matchAll = parameters.matchAll(URLparameters);
-                        let addAmpersand = false;
-                        for (const match of matchAll) {
-                            if (match[1].indexOf("|") === -1) {
-                                string_name._value += (addAmpersand ? "&" : "") + match[1] + "=" + match[2];
-                                addAmpersand = true;
-                            } else {
-                                if (match[1].indexOf("|") === 0) {
-                                    urlParametersToInputs.push({
-                                        input: match[1].substring(1),
-                                        value: match[2]
-                                    });
-                                } else {
-                                    Dawn.error("illegal URI \"|\" only allowed as first charachter in input parameters");
-                                }
-                            }
-                        }
-                    }
-                }
-                let result = await this._in_instanciate(string_name);
-                if (result) {
-                    for (let i in urlParametersToInputs) {
-                        let type = "number";
-                        let input = urlParametersToInputs[i].input;
-                        let value = urlParametersToInputs[i].value;
-                        if (value.indexOf("\"") == 0) {
-                            value.replace("\"", "");
-                            type = "string";
-                            value = await this._lookup("String:" + value);
-                        } else {
-                            value = await this._lookup("Number:" + value);
-                        }
-                        let inputname = "_in_" + type + "_" + input;
-                        if (inputname in result) {
-                            result[inputname](value);
-                            result.inputs_bound[inputname] = true; // to prevent bind errors
-                        } else
-                        if (inputname + "$e" in result) {
-                            result[inputname + "$e"](value);
-                            result.inputs_bound[inputname + "$e"] = true; // to prevent bind errors
-                        }
-                    }
-                }
-                return result;
-            }
-        }
+        if (deref == "?")
+            nextIdentifier = identifier.substring(name.length);
+        else
+            nextIdentifier = identifier.substring(name.length + 1);
 
-        if (this._get_resource()._owner && !from_owner) {
-            string_name._value = originalResource;
-            return await this._get_resource()._owner._in_lookup(string_name, from_owner, this);
-        }
+        if (deref == ".") {
+            if (this.populate_children)
+                await this.populate_children(identifier);
 
-        return null;
-    }
-    this._lookup_child = async function(identifier) {
-        var ref = {
-            _value: identifier
-        };
-        return await this._in_lookup_child(ref);
-    }
-    this._in_lookup_child = async function(string_name, from_owner, exclude) {
-        var identifier = string_name._value;
+            let keys = Object.keys(resource.children);
+            keys.sort(dawnSort);
 
-        if (this._populate_children)
-            await this._populate_children(string_name);
-
-        var keys = Object.keys(this._get_resource()._children);
-        keys.sort(dawnSort);
-
-        for (testPath in this._get_resource()._path) // needs the first element to be ""
-        {
-            var identifierToCheck = this._get_resource()._path[testPath] + identifier;
-            string_name._value = identifierToCheck;
-            for (let id in keys) {
-                if (this._get_resource()._children[keys[id]] != exclude) {
-                    if (identifierToCheck == "*" || identifierToCheck.indexOf(keys[id]) == 0) {
-                        var result = await this._get_resource()._children[keys[id]]._instanciate_processor()._in_lookup(string_name, true);
+            for (ix in resource.path) // needs the first element to be ""
+            {
+                identifierToCheck = resource.path[ix] + nextIdentifier;
+                for (let id in keys) {
+                    if (identifierToCheck.indexOf(keys[id]) == 0) {
+                        var result = await resource.children[keys[id]].instanciate_processor().lookup_new(identifierToCheck,false);
                         if (result)
                             return result;
                     }
                 }
             }
-        }
-        if (this._get_resource()._owner && !from_owner)
-            return await this._get_resource()._owner._instanciate_processor()._in_lookup_child(string_name, false, this);
-        return null;
-    }
+            if (searchToRoot && resource.owner)
+                return await resource.owner.instanciate_processor().lookup_new(identifier, true);
+        } else if (deref == ":" || deref == "?") {
+ 
+            let result = await this.in_instanciate({value:nextIdentifier});
+            if (result) {
+ 
+                // build default input and output lists for binding - excluding explicit ones
+                let keys = Object.keys(result);
+                keys.filter((input)  => input.indexOf(isInput)   === 0 && input.indexOf(isExplicit)  === -1).forEach((input)  => result.inputList[input]   = result[input]);
+                keys.filter((output) => output.indexOf(isOutput) === 0 && output.indexOf(isExplicit) === -1).forEach((output) => result.outputList[output] = result[output]);
 
-    this._clone = function() {
-        return clone(this);
-    }
+                let urlParametersToInputs = [];
 
-    this._out_begin = null;
-    this._out_end = null;
-
-    this.inputs_bound = {};
-
-    this.previous = null;
-    this.next = null;
-    this._test_previous = function(_new_previous) {
-        if (this == _new_previous) {
-            throw ("circular reference");
-        }
-        if (this.previous) {
-            if (_new_previous == this.previous) {
-                throw ("circular reference");
-            }
-            return this.previous._test_previous(_new_previous);
-        }
-        return true;
-    }
-    this._set_previous = function(_previous) {
-        _previous._test_previous(this);
-        this.previous = _previous;
-    }
-    this._get_previous = function(_previous) {
-        return this.previous;
-    }
-    this._set_next = function(_next) {
-        this.next = _next;
-    }
-    this._get_next = function(_next) {
-        return this.next;
-    }
-
-    this._set_owner = function(owner) {
-        resource._owner = owner;
-    }
-    this._get_owner = function(owner) {
-        return resource._owner ? resource._owner : this;
-    }
-    this._add = async function() {
-        var args = Array.prototype.slice.call(arguments);
-        var self = this;
-        //args.forEach(function(child)
-        for (childix in args) {
-            let child = args[childix];
-            if (child == "string")
-                child = resource._lookup(child);
-
-            child._get_resource()._set_owner(self._get_resource()); //nonoptimal
-            var name = "";
-            if (child._get_resource()._name)
-                name = child._get_resource()._name;
-            else
-                name = "Ix" + resource._it++;
-            resource._children[name] = child._get_resource();
-            //				self._children_processors[name] = child._instanciate_processor(); SHOULD BE LIKE THIS
-        }
-        //);
-        return this;
-    }
-
-    this._in_string_name$e = function(string_name) {
-        resource._name = string_name._value;
-    }
-
-    this._in_instanciate = function(input) {
-        let newObject = Object.assign({}, this); // Clone
-        return newObject._instanciate_processor();
-    }
-
-    this._input_list = null;
-    this._build_input_list = function() {
-        this._input_list = {};
-        for (b in this)
-            if (b.indexOf("_in_") == 0)
-                this._input_list[b] = this[b];
-    }
-    this._offer_connection = function(match) {
-        if (!this._input_list)
-            this._build_input_list();
-
-        match = "_in_" + match;
-        for (b in this._input_list) {
-            let explicit = b.endsWith("$e");
-            let all_outputs = b.endsWith("_$");
-            let fullmatch = (b == match);
-            let catchall = (b == match + "_$");
-            let type_match = (match.indexOf(b) == 0) || (b.indexOf(match) == 0);
-            let explicit_match = (explicit && b == match + "$e");
-            if (fullmatch ||
-                catchall ||
-                type_match ||
-                explicit_match) {
-                // inputs ending with $ takes all outputs
-                if ((all_outputs) || typeof(this.inputs_bound[b]) == "undefined") {
-                    this.inputs_bound[b] = true;
-
-                    let newBoundFunction = this[b].bind(this);
-                    newBoundFunction._boundThis = this;
-                    newBoundFunction._outputName = match.replace("_in_", "");;
-                    return newBoundFunction;
-                    break;
-                }
-            }
-        }
-    }
-    this._connect = function(resource_to_connect_to) {
-        if (typeof(resource_to_connect_to) == "string") {
-            let result = resource._lookup(resource_to_connect_to, true);
-            if (!result)
-                result = this._get_resource()._lookup(resource_to_connect_to); //nonoptimal
-            resource_to_connect_to = result;
-        }
+                inputsAndOutputs = nextIdentifier.split("?");
+                inputsAndOutputs = inputsAndOutputs.at("-1").split("#")
+                let inputs = [];
+                let outputs = [];
+                if (nextIdentifier.indexOf("?") !== -1 && nextIdentifier.indexOf("#") !== -1) {
+                    inputs = inputsAndOutputs.at(0).split("&").filter(val => val !== '');
+                    outputs = inputsAndOutputs.at(1).split("&").filter(val => val !== '');
+                } else
+                if (nextIdentifier.indexOf("?") !== -1)
+                    inputs = inputsAndOutputs.at(0).split("&").filter(val => val !== '');
+                else
+                if (nextIdentifier.indexOf("#") !== -1)
+                    outputs = inputsAndOutputs.at(1).split("&").filter(val => val !== '');
 
 
-        resource_to_connect_to._set_previous(this);
-        this._connectee = resource_to_connect_to;
-
-        Dawn.debugInfo("trying to bind " + resource._name + " to " + resource_to_connect_to._name);
-        for (let a in this) {
-            if (a.indexOf("_out_") == 0) {
-                match = a.substr(5);
-
-                // HERE DETECT IF resource_to_connect_to IS ResourceNotFound
-                // IF IT IS DEDUCT THE OUTPUT TYPE AND LOOKUP IN THAT SCOPE WITH URI FROM ResourceNotFound 
-
-                let input_bound = resource_to_connect_to._offer_connection(match)
-
-                if (input_bound) {
-                    Dawn.debugInfo("binding " + resource._name + " to " + resource_to_connect_to._name);
-                    this[a] = input_bound;
-                }
-            }
-        }
-
-        return resource_to_connect_to;
-    }
-
-    this._connect_function = function(outputName, fn) {
-        if (("_out_" + outputName) in this)
-            this["_out_" + outputName] = fn;
-    }
-
-
-    this._in_native$ = function(data) {
-        Function(data._value).call(this);
-    }
-
-    this._in_begin = function() {
-        if (this._out_begin)
-            this._out_begin();
-    }
-
-    this._in_end = function() {
-        if (this._out_end)
-            this._out_end();
-        this.inputs_bound = {};
-        this.bindee = null;
-        this.previous = null;
-    }
-    this._in_go = function() {}
-    this._get_qualified_name = function() {
-        if (this._previous)
-            return this._previous._get_qualified_name() + "." + resource._name;
-        return resource._name;
-    }
-    this._first = function() {
-
-        if (this.previous) {
-            var first = this.previous;
-
-            var loopTest = [first];
-
-            while (first._get_previous()) {
-                first = first._get_previous();
-                loopTest.forEach(function(element) {
-                    if (first == element) {
-                        throw "circular ref error";
+                // Check for explicit in/outputs and adjust in/outputlists accordingly
+                let inputsCleared = false;
+                for (let inputIx in inputs) {
+                    let input = inputs[inputIx];
+                    if (input.indexOf("|") == 0 && input.indexOf("=") !== -1) // assign input with VALUE
+                    {
+                        let pair = input.split("=");
+                        urlParametersToInputs.push({
+                            input: pair[0].substring(1),
+                            value: pair[1]
+                        });
+                    } else
+                    if (input.indexOf("=") === -1) {
+                        if (input.indexOf("|") === 0) input = input.substring(1);
+                        if (!inputsCleared)
+                        {
+                           inputsCleared=true;
+                           Object.keys(result.inputList).forEach(key=>{if (!protectedFunctions.includes(key)) delete result.inputList[key];});
+                        }
+                        let inputFullName = keys.find(v => v.indexOf("_" + input) != -1); // possible error if input is foo and fooBAR is returned
+                        if (inputFullName)
+                        {
+                           result.inputList[inputFullName] = result[inputFullName];
+                        }
                     }
-                });
-                loopTest.push(first);
-            }
-            return first;
-        } else {
-            return this;
-        }
-    }
-
-    this._add_next_function_at = 0;
-    this._nextFunction = [];
-    this._add_next_function = function(context, fn) {
-        if (!fn)
-            fn = context._in_go; // default input to call
-        if (fn)
-            this._nextFunction.splice(this._add_next_function_at, 0, fn.bind(context)); // javscript bind to bind function to resource
-        this._add_next_function_at++;
-    }
-
-
-    this._execute_next_function = function() {
-        this._add_next_function_at = 0;
-        while (this._nextFunction.length) {
-            let fn = this._nextFunction.shift();
-            let result = fn();
-            if (result)
+                }
+                let outputsCleared = false;
+                for (let outputIx in outputs) {
+                    let output = output[inputIx];
+                    if (output.indexOf("|") == 0)
+                    {
+                      output = output.substring(1);
+                      if (!outputsCleared)
+                      {
+                         outputsCleared=true;
+                         Object.keys(result.outputList).forEach(key=>{if (!protectedFunctions.includes(key)) delete result.outputList[key];});
+                      }
+                      let outputFullName = keys.find(v => v.indexOf("_" + output) != -1); // possible error if input is foo and fooBAR is returned
+                      if (outputFullName)
+                      {
+                         result.outputList[outputFullName] = result[outputFullName];
+                      }
+                    }
+                }
+ 
+                for (let i in urlParametersToInputs) {
+                    let type = "";
+                    let constInput = null;
+                    let input = urlParametersToInputs[i].input;
+                    let value = urlParametersToInputs[i].value;
+                    if (value.indexOf("\"") == 0) {
+                        value.replace("\"", "");
+                        type = "String";
+                        constInput = await this.lookup("String:" + value);
+                    } else
+                    if (["true", "false"].includes(value.toLowerCase())) {
+                        type = "Boolean";
+                        constInput = await this.lookup("Boolean:" + value);
+                    } else {
+                        type = "Number";
+                        constInput = await this.lookup("Number:" + value);
+                    }
+                    let inputname  = "in_"  + type + "_" + input;
+                    let outputname = "out_" + type;
+                    if (inputname in result) {
+                        result.endParameters[inputname]=constInput.get_resource();
+                        result.inputList[inputname]=undefined;
+                    } else
+                    if (inputname + "_$explicit" in result) {
+                        result.endParameters[inputname + "$explicit"]=constInput.get_resource();
+                        result.inputList[inputname+ "_$explicit"]=undefined;
+                    }
+                }
+                result.build_output_types();
                 return result;
-        }
-    }
 
-
-    // NEW CONCEPT FOR LINES - CONTAINS FLOWS - CALLS _in_go, promise is return if async, if promise is returned - it sets execution to continue at resolve
-    this._execute = function(array_of_lines) {
-        while (array_of_lines.length) {
-            let flowForThisLine = array_of_lines.shift();
-            let result = flowForThisLine._in_go();
-            if (result) {
-                return result.promise().then(function() {
-                    this.execute(array_of_lines);
-                });
             }
+
+
         }
     }
 
-    this._execute_fn = function(array_of_lines) {
-        while (array_of_lines.length) {
-            let flowForThisLine = array_of_lines.shift();
-            let result = flowForThisLine();
-            if (result) {
-                result.promise().then(function() {
-                    return this.execute(array_of_lines);
-                });
-            }
-        }
-    }
+}
 
-    // little dirty - make sure that resources and processers are called correctly
-    this._instanciate_processor = function() {
-        return this;
+this.clone = function() {
+    return clone(this);
+}
+
+this.out_begin = null;
+this.out_end = null;
+this.out_error = null;
+
+this.set_owner = function(owner) {
+    resource.owner = owner;
+}
+this.get_owner = function(owner) {
+    return resource.owner ? resource.owner : this;
+}
+this.add = async function() {
+    var args = Array.prototype.slice.call(arguments);
+    var self = this;
+    //args.forEach(function(child)
+    for (childix in args) {
+        let child = args[childix];
+        if (child == "string")
+            child = resource.lookup(child);
+
+        child.get_resource().set_owner(self.get_resource()); //nonoptimal
+        var name = "";
+        if (child.get_resource().name)
+            name = child.get_resource().name;
+        else
+            name = "Ix" + resource.it++;
+        resource.children[name] = child.get_resource();
+        //				self.children_processors[name] = child.instanciate_processor(); SHOULD BE LIKE THIS
     }
+    //);
     return this;
+}
+
+this.in_string_name$e = function(string_name) {
+    resource.name = string_name.value;
+}
+
+this.in_instanciate = function(input) {
+    let newObject = Object.assign({}, this); // Clone
+    return newObject.instanciate_processor();
+}
+
+this.build_input_list = function() {
+    this.input_list = {};
+    for (fn in this)
+        if (fn.indexOf("in_") == 0)
+            this.input_list[fn] = this[fn];
+}
+
+this.build_output_types = function() {
+    let outputList = [];
+    let outputTypes=[];
+    Object.keys(this).filter((output) => output.indexOf(isOutput) === 0 && output.indexOf(isExplicit) === -1).forEach((output) => outputList.push(output));
+    for (outputIx in outputList)
+    {
+      let output = outputList[outputIx].replace("out_","");
+      let index=output.indexOf("_");
+      if (index === -1)
+        index = output.length+1;
+      outputTypes.push(output.slice(0,index));
+    }
+    this.output_types = new Set(outputTypes);
+}
+
+this.get_output_types = function() {
+  if (!this.output_types)
+    this.build_output_types();
+  return this.output_types;
+}
+
+this.offer_connection = function(match) {
+    if (!this.input_list)
+        this.build_input_list();
+
+    // order - check explicits, then type
+
+
+    match = "in_" + match;
+    for (input in this.input_list) {
+        let explicit    = input.endsWith(isExplicit);
+        let fullmatch   = (input == match);
+        let catchall    = (input == match + isCatchAll);
+        let type_match  = (match.indexOf(input) == 0) || (input.indexOf(match) == 0);
+        let explicit_match = (explicit && input == match + "$e");
+        if (fullmatch  ||
+            catchall   ||
+            type_match ||
+            explicit_match) 
+        {
+          let newBoundFunction = this[input].bind(this);
+          
+          if (!catchall)
+            delete this.input_list[input]; // remove from list
+          
+          // here if group selected, remove all other groups from list
+          
+          return newBoundFunction;
+        }
+    }
+}
+
+
+
+// connect rules:
+// Only offer outputs to inputs in the lists
+// filter for _$all, _$explicit, _$group
+// when a group is connected remove all other groups from list
+
+this.connect = function(resource_to_connect_to) {
+  /*
+    if (typeof(resource_to_connect_to) == "string") {
+        let result = resource.lookup(resource_to_connect_to, true);
+        if (!result)
+            result = this.get_resource().lookup(resource_to_connect_to); //nonoptimal
+        resource_to_connect_to = result;
+    }
+  */
+    this.connectee = resource_to_connect_to;
+
+    for (let output in this.outputList) {
+        let input_connected = resource_to_connect_to.offer_connection(output.substr(4))
+
+        if (input_connected) {
+            this[output] = input_connected;
+        }
+    }
+
+    return resource_to_connect_to;
+}
+/*
+this.connect_function = function(outputName, fn) {
+    if (("out_" + outputName) in this)
+        this["out_" + outputName] = fn;
+}
+*/
+
+this.in_native$ = function(data) {
+    Function(data.value).call(this);
+}
+
+this.in_begin = function() {
+  this.out_begin?.();
+}
+
+this.fire_end_parameters=function()
+{
+  for(parameter in this.endParameters)
+    this[parameter](this.endParameters[parameter]);
+}
+
+this.in_end = function() {
+  this.fire_end_parameters();
+  this.out_end?.();
+}
+this.in_go = function() {}
+this.get_qualified_name = function() {
+    if (this.previous)
+        return this.previous.get_qualified_name() + "." + resource.name;
+    return resource.name;
+}
+
+this.add_next_function_at = 0;
+this.nextFunction = [];
+this.add_next_function = function(context, fn) {
+    if (!fn)
+        fn = context.in_go; // default input to call
+    if (fn)
+        this.nextFunction.splice(this.add_next_function_at, 0, fn.bind(context)); // javscript bind to bind function to resource
+    this.add_next_function_at++;
+}
+
+
+this.execute_next_function = function() {
+    this.add_next_function_at = 0;
+    while (this.nextFunction.length) {
+        let fn = this.nextFunction.shift();
+        let result = fn();
+        if (result)
+            return result;
+    }
+}
+
+
+// NEW CONCEPT FOR LINES - CONTAINS FLOWS - CALLS _in_go, promise is return if async, if promise is returned - it sets execution to continue at resolve
+this.execute = function(array_of_lines) {
+    while (array_of_lines.length) {
+        let flowForThisLine = array_of_lines.shift();
+        let result = flowForThisLine.in_go();
+        if (result) {
+            return result.promise().then(function() {
+                this.execute(array_of_lines);
+            });
+        }
+    }
+}
+
+this.execute_fn = function(array_of_lines) {
+    while (array_of_lines.length) {
+        let flowForThisLine = array_of_lines.shift();
+        let result = flowForThisLine();
+        if (result) {
+            result.promise().then(function() {
+                return this.execute(array_of_lines);
+            });
+        }
+    }
+}
+
+// little dirty - make sure that resources and processers are called correctly
+this.instanciate_processor = function() {
+    return this;
+}
+return this;
 }
 Resource.Processor = ResourceProcessor;
 module.exports = Resource;

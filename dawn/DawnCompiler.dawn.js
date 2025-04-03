@@ -134,11 +134,11 @@ let DawnCompiler = function () {
 		let centerSection = this.compilation.substring(this.rememberPosition.at(-1));
 		if (removeList)
 		{
-//			if (centerSection.indexOf("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
-			if (centerSection.indexOf("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+//			if (centerSection.indexOf("new Promise((async resolve => {let self = await this.lookup('List:');await self.add(...Array.from(await Promise.all([") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
+			if (centerSection.indexOf("await new Promise(async resolve => {let self = await this.lookup('List:');await self.add(") == 0 && centerSection.lastIndexOf(")") == centerSection.length-1)
 			{
-//				centerSection = centerSection.replace("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(self);}))".length);
-				centerSection = centerSection.replace("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})".length);
+//				centerSection = centerSection.replace("new Promise((async resolve => {let self = await this.lookup('List:');await self.add(...Array.from(await Promise.all([","").slice(0, -"])));return await resolve(self);}))".length);
+				centerSection = centerSection.replace("await new Promise(async resolve => {let self = await this.lookup('List:');await self.add(",");return await resolve(self);})".length);
 			}
 		}
 		if (qualifyInput)
@@ -168,7 +168,7 @@ let DawnCompiler = function () {
 	
 ///// DAWN SYNTAX DEFINITION
 ///// URI - MOST BASIC PRIMITIVE OF DAWN
-	this._alpha = function()
+	this.alpha = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if (currentChar>="a" && currentChar<="z") 
@@ -181,7 +181,7 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._digit = function()
+	this.digit = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if (currentChar>="0" && currentChar<="9") 
@@ -191,10 +191,10 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._hex = function()
+	this.hex = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
-		if (this._digit()) return true;
+		if (this.digit()) return true;
 		if (currentChar>="a" && currentChar<="f") 
 			this.tokenizer.next(); 
 		else
@@ -205,7 +205,7 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._safe = function()
+	this.safe = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if ("$-_@.&:#=?".indexOf(currentChar) != -1) 
@@ -215,7 +215,7 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._extra = function()
+	this.extra = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if ("!*\"'|,()/".indexOf(currentChar) != -1) 
@@ -225,15 +225,15 @@ let DawnCompiler = function () {
 		return true;
 	}
 
- 	this._escape = function()
+ 	this.escape = function()
 	{
 		this.tokenizer.peek();
 		let currentChar = this.tokenizer.currentChar();
 		if (currentChar == "%") 
 		{
 			this.tokenizer.next();
-			if (this._hex())
-				if (this._hex())
+			if (this.hex())
+				if (this.hex())
 				{
 					this.tokenizer.stopPeek();
 					return true;
@@ -243,31 +243,31 @@ let DawnCompiler = function () {
 		return false;
 	}
 
- 	this._xalpha = function()
+ 	this.xalpha = function()
 	{
-		if (this._alpha()) return true;
-		if (this._digit())  return true;
-		if (this._safe())   return true;
-		if (this._extra())  return true;
-		if (this._escape()) return true;
+		if (this.alpha()) return true;
+		if (this.digit())  return true;
+		if (this.safe())   return true;
+		if (this.extra())  return true;
+		if (this.escape()) return true;
 		return false;
 	}
 
- 	this._uri = function()
+ 	this.uri = function()
 	{
 		this.tokenizer.mark(); // put mark in tokenizer to be able to retrieve identifiers (uris)
-		if (!this._xalpha()) return false;
-		while (this._xalpha())
+		if (!this.xalpha()) return false;
+		while (this.xalpha())
 		{
 		}
-		this.compilation += "await self._lookup(\"" + this.tokenizer.identifier() + "\")";
+		this.compilation += "await self.lookup(\"" + this.tokenizer.identifier() + "\")";
 		//this.compilation += "\"" + this.tokenizer.identifier() + "\"";
 		return true;
 	}
 
 	// WHITESPACES, NEWLINES, SEPARATORS
 
-	this._opt_whitespace = function()
+	this.opt_whitespace = function()
 	{
 		while (this.tokenizer.nextIs(" ") || this.tokenizer.nextIs("\t"))
 		{
@@ -275,7 +275,7 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._opt_newline = function()
+	this.opt_newline = function()
 	{
 		while (this.tokenizer.nextIs(" ") || this.tokenizer.nextIs("\t") || this.tokenizer.nextIs("\r") || this.tokenizer.nextIs("\n"))
 		{
@@ -283,43 +283,43 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._whitespace = function()
+	this.whitespace = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if (currentChar != " " && currentChar != "\t")
 			return false;
-		this._opt_whitespace();
+		this.opt_whitespace();
 		return true;
 	}
 
-	this._newline = function()
+	this.newline = function()
 	{
 		let currentChar = this.tokenizer.currentChar();
 		if (currentChar != "\r" && currentChar != "\n")
 			return false;
-		this._opt_newline();
+		this.opt_newline();
 		return true;
 	}
 
-	this._separator = function()
+	this.separator = function()
 	{
-		if (this._whitespace()) return true;
-		if (this._newline()) return true;
+		if (this.whitespace()) return true;
+		if (this.newline()) return true;
 		return false;
 	}
 
 // DAWN SYNTAX
-	this._flow_list_end = function(module)
+	this.flow_list_end = function(module)
 	{
 		this.tokenizer.peek();
 		this.mark();
-		while (this._separator())
+		while (this.separator())
 		{
 			if (this.resourceName == "" &&
 				this.inputName    == "" &&
 				this.outputName   == "")
-				this.compilation+="); await self._add(";
-			if (this._flow(module))
+				this.compilation+="); await self.add(";
+			if (this.flow(module))
 			{
 				this.unmark();
 				this.tokenizer.stopPeek();
@@ -332,23 +332,23 @@ let DawnCompiler = function () {
 		return true;
 	}
 
-	this._flow_list = function(module)
+	this.flow_list = function(module)
 	{
 		if (!this.tokenizer.nextIs("[")) return false;
 		this.mark();
 		this.tokenizer.peek();
-		this._opt_whitespace();
-		if (!this._flow(module))
+		this.opt_whitespace();
+		if (!this.flow(module))
 		{
 			this.cancelMarkAndRewind();
 			return this.tokenizer.unPeek(false); // return false and unpeek
 		}
-		if (!this._flow_list_end(module))
+		if (!this.flow_list_end(module))
 		{
 			this.cancelMarkAndRewind();
 			return this.tokenizer.unPeek(false);
 		}
-		this._opt_whitespace();
+		this.opt_whitespace();
 		if (!this.tokenizer.nextIs("]"))
 		{
 			this.cancelMarkAndRewind();
@@ -361,24 +361,24 @@ let DawnCompiler = function () {
 			this.outputName       != "")
 			this.unmark();
 		else
-//			this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
-			this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})");
+//			this.insertAndPopMark("new Promise((async resolve => {let self = await this.lookup('List:');await self.add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+			this.insertAndPopMark("await new Promise(async resolve => {let self = await this.lookup('List:');await self.add(",");return await resolve(self);})");
 		return true;
 	}
 
-	this._flow_middle = function(module)
+	this.flow_middle = function(module)
 	{
 		this.tokenizer.peek();
-		this._opt_whitespace();
+		this.opt_whitespace();
 		if (!this.tokenizer.nextIs(">>")) return this.tokenizer.unPeek(false); // return false;
 		this.mark();
 		if (this.resourceName == "" &&
 			this.inputName    == "" &&
 			this.outputName   == "")
 //			this.compilation+=",";
-			this.compilation+="); await self._add(";
-		this._opt_whitespace();		
-		if (this._uri())  
+			this.compilation+="); await self.add(";
+		this.opt_whitespace();		
+		if (this.uri())  
 		{
 			let identifier = this.tokenizer.identifier();
 			if (module && identifier.indexOf("NewResource:") == 0)
@@ -408,12 +408,12 @@ let DawnCompiler = function () {
 				this.unmark();
 			return this.tokenizer.stopPeek(true); // return true;
 		}
-		if (this._flow_list(module))
+		if (this.flow_list(module))
 		{
 			this.unmark();
 			return this.tokenizer.stopPeek(true); // return true;
 		}
-		if (this._flow(module))
+		if (this.flow(module))
 		{
 			this.unmark();
 			return this.tokenizer.stopPeek(true); // return true;
@@ -423,11 +423,11 @@ let DawnCompiler = function () {
 		return false;
 	}
 
-	this._flow_end = function(module)
+	this.flow_end = function(module)
 	{
-		if (!this._flow_middle(module)) return false;
+		if (!this.flow_middle(module)) return false;
 		this.incNumberOfResources();
-		while (this._flow_middle(module))
+		while (this.flow_middle(module))
 		{
 			this.incNumberOfResources();
 		}
@@ -435,10 +435,10 @@ let DawnCompiler = function () {
 	}
 
 
-	this._flow_begin = function(module)
+	this.flow_begin = function(module)
 	{
 		this.mark();
-		if (this._uri())
+		if (this.uri())
 		{
 			let identifier = this.tokenizer.identifier();
 			if (module && identifier.indexOf("NewOutput:") == 0)
@@ -457,38 +457,38 @@ let DawnCompiler = function () {
 			return true;
 		}
 		this.cancelMarkAndRewind();
-		if (this._flow_list(module)) return true;
+		if (this.flow_list(module)) return true;
 		return false;
 	}
 
-	this._flow = function(module)
+	this.flow = function(module)
 	{
 		this.resourceName="";
 		this.inputName="";
 		this.outputName="";
 		this.nativeJavascript="";
 		this.mark();
-		if (!this._flow_begin(module))
+		if (!this.flow_begin(module))
 		{
 			this.cancelMarkAndRewind();
 			return false;
 		}
 		this.numberOfResourcesInFlow.push(1);
-		this._flow_end(module);
+		this.flow_end(module);
 		if (this.resourceName!="")
 			this.insertAndPopMark("function "+this.resourceName+"()\n{\nResource.call(this,\""+this.resourceName+"\");\nthis.Processor="+this.resourceName+"Processor;\nreturn this;\n}\nfunction "+this.resourceName+"Processor(resource)\n{\nResource.Processor.call(this,resource);\n",
 		                          "}\n"+this.resourceName+".Processor="+this.resourceName+"Processor;\nmodule.exports="+this.resourceName+";");
 		else
 		if (this.inputName!="" && this.nativeJavascript!="")
-			this.insertAndPopMark("this._in_"+this.inputName+"=function(input_"+this.inputName.replace("_$","")+")\n{\n",
+			this.insertAndPopMark("this.in_"+this.inputName+"=function(input_"+this.inputName.replace("_$","")+")\n{\n",
 		                          "\n}\n");
 		else
 		if (this.inputName!="")
-			this.insertAndPopMark("this._in_"+this.inputName+"=function(input_"+this.inputName+")\n{\nthis.__in_"+this.inputName+"_value = input_"+this.inputName+"._instanciate_processor();\nthis._in_"+this.inputName+"_lines = [",
-		                        "];\nthis._in_"+this.inputName+" = function(input_"+this.inputName+")\n{\nthis.__input_"+this.inputName+"_value = input_"+this.inputName+"._instanciate_processor();\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\nthis._execute(this,this._in_"+this.inputName+"_lines);\n}\n",true,this.inputName);
+			this.insertAndPopMark("this.in_"+this.inputName+"=function(input_"+this.inputName+")\n{\nthis._in_"+this.inputName+"_value = input_"+this.inputName+".instanciate_processor();\nthis.in_"+this.inputName+"_lines = [",
+		                        "];\nthis.in_"+this.inputName+" = function(input_"+this.inputName+")\n{\nthis._input_"+this.inputName+"_value = input_"+this.inputName+".instanciate_processor();\nthis.execute(this,this.in_"+this.inputName+"_lines);\n}\nthis.execute(this,this.in_"+this.inputName+"_lines);\n}\n",true,this.inputName);
 		else
 		if (this.outputName!="")
-			this.insertAndPopMark("this._out_"+this.outputName+"=null;\n",
+			this.insertAndPopMark("this.out_"+this.outputName+"=null;\n",
 		                        "");
 		else
 		if (this.nativeJavascript!="")
@@ -496,49 +496,49 @@ let DawnCompiler = function () {
 		                        this.nativeJavascript);
 		else
 		if (this.currentNumberOfResources()>1) 
-//			this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('Flow:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
-			this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('Flow:');await self._add(",");return await resolve(self);})");
+//			this.insertAndPopMark("new Promise((async resolve => {let self = await this.lookup('Flow:');await self.add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+			this.insertAndPopMark("await new Promise(async resolve => {let self = await this.lookup('Flow:');await self.add(",");return await resolve(self);})");
 		else
 			this.unmark();
 		this.numberOfResourcesInFlow.pop();
 		return true;
 	}
 
-	this._module = function()
+	this.module = function()
 	{
-		if (!this._flow(true))
+		if (!this.flow(true))
 			return false;
-		this._opt_newline();
+		this.opt_newline();
 		return true;
 	}
 	
-	this._program = function(module)
+	this.program = function(module)
 	{
     this.compilation = "";
 		if (!this.tokenizer.nextIs("[")) return false;
 		this.mark();
 		this.tokenizer.peek();
-		this._opt_whitespace();
-		if (!this._flow(module))
+		this.opt_whitespace();
+		if (!this.flow(module))
 		{
 			this.cancelMarkAndRewind();
 			return this.tokenizer.unPeek(false); // return false and unpeek
 		}
-		if (!this._flow_list_end(module))
+		if (!this.flow_list_end(module))
 		{
 			this.cancelMarkAndRewind();
 			return this.tokenizer.unPeek(false);
 		}
-		this._opt_newline();
+		this.opt_newline();
 		if (!this.tokenizer.nextIs("]"))
 		{
 			this.cancelMarkAndRewind();
 			return this.tokenizer.unPeek(false);
 		}
 		this.tokenizer.stopPeek();
-//	  this.insertAndPopMark("new Promise((async resolve => {let self = await this._lookup('List:');await self._add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
-	  this.insertAndPopMark("await new Promise(async resolve => {let self = await this._lookup('List:');await self._add(",");return await resolve(self);})");
-		this._opt_newline();
+//	  this.insertAndPopMark("new Promise((async resolve => {let self = await this.lookup('List:');await self.add(...Array.from(await Promise.all([","])));return await resolve(self);}))");
+	  this.insertAndPopMark("await new Promise(async resolve => {let self = await this.lookup('List:');await self.add(",");return await resolve(self);})");
+		this.opt_newline();
 		return true;
 	}
 
@@ -550,7 +550,7 @@ let DawnCompiler = function () {
 		
 		this.tokenizer = new Tokenizer("["+source+"]");
 			
-		if (this._program() && this.tokenizer.position == this.tokenizer.source.length)
+		if (this.program() && this.tokenizer.position == this.tokenizer.source.length)
 			return this.compilation;
 		else
 			return "ERROR";
@@ -563,7 +563,7 @@ let DawnCompiler = function () {
 	
 		this.compilation += "const Resource = Dawn.require('./dawn/Resource.js');\n";
 		
-		if (this._module() && this.tokenizer.position == this.tokenizer.source.length)
+		if (this.module() && this.tokenizer.position == this.tokenizer.source.length)
 		{
 			this.compilation += "";
 			return this.compilation;

@@ -11,17 +11,21 @@ function Console()
 function ConsoleProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._in_String_$ = function(input)
+	this.in_String_$all = function(input)
     {   
-        Dawn.print(input._value)
+        Dawn.print(input.value)
     }
-	this._in_Number_$ = function(input)
+	this.in_Number_$all = function(input)
     {   
-        Dawn.print(input._value.toDecimal())
+        Dawn.print(input.value.toDecimal())
     }
-	this._in_Boolean_$ = function(input)
+	this.in_Boolean_$all = function(input)
     {   
-        Dawn.print(input._value?"true":"false")
+        Dawn.print(input.value?"true":"false")
+    }
+	this.in_error_$all = function(input)
+    {   
+        Dawn.print(input.value)
     }
 	return this;
 }

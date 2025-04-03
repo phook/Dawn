@@ -10,11 +10,11 @@ function not()
 function notProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Boolean = null;
-	this._in_Boolean_$ = function(input)
+	this.resource = resource;
+	this.out_Boolean = null;
+	this.in_Boolean_$all = function(input)
     {   
-        this?._out_Boolean({_value:!input._value}); 
+        this?.out_Boolean({value:!input.value}); 
     }
 }
 not.Processor=notProcessor;

@@ -166,7 +166,7 @@ let Dawn = {
     {
 		/*
       if (context)
-        context = Dawn._instanciate_processor()._lookup(context);
+        context = Dawn.instanciate_processor().lookup(context);
       else
 	  */
         context = Dawn;	
@@ -194,13 +194,13 @@ let Dawn = {
             print(string + "\n");
         }
 
-        // ALL THIS COULD PROBABLY BE List._go() ??? so execute is hidden
+        // ALL THIS COULD PROBABLY BE List.go() ??? so execute is hidden
 
         // Should get processor from context and eval in it
-        let processor = context._instanciate_processor();
+        let processor = context.instanciate_processor();
 //        let program_lines = evalInContext("async function command() {let self=this; await "+jsSource+"}; command.call(this);",processor).then(foo => {
         evalInContext("let self=this;"+jsSource.replace("await","")+"",processor).then(command => {
-            processor._execute([command]);
+            processor.execute([command]);
         });
 
       }        
@@ -216,13 +216,13 @@ let Dawn = {
 
         Resource.call(this,"");
 
-        const file = new (Dawn.require("Protocol/file"))("dawn",rootUrl);
-        const FileProtocolProcessor = file._instanciate_processor();
-        let dawnResource = (await FileProtocolProcessor._in_instanciate())._get_resource();
-        this._instanciate_processor()._add(dawnResource);
-        this._path.push("dawn.");
-        this._children["dawn"]._path.push("Protocol."); // find protocols
-        this._children["dawn"]._path.push("Content-Type.data."); // find data types
+        const file = new (Dawn.require("Scheme/file"))("dawn",rootUrl);
+        const FileProtocolProcessor = file.instanciate_processor();
+        let dawnResource = (await FileProtocolProcessor.in_instanciate()).get_resource();
+        this.instanciate_processor().add(dawnResource);
+        this.path.push("dawn.");
+        this.children["dawn"].path.push("Scheme."); // find schemes
+        this.children["dawn"].path.push("Content-Type.data."); // find data types
         
         // hardcode - change
 //        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");
@@ -290,16 +290,16 @@ let Dawn = {
             if (!boundFunction)
             {    
                 boundFunction = fn_to_go.call(scope,scope); // this and parameter - 
-                boundFunction._set_owner(scope); // set scope to owner (but not add - consider)
+                boundFunction.set_owner(scope); // set scope to owner (but not add - consider)
             }
-            var result = boundFunction._in_go(scope);
+            var result = boundFunction.in_go(scope);
             if (this.next)
             {
                 if (!result)
                     this.next.call(this.next,scope);
                 else
                 {
-                    scope._add_next_function(this,this.next);
+                    scope.add_next_function(this,this.next);
                     // potentially return true - maybe promise instead - only 1 promise pr. async
                 }
             }
@@ -338,16 +338,16 @@ let Dawn = {
             if (!boundFunction)
             {    
                 boundFunction = fn_to_go.call(scope,scope); // this and parameter - 
-                boundFunction._set_owner(scope); // set scope to owner (but not add - consider)
+                boundFunction.set_owner(scope); // set scope to owner (but not add - consider)
             }
-            var result = boundFunction._in_go(scope);
+            var result = boundFunction.in_go(scope);
             if (this.next)
             {
                 if (!result)
                     this.next.call(this.next,scope);
                 else
                 {
-                    scope._add_next_function(this,this.next);
+                    scope.add_next_function(this,this.next);
                     // potentially return true - maybe promise instead - only 1 promise pr. async
                 }
             }
@@ -356,24 +356,24 @@ let Dawn = {
     // this takes and array of flows - can probably be put into resource
     return_executable_function: function(program) // call with this as scope
     {
-		//let processor = this._instanciate_processor();
+		//let processor = this.instanciate_processor();
 		let boundArray = [];
 		for(entry in program)
 		{
 			let boundFlow = program[entry].call(this);// this = scope?
-			boundFlow._set_owner(this);
+			boundFlow.set_owner(this);
 			boundArray.push(boundFlow); 
 		}
 		return function execute_flow(input) // call with this as scope
 		{
-			this._input = input;
-			var processor = this._instanciate_processor();
-			//processor._input = input;
+			this.input = input;
+			var processor = this.instanciate_processor();
+			//processor.input = input;
 			for(entry in boundArray)
 			{
-				processor._add_next_function(boundArray[entry], boundArray[entry]._in_go);
+				processor.add_next_function(boundArray[entry], boundArray[entry].in_go);
 			}
-			processor._execute_next_function(processor);
+			processor.execute_next_function(processor);
 		}
     }
 }

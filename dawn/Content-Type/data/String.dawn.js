@@ -12,24 +12,24 @@ function _String()
 function StringProcessor(resource)
 {
   Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_String = null;
-    this._in_String_$ = function(input)
+	this.resource = resource;
+	this.out_String = null;
+    this.in_String_$all = function(input)
     {   
-      resource._value = input._value;
+      resource.value = input.value;
     }
-    this._in_go = function()
+    this.in_go = function()
     {
-        return this?._out_String(resource);
+        return this.out_String?.(resource);
     }
-    this._in_instanciate = function(input)
+    this.in_instanciate = function(input)
     {   
-		 let newObject=this._get_resource()._clone(); // Clone
+		 let newObject=this.get_resource().clone(); // Clone
 		 if (input)
-	         newObject._value = decodeURIComponent(input._value);
+	         newObject.value = decodeURIComponent(input.value);
 		 else
-			 newObject._value = "";
-     return newObject._instanciate_processor();
+			 newObject.value = "";
+     return newObject.instanciate_processor();
     }
 	return this;
 }

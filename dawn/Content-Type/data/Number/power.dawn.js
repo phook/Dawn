@@ -12,23 +12,23 @@ function power()
 function powerProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Number = null;
-	this._tempNumber = new resource.Number.bigRat(0,10);
-	this._in_Number_base = function(input)
+	this.resource = resource;
+	this.out_Number = null;
+	this.tempNumber = new resource.Number.bigRat(0,10);
+	this.in_Number_base = function(input)
     { // raise error if not called?  
-      this._tempNumber = input._value;
+      this.tempNumber = input.value;
     }
-	this._in_Number_$ = function(input)
+	this.in_Number_$all = function(input)
     {  
-		if (this._tempNumber)
-			this._tempNumber = this._tempNumber.pow(input._value);
+		if (this.tempNumber)
+			this.tempNumber = this.tempNumber.pow(input.value);
 		else
-			this._tempNumber = input._value;
+			this.tempNumber = input.value;
     }
-	this._in_end = function()
+	this.in_end = function()
     {
-        this?._out_Number({_value:this._tempNumber}); 
+        this?.out_Number({value:this.tempNumber}); 
     }
 }
 power.Processor=powerProcessor;

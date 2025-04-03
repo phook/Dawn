@@ -148,8 +148,8 @@ app.head("*",async function (request, result, next) {
 
 let environment = 
 {
-  "dawnPath" : ("file:///"+__dirname+"/dawn").replace("\\","/"),
-  "userPath" : "file:///"+os.homedir().replace("\\","/")
+  "dawnPath" : ("file:///"+__dirname+"/dawn").replaceAll("\\","/"),
+  "userPath" : "file:///"+os.homedir().replaceAll("\\","/")
 }
 
 
@@ -164,14 +164,20 @@ app.get("*",async function (request, result, next) {
   {
     filepath = url.replace("/file:///","");
     try {
+      // Check for missing directory for a dawn file - return empty dir instead of 404
+      if (path.extname(filepath) === "" && !fs.existsSync(filepath) && fs.existsSync(filepath + ".dawn.js")) 
+      {
+        result.status(200).setHeader("Content-Type","text/directory-json").send("{}");
+        return;
+      }
       let stats = fs.statSync(filepath);
-      if (stats.isDirectory())
+      if (stats && stats.isDirectory())
       {
         let dir = await read_dir(filepath,request.query.hidden);
         result.status(200).setHeader("Content-Type","text/directory-json").send(JSON.stringify(dir));
       }
       else
-      if (stats.isFile())
+      if (stats && stats.isFile())
       {
         filepath = path.resolve(filepath);
         console.log(filepath);
@@ -193,9 +199,11 @@ app.get("*",async function (request, result, next) {
             mimetype = "file/" + extension.substring(1);
         }
         try {
-        result.status(200).setHeader("Content-Type",mimetype).sendFile(filepath);      
+          result.status(200).setHeader("Content-Type",mimetype).sendFile(filepath);      
         } catch (ex) {console.log("sendfile problem" + ex);}
       }
+      else
+        result.status(404).send(""); 
     }
     catch (exception)
     {

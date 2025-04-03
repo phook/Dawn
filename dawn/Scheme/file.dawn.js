@@ -97,11 +97,11 @@ function FileResource(name,url,contentType) {
 function FileResourceProcessor(resource) {
     Resource.Processor.call(this, resource);
 
-    this._populate_children = async function()
+    this.populate_children = async function()
     {
-      if (Object.keys(this._get_resource()._children).length == 0)
+      if (Object.keys(this.get_resource().children).length == 0)
       {
-        resource.contentType = this._get_owner()._children[resource.url.split("/").at(-1)].contentType;
+        resource.contentType = this.get_owner().children[resource.url.split("/").at(-1)].contentType;
         
         if (!resource.contentType)
             resource.contentType = await read_contenttype(resource.url);
@@ -113,22 +113,22 @@ function FileResourceProcessor(resource) {
               console.log(json);
               for(resourcename in json)
               {          
-                this._add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename].mimetype));
+                this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename].mimetype));
                 console.log(resourcename);
               }
           }
       }
     }
 
-    this._in_instanciate = async function(data) {
+    this.in_instanciate = async function(data) {
       /*
-      if (url._value !== "")
+      if (url.value !== "")
       {
-        let deconstructedUrl = url._value.split('/')
-        resource._name = deconstructedUrl.pop();
-        resource.url = url._value;
+        let deconstructedUrl = url.value.split('/')
+        resource.name = deconstructedUrl.pop();
+        resource.url = url.value;
  
-        await this._populate_children();
+        await this.populate_children();
       }
       */
       if (resource.contentType)
@@ -137,12 +137,12 @@ function FileResourceProcessor(resource) {
         // REPLACE FILE TYPE WITH CORRECT AND INSTANCIATE THAT
         console.log(resource.url);
         let resourceSource = new (Dawn.require(resource.url))();
-        let instance = resourceSource._in_instanciate(data); 
-        instance._set_owner(this); // set as owner to inherit scope but do not become child
+        let instance = resourceSource.in_instanciate(data); 
+        instance.set_owner(this); // set as owner to inherit scope but do not become child
         if (resource.contentType == "application/dawn" || resource.contentType == "text/directory-json")
-          await this._populate_children();
-        if (this._get_resource()._children)
-          instance._get_resource()._children = this._get_resource()._children; // reference same children for back lookup 
+          await this.populate_children();
+        if (this.get_resource().children)
+          instance.get_resource().children = this.get_resource().children; // reference same children for back lookup 
         return instance;
       }
       

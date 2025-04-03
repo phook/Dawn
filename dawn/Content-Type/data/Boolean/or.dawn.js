@@ -10,19 +10,19 @@ function or()
 function orProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Boolean = null;
-	this._in_begin = function()
+	this.resource = resource;
+	this.out_Boolean = null;
+	this.in_begin = function()
 	{
-		this._tempBoolean = false; 
+		this.tempBoolean = false; 
     }
-	this._in_Boolean_$ = function(input)
+	this.in_Boolean_$all = function(input)
     {   
-      this._tempBoolean |= input._value;
+      this.tempBoolean |= input.value;
     }
-	this._in_end = function()
+	this.in_end = function()
     {
-        this?._out_Boolean({_value:this._tempBoolean}); 
+        this?.out_Boolean({value:this.tempBoolean}); 
     }
 }
 or.Processor=orProcessor;

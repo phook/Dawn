@@ -12,20 +12,20 @@ function mul()
 function mulProcessor(resource)
 {
 	Resource.Processor.call(this,resource); 
-	this._resource = resource;
-	this._out_Number = null;
-	this._tempNumber = new resource.Number.bigRat(1,1);
-	this._in_begin = function()
+	this.resource = resource;
+	this.out_Number = null;
+	this.tempNumber = new resource.Number.bigRat(1,1);
+	this.in_begin = function()
 	{
-		this._tempNumber=resource.Number.bigRat(1,1);
+		this.tempNumber=resource.Number.bigRat(1,1);
     }
-	this._in_Number_$ = function(input)
+	this.in_Number_$all = function(input)
     {   
-      this._tempNumber = this._tempNumber.multiply(input._value);
+      this.tempNumber = this.tempNumber.multiply(input.value);
     }
-	this._in_end = function()
+	this.in_end = function()
     {
-        this?._out_Number({_value:this._tempNumber}); // WRONG - MUST BE STRING
+        this?.out_Number({value:this.tempNumber}); // WRONG - MUST BE STRING
     }
 }
 mul.Processor=mulProcessor;
