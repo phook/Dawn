@@ -30,6 +30,13 @@ function Resource(name, owner) {
         return new this.Processor(this);
     }
 
+    this.default_processor_instance = null;
+    this.default_processor = function() {
+      if (!this.default_processor_instance)
+        this.default_processor_instance = new this.Processor(this);
+      return this.default_processor_instance;
+    }
+
     this.in_instanciate = function(input) {
         return this.instanciate_processor().in_instanciate(input);
     }
@@ -153,14 +160,14 @@ function ResourceProcessor(resource) {
                 identifierToCheck = resource.path[ix] + nextIdentifier;
                 for (let id in keys) {
                     if (identifierToCheck.indexOf(keys[id]) == 0) {
-                        var result = await resource.children[keys[id]].instanciate_processor().lookup_new(identifierToCheck,false);
+                        var result = await resource.children[keys[id]].default_processor().lookup_new(identifierToCheck,false);
                         if (result)
                             return result;
                     }
                 }
             }
             if (searchToRoot && resource.owner)
-                return await resource.owner.instanciate_processor().lookup_new(identifier, true);
+                return await resource.owner.default_processor().lookup_new(identifier, true);
         } else if (deref == ":" || deref == "?") {
  
             let result = await this.in_instanciate({value:nextIdentifier});
@@ -334,7 +341,8 @@ this.build_output_types = function() {
       let index=output.indexOf("_");
       if (index === -1)
         index = output.length+1;
-      outputTypes.push(output.slice(0,index));
+      if (output[0] == output[0].toUpperCase())
+        outputTypes.push(output.slice(0,index));
     }
     this.output_types = new Set(outputTypes);
 }
@@ -485,6 +493,9 @@ this.execute_fn = function(array_of_lines) {
 
 // little dirty - make sure that resources and processers are called correctly
 this.instanciate_processor = function() {
+    return this;
+}
+this.default_processor = function() {
     return this;
 }
 return this;

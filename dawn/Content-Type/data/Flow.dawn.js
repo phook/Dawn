@@ -18,7 +18,7 @@ function FlowProcessor(resource) {
     }
     this.connect_function = function(outputName, fn) {
         if (resource.elements.length > 0)
-            resource.elements.at(-1).instanciate_processor().connect_function(outputName, fn);
+            resource.elements.at(-1).default_processor().connect_function(outputName, fn);
     }
 
     this.add = async function() {
@@ -28,7 +28,7 @@ function FlowProcessor(resource) {
             if (child)
             {
               if (typeof(child) == "string") {
-                  child = await resource.instanciate_processor().lookup(child);
+                  child = await resource.default_processor().lookup(child);
               }
               if (typeof(child) == "function") {
                   if (resource.elements.length > 0)
@@ -70,12 +70,6 @@ function FlowProcessor(resource) {
     
     this.previousLookup = this.lookup_new;
     this.lookup_new = async function(identifier, searchToRoot) {
-      let ref = {
-            value: identifier
-        };
-        let ref1 = {
-            value: "*." + identifier
-        };
         let result;
 
         let previousElement = resource.elements.at(-1);
@@ -86,21 +80,21 @@ function FlowProcessor(resource) {
           {
             let lookupScope = await this.previousLookup("*."+output_types_of_previous[outputType]+":", true);
             if (lookupScope)
-              result = await lookupScope.lookup_new(identifier);
+              result = await lookupScope.lookup_new(identifier,false);
             if (result)
               return result;
           }
         }
         /*
         for (element in resource.elements) {
-            result = await resource.elements[element]?.instanciate_processor().lookup_new(ref.value, false);
+            result = await resource.elements[element]?.default_processor().lookup_new(ref.value, false);
             if (result)
                 return result;
         }
         */
         if (!result)
             if (searchToRoot && resource.owner)
-                result = await resource.owner.instanciate_processor().lookup(identifier, searchToRoot);
+                result = await resource.owner.default_processor().lookup(identifier, searchToRoot);
 
         if (!result)
             result = this.previousLookup(identifier,searchToRoot);

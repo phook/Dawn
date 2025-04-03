@@ -51,19 +51,18 @@ function ListProcessor(resource) {
         let inputs = "";
         let args = Array.prototype.slice.call(arguments);
         Dawn.debugInfo("list adding " + args.length + " elements");
-        let self = this;
         for(elementIx in args)
         {
           element = args[elementIx];
           if (element)
           {
             if (typeof(element) == "string")
-                element = await resource.instanciate_processor().lookup(element);
+                element = await resource.default_processor().lookup(element);
             element = element.instanciate_processor(); //NEW
-            element.set_owner(self);
+            element.set_owner(resource);
             element["_in_go@"] = true; // occupy _go
             resource.elements.push(element.get_resource());
-            self.elements.push(element);
+            this.elements.push(element);
           }
         };
         return this;
@@ -71,20 +70,18 @@ function ListProcessor(resource) {
     // javascript wrapper version for dawn defined function
     this.previousLookup = this.lookup_new;
     this.lookup_new = async function(identifier, searchToRoot) {
-        let ref = {
-            value: identifier
-        };
         let result;
-
+/*
+why should a list lookup in its elements?
         for (element in resource.elements) {
-            result = await resource.elements[element].instanciate_processor().lookup(ref, false);
+            result = await resource.elements[element].default_processor().lookup_new(identifier, false);
             if (result)
                 return result;
         }
-
+*/
         if (!result)
             if (searchToRoot && resource.owner)
-                result = await resource.owner.instanciate_processor().lookup_new(identifier, searchToRoot);
+                result = await resource.owner.default_processor().lookup_new(identifier, searchToRoot);
  
         if (!result)
             result = await this.previousLookup(identifier,searchToRoot);
@@ -102,10 +99,10 @@ this.get_output_types = function() {
 //  if (!this.output_types)
   {
     this.output_types = new Set();
-    for (elementIx in resource.elements)
+    for (elementIx in this.elements)
     {
-      let element = resource.elements[elementIx];
-      this.output_types = this.output_types.union(element.instanciate_processor().get_output_types());
+      let element = this.elements[elementIx];
+      this.output_types = this.output_types.union(element.get_output_types());
     }
   }
 
