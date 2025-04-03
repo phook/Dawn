@@ -223,7 +223,7 @@ function ResourceProcessor(resource) {
                 }
                 let outputsCleared = false;
                 for (let outputIx in outputs) {
-                    let output = output[inputIx];
+                    let output = outputs[outputIx];
                     if (output.indexOf("|") == 0)
                     {
                       output = output.substring(1);
