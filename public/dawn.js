@@ -66,10 +66,6 @@ let Dawn = {
                 */
                 try 
                 {
-/*
-                    if (!async_callback)
-                    {
-*/
                         exports={};
                         var X=new XMLHttpRequest();
                         X.open("GET", url, 0); // sync
@@ -79,41 +75,12 @@ let Dawn = {
                         var source = X.responseText;
                         
                         if (url.toLowerCase().substr(-5) ==='.json' || url.substr(-1) === "/") // json or dir
-                          this.cache[url]  = exports = JSON.parse(source); 
+                          this.cache[url]  = exports = JSON.parse(source); // parse jsons
                         else
-                          this.cache[url]  = exports = this.requireBySource(source); 
-
-                    /*
-                    }
-                    else
-                    {
-                        exports={};
-                        var X=new XMLHttpRequest();
-                        
-                        function callback()
-                        {
-                            var source = this.responseText;
-                            if (source.substr(0,10)==="(function(")
-                            { 
-                                var moduleStart = source.indexOf('{');
-                                var moduleEnd = source.lastIndexOf('})');
-                                var CDTcomment = source.indexOf('//@ ');
-                                if (CDTcomment>-1 && CDTcomment<moduleStart+6) moduleStart = source.indexOf('\n',CDTcomment);
-                                source = source.slice(moduleStart+1,moduleEnd-1); 
-                            } 
-                            source="//@ sourceURL="+window.location.origin+url+"\n" + source;
-                            var module = { id: url, uri: url, exports:exports }; 
-                            var anonFn = new Function("require", "exports", "module", source);
-                            anonFn(require, exports, module);
-                            require.cache[url]  = exports = module.exports; 
-                            async_callback(exports);
-                        }
-                        
-                        X.addEventListener("load", callback);
-                        X.open("GET", loadUrl); 
-                        X.send();
-                    }
-                    */
+                        if (url.toLowerCase().substr(-3) ==='.js') // "compile" js
+                          this.cache[url]  = exports = this.requireBySource(source);
+                        else
+                          this.cache[url]  = exports = source; // return text
                 } 
                 catch (err) 
                 {

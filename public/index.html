@@ -54,27 +54,17 @@ terminal, .cmd .cmd-prompt {
 let environment = Dawn.require("environment.json");
 Dawn.initialize(environment.dawnPath);
 
-/*
-let Dawn         = require("Dawn");
-let DawnCompiler = require("DawnCompiler");
+let BNFT = Dawn.require("../BNFT/BNFT.js");
+let basic_flavor=Dawn.require("flavors/basic.bnft");
 
-// GET DAWNROOT FROM SERVER     File:///C:/blahblah 
-// GET USER ROOT FROM SERVER    on Server: const homedir = require('os').homedir();
-// FORMAT BOTH IN FILE SYNTAX
+function fileToString(file)
+{
+    return Dawn.require("flavors/"+file);
+}
 
+  let basic_parser=new BNFT(basic_flavor,{fileToString:fileToString});
 
-Dawn.initialize(".",null,false);
-Dawn.print = console.log;
-*/
-/*
-let Hub = require("hubclient");
-let hub = Hub.createClient();
-*/
 let index=0;
-
-
-
-
 let terminal = $('#terminal').terminal(function(text){
 
   // HERE COMPILE AND EXECUTE DAWN  STRING:text>>Run    - Run performs the magic 
@@ -94,6 +84,27 @@ let terminal = $('#terminal').terminal(function(text){
 
   Dawn.execute(text,environment.userPath, returnPrintFunction(index));
 
+  
+
+// TEST BEGIN
+
+   let basicSource="";
+   let dawnSource = basic_parser.parse(text,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
+   
+   if (false && dawnSource !== "ERROR")
+   {
+     basicSource = basic_parser.parse(dawnSource,{nonterminal:"FROMDAWN_COMMANDPROMT"});
+     if (basicSource == "ERROR")
+      basicSource += ":" + text;
+   }
+   else
+   {
+      basicSource = dawnSource + ":" + text;   
+   }
+   
+   document.querySelector('.toggle'+index).nextSibling.nextSibling.innerHTML=basicSource;
+// TEST END
+
   attachToggleFunction(index, true)
   index++;
   attachToggleFunction(index);
@@ -109,7 +120,8 @@ function attachToggleFunction(index, dont)
   {
     terminal.set_prompt('<span class="toggle'+index+' closed open">&#x25B6;</span><span>&nbsp;$ </span>', {raw:true});
     document.getElementsByClassName("toggle"+index)[0].firstChild.style="margin-top:-5px";
-    document.getElementsByClassName("toggle"+(index-1))[0].firstChild.style="margin-top:-5px";
+    if (index>0)
+      document.getElementsByClassName("toggle"+(index-1))[0].firstChild.style="margin-top:-5px";
   }
   $(".toggle"+index).click((event) => 
   {
