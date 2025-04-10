@@ -59,7 +59,7 @@ let basic_flavor=Dawn.require("Flavors/basic.bnft");
 
 function fileToString(file)
 {
-    return Dawn.require("flavors/"+file);
+    return Dawn.require("Flavors/"+file);
 }
 
   let basic_parser=new BNFT(basic_flavor,{fileToString:fileToString});
