@@ -91,7 +91,7 @@ let terminal = $('#terminal').terminal(function(text){
    let basicSource="";
    let dawnSource = text; //basic_parser.parse(text,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
    
-   if (false && dawnSource !== "ERROR")
+   if (dawnSource !== "ERROR")
    {
      basicSource = basic_parser.parse(dawnSource,{nonterminal:"FROMDAWN_COMMANDPROMT"});
      if (basicSource == "ERROR")
