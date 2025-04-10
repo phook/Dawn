@@ -89,7 +89,7 @@ let terminal = $('#terminal').terminal(function(text){
 // TEST BEGIN
 
    let basicSource="";
-   let dawnSource = basic_parser.parse(text,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
+   let dawnSource = text; //basic_parser.parse(text,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
    
    if (false && dawnSource !== "ERROR")
    {
