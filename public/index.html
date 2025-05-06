@@ -130,6 +130,7 @@ Dawn.initialize(environment.dawnPath);
 
 let BNFT = Dawn.require("../BNFT/BNFT.js");
 let basic_flavor=Dawn.require("Flavors/basic.bnft");
+
 let basic_parser=new BNFT(basic_flavor,{fileToString:fileToString});
 
 const dropdown = document.querySelector('.dropdown');
@@ -137,10 +138,9 @@ const options = dropdown.querySelectorAll('.dropdown-option');
 const marker = dropdown.querySelector('.ontop');
 let selectedElement = dropdown.querySelector('.show');;
 
-
 function fileToString(file)
 {
-    return Dawn.require("flavors/"+file);
+    return Dawn.require("Flavors/"+file);
 }
 
 
