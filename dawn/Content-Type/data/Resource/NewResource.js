@@ -3,7 +3,10 @@ _NewResource = function() // SHOULD BE CALLED NEW RESOURCE
 {
     // should have input for cloning any object i.e. creating a var String:Hello >> NewResource:HelloText (syntax sugared: var HelloText="Hello") 
 	Resource.call(this,"NewResource");
-    this.newObject = null;
+    
+	// list input for receiving the "program" which creates the resource
+	
+	this.newObject = null;
 	this.newName = null;
     this.in_native$ = function(native)
     {

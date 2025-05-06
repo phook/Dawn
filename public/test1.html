@@ -102,14 +102,6 @@ terminal, .cmd .cmd-prompt {
 			top:30px;
 		}
 
-	.credit {
-		font-family: monospace;
-		font-size:10px;
-		position:absolute;
-		bottom:4px;
-		left:4px;
-		color:white;
-	}
 
 </style>
 </head>
@@ -122,7 +114,7 @@ terminal, .cmd .cmd-prompt {
     <div class="dropdown-option hide">DAWN:Pure</div>
 	<div class="ontop"><img height=20" src="data:image/png;base64,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"/></div>
 </div>
-<div class="credit">powered by jquery.terminal</div>
+
 </body>
 <script>
 let environment = Dawn.require("environment.json");
@@ -196,7 +188,6 @@ $.terminal.defaults.formatters.push(
 			return $.terminal.tracking_replace(commandString, new RegExp(escapeRe(commandString)), flavorString, position);
 	}
 );
-$.terminal.defaults.formatters.push($.terminal.defaults.formatters[0]);// little dirty - apply xml parser againg to allow markup
 
 
 let index=0;
@@ -205,24 +196,46 @@ let terminal = $('#terminal').terminal($.noop, {
 		echoCommand: false,
 		onBeforeCommand(command) {
 			const prompt = this.get_prompt();
+			this.echo(`${prompt}${command}`);
+			this.echo('<div class="output'+index+'"></div>',{raw:true});
 			let dawnSource = basic_parser.parse(command,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
-		   if (dawnSource.indexOf("ERROR") !== 0)
+		   if (dawnSource !== "ERROR")
 		   {
-				this.echo(`${prompt}${command}`);
-				this.echo('<div class="output'+index+'"></div>',{raw:true});
 				Dawn.execute(dawnSource,environment.userPath, returnPrintFunction(index));
 
 				attachToggleFunction(index, true)
 				index++;
 				attachToggleFunction(index);
 			}
-			else
-			{
-				command = "ERROR:"+command;
-				this.echo(`${prompt}${command}`);
-			}
 		}
-    });
+    });/*
+	
+	function(text)
+	{
+		this.echo('<div class="output'+index+'"></div>',{raw:true});
+
+	   let dawnSource = basic_parser.parse(text,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
+	   
+	   if (dawnSource !== "ERROR")
+	   {
+			//Dawn.execute(dawnSource,environment.userPath, returnPrintFunction(index));
+
+			attachToggleFunction(index, true)
+			index++;
+			attachToggleFunction(index);
+	    }
+	},{
+	  greetings:false,
+});*/
+
+/*
+const term = $('body').terminal($.noop, {
+    echoCommand: false,
+    onBeforeCommand(command) {
+        const prompt = this.get_prompt();
+        this.echo(`${prompt}${command}`);
+    }
+});*/
 
 
 
@@ -256,7 +269,9 @@ function attachToggleFunction(index, dont)
 		let newFlavor = flavor();
 		if (currentFlavor != newFlavor)
 		{
+			//formatDisable = false;
 			terminal.refresh();
+			//formatDisable = true;
 		}
 		if (dropdown.classList.contains('closed'))
 		{
