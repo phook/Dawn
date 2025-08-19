@@ -1,0 +1,114 @@
+Logical Or (\vee): 𝑝𝑝 ∨ 𝑞𝑞      or
+Logical And (\wedge): 𝑝𝑝 ∧ 𝑞𝑞   and
+Negation (\neg): ¬𝑝𝑝            not
+Logical Xor (\oplus): 𝑝𝑝 ⊕      xor
+
+5 ≤ 2𝑥 + 𝑦
+Just type 5<=2x+y
+
+Element of (\in): 𝑥𝑥 ∈ 𝐴𝐴                 in
+Not an Element of (\notin): 𝑥𝑥 ∉ 𝐴𝐴   not x in y
+
+Subset (\subseteq): 𝐴𝐴 ⊆ 𝐵𝐵
+Proper Subset (\subset): 𝐴𝐴 ⊂ 𝐵𝐵   -  subsetof
+Super Set (\superseteq): 𝐴𝐴 ⊇ BB    - supersetof
+
+Not Equal (\neq): 𝐴𝐴 ≠ 𝐵𝐵     !=
+
+Set - just a list that kills duplicates
+Set Intersection (\cap): 𝐴𝐴 ∩ 𝐵𝐵        intersect
+Set Union (\cup): 𝐴𝐴 ∪ 𝐵𝐵               union
+Set Difference (A-B): 𝐴𝐴 − 𝐵𝐵           minus
+
+{} in flavor for sets
+
+List
+List<X>    - to derive the following - ahould be defaultly available - this means a list that behaves as the basic element (i.e. shared processor)
+Number_List
+String_List
+Boolean_List
+
+String as String_List ...
+
+String:Hello>>substring&Number_startposition=2&Number_endposition=3&Number_size=1
+String:Hello>>substring&startposition=2&endposition=3&size=1
+"Hello"[2..3] eller "Hello"[2:1] (2..3 is 2 to 3 - 2:1 is 2 and 1 length)
+
+
+PROTOCOLS TO SUPPORT:
+DNS?
+LDAP?
+RPC?
+RTSP?
+RTP?
+SSH?
+TELNET?
+TLS?
+XMPP?
+UDP? WSS?
+FTP
+HTTP
+HTTPS
+IMAP
+POP
+SMTP
+MQTT
+ODBC
+
+
+
+
+TIME:10M >> EVERY >> [
+
+]
+
+
+C flavor could be &&, || ! etc.
+
+
+
+terminal should be used for examples - a "locked" mode
+examples for all the syntax goodies
+
+sets, calculations etc. (based number for a sidebar)
+
+[12 12 12 12] should use a List_Number
+["" "" "" ""] should use a List_String
+etc.
+
+{} should use a set (special list which screens adds for doubles)
+
+so nice examples like {"foo","bar","baz"} ∪ {"bim"} yields
+{"foo","bar","baz","bim"}
+
+console input for Set and List
+
+Set of X and List of X
+
+Set has List input and List output
+
+
+"," comma should be possible in paramters in uri= Add?Number=2,3
+results in multiple calls ie. Number(2) then Number(3)
+
+yes, handy for sets and arrays: Set:Number=1,5,6,9
+
+
+INHERITANCE: how?
+
+NewResource,NewInput,NewOutput,Clone
+
+ranges
+
+"foo"["o"?] IndexOf?
+
+Console parameters:
+&theme=dark,white   // default themes for console (theme switcher?)
+&demomode=xx>>yy    // seed terminal with command, remove output closer, disallow input, add run button
+
+PLAN:
+update flavor to current features
+add features - cloning, list of, set of, list operators, set operators, console support for list and set
+update flavor to added features
+update not so poignant guide
+

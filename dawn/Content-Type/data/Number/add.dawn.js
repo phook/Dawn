@@ -25,7 +25,7 @@ function addProcessor(resource)
     }
 	this.in_end = function()
     {
-        return this?.out_Number({value:this.tempNumber}); 
+        return this?.out_Number?.({value:this.tempNumber}); 
     }
 }
 add.Processor=addProcessor;

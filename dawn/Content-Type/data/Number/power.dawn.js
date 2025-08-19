@@ -28,7 +28,7 @@ function powerProcessor(resource)
     }
 	this.in_end = function()
     {
-        this?.out_Number({value:this.tempNumber}); 
+        this.out_Number?.({value:this.tempNumber}); 
     }
 }
 power.Processor=powerProcessor;

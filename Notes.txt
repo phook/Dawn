@@ -2,7 +2,7 @@ DAWN GETTING FORWARD:
 
 Missing:
  - Commands (if, for, while, loop, block)
- - Number bases (binary, octal, hex)
+ - Number bases (binary, octal, hex)     XX
  - List comprehension
  - Pretty Syntax Printing
  - Pretty Syntax Input
@@ -15,29 +15,28 @@ Missing:
    - images
    - videos
    - sound
- - Async/Multithread/Parallel
+ - Async/Multithread/Parallel    XX
  - Javascript packages interface
  - BNFT compiler
  - Measurements/Units
  - IDE
- - Console
+ - Console                       XX
 
-Basic fobs:
- Fob, List, Pipe, Block,
+Basic resources:
+ Resource, List, Pipe, Block,
 
 Precompile pass:
  console command - on server side , converts dawn (and flavors) into javascript
 
 DemoConsole:
- - list of flavors + flavor files - PURE and BASIC (PURE is not a flavor - its just the DAWN file)
+ - list of flavors + flavor files - PURE and BASIC, CLIKE (PURE is not a flavor - its just the DAWN file)
  - dawn source - whenever flavor changes reset view
  - optionally running the code - on/off
  - in bnft options for (interactive console)
-     FROM_CLI    - special syntax for CLI (cd, mkdir etc.) - ouput DAWN (should also take FROM_EDITOR and PRINT as input)
-     FROM_EDITOR - keyboard input from editor - output DAWN (should also take PRINT as input)
-     TO_EDITOR   - input DAWN to keyin friendly text - only if editor should support reverting to limited charset input...
-     TO_PRINT    - input DAWN prettiest version - for console history/editor when not editing
- - demo uses TO_PRINT (to create the source from editor FROM_EDITOR is needed)  
+     TODAWN_COMMANDPROMT    - special syntax for CLI (cd, mkdir etc.) - ouput DAWN (should also take FROM_EDITOR and PRINT as input)
+     TODAWN_PROGRAM         - keyboard input from editor - output DAWN (should also take PRINT as input)
+     FROMDAWN_PROGRAM       - input DAWN to keyin friendly text - only if editor should support reverting to limited charset input...
+     FROMDAWN_COMMANDPROMT  - input DAWN prettiest version - for console history/editor when not editing  
 
 Boolean
 If
@@ -67,10 +66,10 @@ Nopes - compile to binding- run bind and let bind display "type" error i.e. plus
 
 basic syntax?
 [] >> {}  - LOOP
-[1..10:2] >> {} - FOR from to step
+[1..10:2] >> {} - FOR from to step  (this could be a constructor to a Number_List:1..10:2
 [A > 10:0] >> {} - WHILE expr repeat (REPEAT set repeat = 1 or TRUE)
 
-inline FOB:
+inline resource:
 [1..10] >>
   input number -- this could be implicit for loops 
      number >> Console
@@ -80,9 +79,11 @@ inline FOB:
 
 Explicit bind to input:
 A.output >> Explicit:input >> B  - "." notation selects output and Explicit routes it to input
+-NO routing uses parameters without assignment ie.e B?input
+
 
 Events binding:
-Mouse.event_move_relative >> position - returns an fob that binds at time of execution
+Mouse.event_move_relative >> position - returns an resource that binds at time of execution
 
 Event unbind syntax sugar:
 Mouse.event_move_relative << - undbinds i.e. Unbind >> Mouse.event_move_relative 
@@ -98,7 +99,7 @@ Define Add
     output Result this
 
 BaseOn!!!!
-
+Number: >> BaseOn:
     
 ?use this for self reference?
 
@@ -113,7 +114,7 @@ how create var?
 lookup?
 
 name?
-String:Hello >> Holder:greeting  - should be altight since String returns new Fob - Holder is special like NewObject and creates im scope
+String:Hello >> Holder:greeting  - should be altight since String returns new Resource - Holder is special like NewObject and creates im scope
 
 Reference:greeting >> Console
 
