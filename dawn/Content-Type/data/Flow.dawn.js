@@ -56,7 +56,9 @@ function FlowProcessor(resource) {
               // Flow stores processors
               resource.elements.push(child);
               child.set_owner(resource);
-            }
+            
+		      this.output
+			}
             else
             {
               resource.elements.push(null);
@@ -107,7 +109,13 @@ function FlowProcessor(resource) {
           
         return result;
     }
-
+	this.get_output_types = function() {
+        let previousElement = resource.elements.at(-1);
+        if (previousElement)
+			return previousElement.get_output_types();
+		return new Set();
+	}
+	
     this.in_instanciate = function(input) {
         let newObject = Object.assign({}, this); // Clone
         newObject.elements = []; // Instanciate and empty list
