@@ -197,7 +197,7 @@ let Dawn = {
 //        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");
         this.compiler = new (Dawn.require("DawnCompiler"))();
 
-
+		FileProtocolProcessor.populate_children();
         
         if (this.isBrowser())
         {

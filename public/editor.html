@@ -189,7 +189,20 @@ ul, li {
     </embed>
 </div>
 <script src="ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<script src="dawn.js"></script>
 <script>
+	let environment = Dawn.require("environment.json");
+	(async () => {
+			await Dawn.initialize(environment.dawnPath);
+
+
+
+			let sourceDir = await Dawn.instanciate_processor().lookup(environment.userPath);
+			console.log(sourceDir.get_resource().children);
+	})()
+
+	
+
     function Do(method,url,json,callback)
     {
       //console.log(url);
@@ -240,24 +253,31 @@ ul, li {
         var markup="<ul style='padding:0px' class='mdc-list'>";
         for(var i in tree)
         {
-            if (typeof(tree[i]) == "string")
+            if (tree[i].mimetype == "text/directory-json")
             {
-                let type="<span class='indent  mdc-list-item__text'></span><i style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</i>";
+                let type="<span class='caret  mdc-list-item__text'></span><i  style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>folder</i>";
+                markup += "<li style='height:24px;'class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
+                markup += "<li  class='nested'>" + createMarkup(tree[i],level+1) + "</li>";
+            }
+            else
+			if (true)
+            {
+                let type="<span class='indent  mdc-list-item__text'></span><div style=''><div style='float:left;margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</div><div style='float:left;margin-right: 8px;padding-top:8px;height:12px;overflow:hidden;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>sunny_snowing</div></div>";
                 markup += "<li style='height:24px;' class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
             
             }
             else
             {
-                let type="<span class='caret  mdc-list-item__text'></span><i  style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>folder</i>";
-                markup += "<li style='height:24px;'class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
-                markup += "<li  class='nested'>" + createMarkup(tree[i],level+1) + "</li>";
+                let type="<span class='indent  mdc-list-item__text'></span><i style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</i>";
+                markup += "<li style='height:24px;' class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
+            
             }
         }
         return markup +"</ul>";
     }
     
 
-    var project = GET("/_dir?dir=file:///./dawn&recursive=true", function(project)
+    var project = GET("/file:///C:/Users/109600/Projects/Dawn/dawn", function(project)
     {
         document.getElementById("project").innerHTML = createMarkup(JSON.parse(project),0);
         var toggler = document.getElementsByClassName("caret");

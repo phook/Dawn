@@ -138,7 +138,7 @@ function FileResourceProcessor(resource) {
       
       if (this.resourceSource)
       {
-        let instance = this.resourceSource.in_instanciate(data); 
+        let instance = await this.resourceSource.in_instanciate(data); 
         instance.set_owner(this); // set as owner to inherit scope but do not become child
         if (resource.contentType == "application/dawn" || resource.contentType == "text/directory-json")
           await this.populate_children();

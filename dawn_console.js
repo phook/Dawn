@@ -10,9 +10,47 @@ const checkForLocalHost = require('./checkForLocalHost.js');
 const hub     = require('./hubserver.js');
 const app = express();
 const server = http.createServer(app);
+
+
+
+app.use((req, res, next) => {
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src * 'unsafe-eval' 'unsafe-inline' data: blob:; script-src * 'unsafe-eval' 'unsafe-inline'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data: blob:;"
+  );
+  next();
+});
+app.get('/test-csp', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>CSP Test</title>
+      <style>
+        body { font-family: sans-serif; background: #f0f0f0; padding: 2em; }
+        #result { color: green; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h1>CSP Eval Test</h1>
+      <div id="result">Running eval...</div>
+      <script>
+        try {
+          const result = eval("2 + 2");
+          document.getElementById("result").textContent = "Eval succeeded: 2 + 2 = " + result;
+        } catch (e) {
+          document.getElementById("result").textContent = "Eval failed: " + e.message;
+        }
+      </script>
+    </body>
+    </html>
+  `);
+});
+
+/*
 const cors = require('cors');
 app.use(cors());
-
+*/
 //app.use(compression());
 
 let Dawn = require("./public/dawn.js");

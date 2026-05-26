@@ -56,4 +56,15 @@ Not a lot of resources have been added as of yet, since the list is big of whish
 - commands (if, loops)
 - alternative flavor syntaxes (currently a basic flavor exists)
 
+Design Observations
+-------------------
+
+The central idea — that everything is a URI resolving to a resource — is genuinely original. Most languages treat network I/O as a special case bolted on after the fact. In Dawn, `String:Hello`, `https://mysite.dk/image.jpg`, and `smtp:user@host` are all the same kind of thing: a URI that resolves to a resource with inputs and outputs. That unification is clean and powerful.
+
+Scalability in Dawn is hierarchical rather than syntactic. A game is not a tangle of nested calls — it is `Joystick >> Game >> Screen`. Each resource hides its internal complexity behind a simple interface, and you compose at whatever level of abstraction makes sense. This is closer to how systems engineers think than how most programmers write code.
+
+The hardest design problem is **binding**: when you connect two resources, the default behavior depends on the specific pair being connected. This gives the language great flexibility — a number bound to a console prints differently than a number bound to a file — but it means the programmer needs to understand or discover what any given connection does. That is a real cognitive cost, and the main place where Dawn demands trust in conventions rather than explicit contracts.
+
+None of this is a problem for the intended use case. Dawn is a **playful scripting language** for automating workflows, wiring together internet resources, and exploring language ideas — not a language for systems that need formal verification. In that space, the convention-based, flow-first design is a strength: it is quick to connect things, easy to read simple pipelines, and flexible enough to grow with the task.
+
 
