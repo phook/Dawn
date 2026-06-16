@@ -1,4 +1,4 @@
-const Dawn = require("./Dawn.js");
+const Dawn = require("./public/dawn.js");
 Dawn.initialize(".",null,false);
 const bnft = Dawn.require("./BNFT/BNFT.js");
 

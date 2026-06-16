@@ -102,7 +102,7 @@ this.get_output_types = function() {
     for (elementIx in this.elements)
     {
       let element = this.elements[elementIx];
-      this.output_types = this.output_types.union(element.get_output_types());
+      this.output_types = new Set([...this.output_types, ...element.get_output_types()]);
     }
   }
 

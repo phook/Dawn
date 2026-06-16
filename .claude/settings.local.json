@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(grep -E \"\\\\.\\(json|config|rc|sh\\)$\")",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(grep -E \"run_tests|\\\\.js$|\\\\.bnft$\")"
     ]
   }
 }

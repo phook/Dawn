@@ -25,7 +25,9 @@
     "uglify-js": "^3.14.2"
   },
   "scripts": {
-    "dawn": "node dawn_console.js"
+    "dawn": "node dawn_console.js",
+    "test": "node Test/runner.js",
+    "test:update": "node Test/runner.js --update"
   },
   "repository": {
     "type": "git",

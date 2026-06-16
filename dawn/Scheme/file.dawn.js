@@ -101,17 +101,30 @@ function FileResourceProcessor(resource) {
     {
       if (Object.keys(this.get_resource().children).length == 0 && !this.get_resource().json)
       {
-        resource.contentType = this.get_owner().children[resource.url.split("/").at(-1)].contentType;
-        
+        resource.contentType = this.get_owner()?.children[resource.url.split("/").at(-1)]?.contentType;
+
         if (!resource.contentType)
             resource.contentType = await read_contenttype(resource.url);
-        
-          if (resource.contentType.indexOf("text/directory-json") == 0 || resource.contentType.indexOf("application/dawn") == 0)
+
+        if (!resource.contentType && Dawn.isServer()) {
+            const _path = Dawn.require('path');
+            const _fs   = Dawn.require('fs');
+            const abs   = _path.resolve(resource.url);
+            try { if (_fs.statSync(abs).isDirectory()) resource.contentType = 'text/directory-json'; } catch(e) {}
+        }
+
+        let isDir = resource.contentType && resource.contentType.indexOf("text/directory-json") == 0;
+        if (!isDir && resource.contentType && resource.contentType.indexOf("application/dawn") == 0 && Dawn.isServer()) {
+            const _path = Dawn.require('path');
+            const _fs   = Dawn.require('fs');
+            try { isDir = _fs.statSync(_path.resolve(resource.url)).isDirectory(); } catch(e) {}
+        }
+        if (isDir)
           {
             let json = await read_dir(resource.url);
             for(resourcename in json)
-            {          
-              this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename].mimetype));
+            {
+              this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename]));
             }
             this.get_resource().json=json;
           }
