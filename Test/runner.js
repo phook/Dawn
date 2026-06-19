@@ -16,7 +16,7 @@ const parser = new BNFT(grammarSource, {
 });
 
 function runBnft(source, nonterminal) {
-    return parser.parse(source.trim(), { nonterminal, alert: () => {} }) || 'ERROR';
+    return parser.parse(source, { nonterminal, alert: () => {} }) || 'ERROR';
 }
 
 let passed = 0, failed = 0, updated = 0;
@@ -81,7 +81,7 @@ const basicFiles = fs.readdirSync(basicCasesDir)
 for (const file of basicFiles) {
     const name = file.replace('.basic', '');
     const basicSource = fs.readFileSync(path.join(basicCasesDir, file), 'utf8');
-    const result = runBnft(basicSource, 'FLOW');
+    const result = runBnft(basicSource, 'TODAWN_PROGRAM').trimEnd();
     check(`basic/${name}  (basic→dawn)`, result, path.join(basicCasesDir, name + '.dawn'));
 }
 
@@ -99,7 +99,7 @@ for (const file of basicFiles) {
     }
 
     const dawnSource = fs.readFileSync(dawnPath, 'utf8');
-    const result = runBnft(dawnSource, 'FROMDAWN_FLOW');
+    const result = runBnft(dawnSource, 'FROMDAWN_PROGRAM').trimEnd();
     const basicSource = fs.readFileSync(basicPath, 'utf8').trimEnd();
 
     if (result === 'ERROR' || result.startsWith('ERROR:')) {

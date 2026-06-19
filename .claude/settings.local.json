@@ -3,7 +3,14 @@
     "allow": [
       "Bash(grep -E \"\\\\.\\(json|config|rc|sh\\)$\")",
       "Bash(git *)",
-      "Bash(grep -E \"run_tests|\\\\.js$|\\\\.bnft$\")"
+      "Bash(grep -E \"run_tests|\\\\.js$|\\\\.bnft$\")",
+      "Bash(node *)",
+      "Bash(xxd Test/cases/basic/number_addition.dawn)",
+      "Bash(xxd)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(xxd *)",
+      "Bash(grep -n \"^{ \\\\|\\\\\"{\\\\\"\\\\\\\\|OR_alt\\\\\\\\|alt_alt\\\\\\\\|nextIs.*\\\\\"|\\\\\".*\\\\\"$\" BNFT/BNFT.js)",
+      "Bash(BNFT_TRACE=1 node -e ' *)"
     ]
   }
 }

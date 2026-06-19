@@ -1,1 +1,1 @@
-[String:Hello]>>concatenate:>>Console:
+String:Hello>>Console:
