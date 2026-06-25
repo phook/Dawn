@@ -277,7 +277,7 @@ ul, li {
     }
     
 
-    var project = GET("/file:///C:/Users/109600/Projects/Dawn/dawn", function(project)
+    var project = GET("/"+environment.dawnPath, function(project)
     {
         document.getElementById("project").innerHTML = createMarkup(JSON.parse(project),0);
         var toggler = document.getElementsByClassName("caret");
