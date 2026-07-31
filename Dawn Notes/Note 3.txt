@@ -21,6 +21,7 @@ Variables N/A
 
 
 String:HelloWorld?|name="foo">>.    - this means add a string "HelloWorld" with the name "foo" to current scope - i.e. "var foo='HelloWorld'"
+well then this should be a pattern so all objects can be constructed as vars - name would be a little to generic input
 
 
 Numbers / Strings / Symbols / Constants N/A
@@ -54,7 +55,7 @@ operators
 keywords
 
 
-introspection - test for inputs & outputs - helpful for i.e. protocols, if login possible display login/logout options
+introspection/reflection - test for inputs & outputs - helpful for i.e. protocols, if login possible display login/logout options
 
 
 Editor - Tabs:

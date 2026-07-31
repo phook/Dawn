@@ -63,11 +63,13 @@ const { createReadStream } = require('fs');
 
 async function read_dir(dirpath, hidden) {
     let jsdir = {};
+    // Directory listing JSON entry shape: { contentType, size, time }.
+    // The HTTP "Content-Type" response header is independent of this body's property name.
     let fdat = {
-      mimetype : "",
+      contentType : "",
       size     : 0,
       time     : 0
-    }    
+    }
     files = fs.readdirSync(dirpath)
     for(fileno in files)
     {
@@ -78,41 +80,41 @@ async function read_dir(dirpath, hidden) {
                 if (file.endsWith(".dawn")) // if there is a dawn file there is a dawn source editable and an executable
                 {
                   jsdir[file] = Object.assign({},fdat);
-                  jsdir[file].mimetype = "text/dawn";
+                  jsdir[file].contentType = "text/dawn";
                   file = file.replace(".dawn","");
                   jsdir[file] = Object.assign({},fdat);
-                  jsdir[file].mimetype = "application/dawn";
+                  jsdir[file].contentType = "application/dawn";
                 }
                 else
                 if (file.endsWith(".dawn.js")) // if there is a dawn.js file there is an executable
                 {
                   file = file.replace(".dawn.js","");
                   jsdir[file] = Object.assign({},fdat);
-                  jsdir[file].mimetype = "application/dawn";
+                  jsdir[file].contentType = "application/dawn";
                 }
                 else
                 {
                   var stat = fs.statSync(filepath);
                   if (stat && stat.isDirectory() && typeof(jsdir[file]) == "undefined") {
                     jsdir[file] = Object.assign({},fdat);
-                    jsdir[file].mimetype = "text/directory-json";
+                    jsdir[file].contentType = "text/directory-json";
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
-                  } 
-                  else 
+                  }
+                  else
                   {
                     jsdir[file] = Object.assign({},fdat);
                     let extension = path.extname(filepath);
                     if (extension === "") // a file with no extension needs "." to be distinguised from dawn objects
                       file +=".";
-                    let mimetype="text/uil";
+                    let ftcontentType="text/uil";
                     if (extension !== ".uil")
                     {
-                      mimetype = (await mime(createReadStream(filepath), extension)).mime;
-                      if (!mimetype)
-                        mimetype = "binary/" + extension.replace(".","");
+                      ftcontentType = (await mime(createReadStream(filepath), extension)).mime;
+                      if (!ftcontentType)
+                        ftcontentType = "binary/" + extension.replace(".","");
                     }
-                    jsdir[file].mimetype = mimetype;
+                    jsdir[file].contentType = ftcontentType;
                     jsdir[file].size     = stat.size;
                     jsdir[file].time     = stat.mtimeMs;
                   }
@@ -256,6 +258,8 @@ app.get("*",async function (request, result, next) {
 
 
 app.use(express.static('public'));
+app.use(express.static('BNFT'));
+app.use(express.static('dawn'));
 
 
 
@@ -310,6 +314,30 @@ app.put('/_file', async (request, result) => {
 app.use(function (req, res, next) {
   res.status(204).send()
 })
+
+app.put("/_file", async (request, result) => {
+    try {
+        let filePath = request.query.path;
+        if (!filePath) {
+            result.status(400).send("Missing path query parameter");
+            return;
+        }
+        filePath = filePath.replace(/^file:\/\//, "");
+        filePath = path.resolve(filePath);
+        let data = "";
+        request.on("data", chunk => { data += chunk; });
+        request.on("end", () => {
+            try {
+                fs.writeFileSync(filePath, data);
+                result.status(200).send("OK");
+            } catch (e) {
+                result.status(500).send(e.message);
+            }
+        });
+    } catch (err) {
+        result.status(500).send(err.message);
+    }
+});
 
 server.listen(process.env.PORT || 5000, function () {
 })

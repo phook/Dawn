@@ -1,1 +1,1 @@
-[Number:6 Number:2>>reciprocate:]>>multiply:
+[Number:6 Number:2]>>divide:

@@ -1,1 +1,1 @@
-[NewOutput:String [[input: String:foo]>>String.concatenate:>>output:String]>>NewInput:String]>>NewResource:Tester
+[NewOutput:out1 [Meta:AssignExpression>>[input:Number Number:2]>>Number.add:>>out1]>>NewInput:inp1]>>NewResource:Tester

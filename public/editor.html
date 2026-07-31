@@ -1,314 +1,324 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Editor</title>
-  <style type="text/css" media="screen">
-    body {
-        overflow: hidden;
-    }
-    
-    #project {
-      width:300px;
-      overflow: auto;
-    }
-
-    #editor {
-      flex-grow:5;
-    }
-
-    .card {
-      display: flex;
-      flex-grow:5;
-    }
-
-    #console {
-      height: 200px;
-    }    
-  
-    .row {
-        display: flex;
-        flex-direction: row;
-        flex-grow:1;
-    }
-    .column {
-        display: flex;
-        flex-direction: column;
-        height:100vh;
-        flex-grow:1;
-        overflow:hidden;
-    }
-
-ul, li {
-  list-style-type: none;
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
-.caret {
-  cursor: pointer;
-  user-select: none; /* Prevent text selection */
-}
-
-.caret::before {
-  content: "\25B6";
-  color: black;
-  display: inline-block;
-  margin-right: 6px;
-}
-
-.indent {
-  padding-left: 14px;
-}
-
-.indent::before {
-  content:"  ";
-  display: inline-block;
-  margin-right: 6px;
-}
-
-.caret-down::before {
-  transform: rotate(90deg);
-}
-
-.nested {
-  display: none;
-  list-style-type: none;
-}
-
-.active {
-  display: block;
-  list-style-type: none;
-}
-
-.small {
-  height: 20px;
-}
-
-.btn {
-   float:right;
-   position: relative; 
-   display: block; 
-   padding: 0; 
-   overflow: hidden; 
-   border-width: 0; 
-   outline: none; 
-   border-radius: 2px; 
-   box-shadow: 0 1px 4px rgba(0, 0, 0, .6); 
-   background-color: white; 
-   color: #ecf0f1; 
-  transition: background-color .3s;
-  width:50px;
-}
-
-.btn:hover, .btn:focus {
-  background-color: #27ae60;
-}
-
-.btn > * {
-  position: relative;
-}
-
-.btn span {
-  display: block;
-}
-
-.btn:before {
-   content: ""; 
-   position: absolute; 
-   display: block; 
-   width: 0; 
-   padding-top: 0; 
-   border-radius: 100%; 
-   background-color: rgba(236, 240, 241, .3); 
-   -webkit-transform: translate(-50%, -50%); 
-  -moz-transform: translate(-50%, -50%);
-  -ms-transform: translate(-50%, -50%);
-  -o-transform: translate(-50%, -50%);
-   transform: translate(-50%, -50%); 
-}   
-   
-
-
-.btn:active:before {
-  transition: width .2s ease-out, padding-top .2s ease-out;
-}
-
-
-  </style>
-  <link rel="stylesheet" href="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-  <script src="https://unpkg.com/material-components-web@7.0.0/dist/material-components-web.min.js"></script>
+<meta charset="UTF-8">
+<title>Editor</title>
+<style>
+body { overflow: hidden; font-family: sans-serif; margin: 0; }
+.column { display: flex; flex-direction: column; height: 100vh; }
+.row    { display: flex; flex-direction: row; flex-grow: 1; }
+.toolbar { display: flex; flex-direction: row; padding: 4px; background: #333; gap: 8px; align-items: center; }
+.toolbar button, .toolbar select { height: 28px; padding: 0 12px; cursor: pointer; }
+.toolbar span { color: #eee; font-size: 12px; }
+.filename { color: #0f0; font-size: 12px; margin-left: 12px; }
+.project { width: 320px; background: #f5f5f5; overflow: auto; }
+.editor  { flex-grow: 1; background: #fff; position: relative; }
+#editor { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+.console { height: 200px; background: #222; color: #eee; padding: 8px; }
+ul { list-style: none; margin: 0; padding-left: 12px; }
+li { padding: 1px 0; cursor: pointer; }
+li:hover { background: #e0e0e0; }
+li.selected { background: #b3d9ff; }
+.caret { cursor: pointer; user-select: none; font-weight: bold; margin-right: 4px; display: inline-block; width: 12px; text-align: center; }
+.caret.down::before { content: "v"; }
+.caret.right::before { content: ">" }
+.nested { display: none; }
+.nested.open { display: block; }
+.indent { display: inline-block; }
+.flavor-selector { position: relative; display: inline-block; }
+.flavor-dropdown { display: none; position: absolute; background: #444; min-width: 160px; z-index: 100; }
+.flavor-dropdown.show { display: block; }
+.flavor-option { padding: 8px 12px; color: #eee; cursor: pointer; }
+.flavor-option:hover { background: #666; }
+</style>
 </head>
 <body>
-
 <div class="column">
-     <div><button class="btn" type="button" style="float: right;"><img src="favicon/baseline_save_alt_black_18dp.png" width="30px"/></button></div>
-    <div class="row">
-        <div class="mdc-card" style="height:500px">
-        <div class="mdc-select mdc-select--filled demo-width-class small-select">
-          <div class="mdc-select__anchor"
-               role="button"
-               aria-haspopup="listbox"
-               aria-expanded="false"
-               aria-labelledby="demo-label demo-selected-text">
-            <span class="mdc-select__ripple"></span>
-            <span id="demo-label" class="mdc-floating-label">Flavor</span>
-            <span id="demo-selected-text" class="mdc-select__selected-text"></span>
-            <span class="mdc-select__dropdown-icon">
-              <svg
-                  class="mdc-select__dropdown-icon-graphic"
-                  viewBox="7 10 10 5" focusable="false">
-                <polygon
-                    class="mdc-select__dropdown-icon-inactive"
-                    stroke="none"
-                    fill-rule="evenodd"
-                    points="7 10 12 15 17 10">
-                </polygon>
-                <polygon
-                    class="mdc-select__dropdown-icon-active"
-                    stroke="none"
-                    fill-rule="evenodd"
-                    points="7 15 12 10 17 15">
-                </polygon>
-              </svg>
-            </span>
-            <span class="mdc-line-ripple"></span>
-          </div>
-        </div>
-        <div id="project">
-        </div>
-        </div>
-        <div class="card mdc-card" style="height:500px">
-            <pre id="editor">
-            </pre>
-        </div>
-    </div>
-    <embed class="mdc-card" id="console" src="index.html" style="height:200px">
-    </embed>
+<div class="toolbar">
+<select id="flavorSelect">
+<option value="BasicPretty">BASIC: Pretty</option>
+<option value="BasicKeyboard">BASIC: Keyboard</option>
+<option value="Pure">DAWN: Pure</option>
+</select>
+<button id="newBtn">New</button>
+<button id="saveBtn">Save</button>
+<span id="filename" class="filename">No file open</span>
 </div>
-<script src="ace/src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+<div class="row">
+<div class="project">
+<div id="project">
+<em>Loading project</em>
+</div>
+</div>
+<div class="editor">
+<div id=editor class=ace_target>
+</div>
+</div>
+
+<script src="ace/src-min-noconflict/ace.js"></script>
 <script src="dawn.js"></script>
 <script>
-	let environment = Dawn.require("environment.json");
-	(async () => {
-			await Dawn.initialize(environment.dawnPath);
+let environment = Dawn.require("/environment.json");
+let BNFT = null;
+let basicFlavor = null;
+let basicParser = null;
+let dawnCompiler = null;
+let currentFilePath = null;
+let currentFlavor = "BasicPretty";
+let lastFlavor = null;
+let syntaxOK = false;
 
+(async () => {
+    try {
+        await Dawn.initialize(environment.dawnPath);
+        let sourceDir = await Dawn.instanciate_processor().lookup(environment.userPath);
+        console.log("sourceDir children:", sourceDir && sourceDir.get_resource && sourceDir.get_resource().children);
+        BNFT = Dawn.require("../BNFT/BNFT.js");
+        basicFlavor = Dawn.require("Flavors/basic.bnft");
+        basicParser = new BNFT(basicFlavor, { fileToString: fileToString });
+        dawnCompiler = new (Dawn.require("DawnCompiler.dawn.js"));
+    } catch (e) {
+        console.log("init error", e && e.message);
+    }
+})();
 
+function fileToString(file) {
+    return Dawn.require("Flavors/" + file);
+}
 
-			let sourceDir = await Dawn.instanciate_processor().lookup(environment.userPath);
-			console.log(sourceDir.get_resource().children);
-	})()
+function Do(method, url, json, callback) {
+    if (typeof(json) === "function") { callback = json; json = ""; }
+    else if (typeof(json) === "object") { json = JSON.stringify(json); }
+    else if (typeof(json) === "undefined") { json = ""; }
+    var http = new XMLHttpRequest();
+    http.open(method, url, true);
+    http.setRequestHeader("Content-type", "application/json");
+    http.onreadystatechange = function() {
+        if (http.readyState == 4 && http.status == 200) {
+            callback(http.responseText);
+        }
+    };
+    http.send(json);
+}
+function GET(url, json, callback)    { Do("GET", url, json, callback); return "ok"; }
+function POST(url, json, callback)   { Do("POST", url, json, callback); return "ok"; }
+function PUT(url, json, callback)    { Do("PUT", url, json, callback); return "ok"; }
+function DELETE(url, json, callback) { Do("DELETE", url, json, callback); return "ok"; }
 
+var editElement = document.getElementById("editor");
+var editor = null;
+if (editElement) {
+    try { 
+        editor = ace.edit(editElement); 
+        editor.setTheme("ace/theme/dawn");
+        editor.getSession().setMode("ace/mode/javascript");
+        console.log("ACE editor initialized");
+    } catch (e) { console.log("ACE init error", e); }
+}
+
+function buildFetchUrl(url) {
+    if (url && url.indexOf("file:///") === 0) return "/file:///" + url.substring(8);
+    if (url && url.indexOf("file:/") === 0) return "/" + url;
+    return url;
+}
+
+function makeEl(tag, attrs, children) {
+    var el = document.createElement(tag);
+    if (attrs) {
+        for (var k in attrs) {
+            if (k === "className") el.className = attrs[k];
+            else if (k === "text") el.textContent = attrs.text;
+            else el.setAttribute(k, attrs[k]);
+        }
+    }
+    if (children) {
+        for (var i = 0; i < children.length; i++) {
+            if (children[i]) el.appendChild(children[i]);
+        }
+    }
+    return el;
+}
+
+function selectFile(path, el) {
+    if (!path || !editor) return;
+    document.querySelectorAll("li.selected").forEach(x => x.classList.remove("selected"));
+    if (el) el.classList.add("selected");
+	loadFile(path);
+}
+
+function loadFile(path) {
+    currentFilePath = path;
+    updateFilename(path.split("/").pop());
+    GET(buildFetchUrl(path), function(data) {
+        var source = data || "";
+        if (currentFlavor !== "Pure" && BNFT && basicParser) {
+			var converted = basicParser.parse(data + "\n", { nonterminal: currentFlavor == "BasicPretty" ? "FROMDAWN_PROGRAM" : "FROMDAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
+			if (converted && converted.indexOf("ERROR") !== 0) 
+				source = converted;
+        }
+        editor.setValue(source, -1);
+        editor.getSession().getUndoManager().reset();
+        checkSyntax();
+    });
+}
+
+function newFile() {
+    currentFilePath = null;
+    updateFilename();
+    editor.setValue("", -1);
+    editor.getSession().getUndoManager().reset();
+    currentFlavor = document.getElementById("flavorSelect").value;
+    document.getElementById("filename").style.color = "#0f0";
+    document.querySelectorAll("li.selected").forEach(x => x.classList.remove("selected"));
+}
+
+function updateFilename(name) {
+    var el = document.getElementById("filename");
+    if (currentFilePath) {
+        el.textContent = name || currentFilePath.split("/").pop();
+    } else {
+        el.textContent = "[unnamed]";
+    }
+}
+
+function saveFile() {
+    var content = editor.getValue();
+    var flavor = currentFlavor || document.getElementById("flavorSelect").value;
+    if (!currentFilePath) {
+        var name = prompt("File name:", "untitled.dawn");
+        if (!name) return;
+        currentFilePath = "file:///" + name;
+        updateFilename(name);
+    }
+    if (flavor !== "TODAWN_PROGRAM" && BNFT && basicParser) {
+        try {
+            var toParse = content;
+            if (!toParse.endsWith("\n")) toParse += "\n";
+            var dawnSource = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
+            if (dawnSource && dawnSource.indexOf("ERROR") !== 0) content = dawnSource.trimEnd();
+        } catch (e) {}
+    }
+    var http = new XMLHttpRequest();
+    http.open("PUT", "/_file?path=" + currentFilePath, true);
+    http.onreadystatechange = function() {
+        if (http.readyState == 4 && http.status == 200) console.log("Saved:", currentFilePath);
+    };
+    http.send(content);
+}
+
+document.getElementById("newBtn").addEventListener("click", newFile);
+document.getElementById("saveBtn").addEventListener("click", saveFile);
+
+document.getElementById("flavorSelect").addEventListener("change", function() {
+	if (!editor || !BNFT || !basicParser) return;
+	var editText = editor.getValue();
+    var newFlavor = document.getElementById("flavorSelect").value;
+	var flavorChanged = (currentFlavor != newFlavor)
+	lastFlavor = currentFlavor;
+    currentFlavor = newFlavor;
+
+	var toParse = editText;
+	if (!toParse.endsWith("\n")) toParse += "\n";
 	
+	var newCode = "";
+	
+	if (lastFlavor === "Pure")
+	{
+		newCode = basicParser.parse(toParse, { nonterminal: "FROMDAWN_PROGRAM", alert: function() {} });
+		if (newCode.indexOf("ERROR") !== 0)
+			editor.setValue(newCode);
+	}
+	else
+	if (lastFlavor === "BasicPretty")
+	{
+		newCode = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
+		if (newCode.indexOf("ERROR") !== 0)
+			editor.setValue(newCode);
+	}
+    document.getElementById("filename").style.color = "#0f0";
 
-    function Do(method,url,json,callback)
-    {
-      //console.log(url);
-      if (typeof(json) === "function")
-      {
-        callback = json;
-        json = "";
-      }
-      else
-      if (typeof(json) === "object")
-      {
-        json = JSON.stringify(json);
-      }
-      else
-      if (typeof(json) === "undefined")
-      {
-        json = "";
-      }
-      var http = new XMLHttpRequest();
-      http.open(method, url, true);
+    checkSyntax();
+});
 
-      http.setRequestHeader("Content-type", "application/json");
+var syntaxTimer = null;
 
-      http.onreadystatechange = function()
-      {
-        if(http.readyState == 4 && http.status == 200) 
-        {
-          callback(http.responseText);
-        }
-      }
-      http.send(json);
-    }
-
-    function GET(url,json,callback)    {Do("GET",url,json,callback); return "returnValueInCallback";}
-    function POST(url,json,callback)   {Do("POST",url,json,callback); return "returnValueInCallback";}
-    function PUT(url,json,callback)    {Do("PUT",url,json,callback); return "returnValueInCallback";}
-    function DELETE(url,json,callback) {Do("DELETE",url,json,callback); return "returnValueInCallback";}
+function checkSyntax() {
+    var content = editor.getValue();
+    if (!content.endsWith("\n")) content += "\n";
+	
+	if (currentFlavor == "Pure")
+	{
+		let result = dawnCompiler.parse(content);
+		syntaxOK = result.indexOf("ERROR") !== 0;
+	}
+	else
+	{
+		let result =  basicParser.parse(content, { nonterminal: currentFlavor == "BasicPretty" ? "TODAWN_PROGRAM" : "TODAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
+		syntaxOK = result.indexOf("ERROR") !== 0;
+	}
+	document.getElementById("flavorSelect").disabled = !syntaxOK; // dont allow syntax change with errorneous source
+	document.getElementById("filename").style.color = syntaxOK ? "#0f0" : "#f44"; // color bar to alert user
+}
 
 
-    var editElement = document.getElementById("editor");
-    var editor = ace.edit(editElement);
-    editor.setTheme("ace/theme/dawn");
-    //editor.session.setMode("ace/mode/javascript");
+editor.getSession().on("change", function() {
+    clearTimeout(syntaxTimer);
+    syntaxTimer = setTimeout(checkSyntax, 500);
+});
 
-    
-    function createMarkup(tree,level)
-    {
-        var markup="<ul style='padding:0px' class='mdc-list'>";
-        for(var i in tree)
-        {
-            if (tree[i].mimetype == "text/directory-json")
-            {
-                let type="<span class='caret  mdc-list-item__text'></span><i  style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>folder</i>";
-                markup += "<li style='height:24px;'class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
-                markup += "<li  class='nested'>" + createMarkup(tree[i],level+1) + "</li>";
-            }
-            else
-			if (true)
-            {
-                let type="<span class='indent  mdc-list-item__text'></span><div style=''><div style='float:left;margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</div><div style='float:left;margin-right: 8px;padding-top:8px;height:12px;overflow:hidden;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>sunny_snowing</div></div>";
-                markup += "<li style='height:24px;' class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
-            
-            }
-            else
-            {
-                let type="<span class='indent  mdc-list-item__text'></span><i style='margin-right: 8px;' class='material-icons mdc-list-item__graphic' aria-hidden='true'>description</i>";
-                markup += "<li style='height:24px;' class='mdc-list-item'>"+ "<div style='width:"+ level * 15+"px;'></div>"+ type + "<span class='mdc-list-item__text'>"  + i + "<span></li>";
-            
-            }
-        }
-        return markup +"</ul>";
-    }
-    
-
-    var project = GET("/"+environment.dawnPath, function(project)
-    {
-        document.getElementById("project").innerHTML = createMarkup(JSON.parse(project),0);
-        var toggler = document.getElementsByClassName("caret");
-        var i;
-
-        for (i = 0; i < toggler.length; i++) {
-          toggler[i].addEventListener("click", function() {
-            this.parentElement.nextSibling.classList.toggle("active");
-            this.classList.toggle("caret-down");
-          });
+function renderTree(parentEl, tree, level, parentUrl) {
+    var ul = makeEl("ul");
+    parentEl.appendChild(ul);
+    Object.keys(tree).sort().forEach(function(name) {
+        var entry = tree[name];
+        var indent = makeEl("span", { className: "indent", style: "display:inline-block;width:" + (level * 12) + "px" });
+        var row = makeEl("li");
+        var label = makeEl("span", { text: "  " + name, style: "margin-left:4px" });
+        if (entry && entry.contentType === "text/directory-json") {
+            var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
+            var caret = makeEl("span", { className: "caret right", style: "margin-right:4px" });
+            caret.addEventListener("click", function(ev) {
+                ev.stopPropagation();
+                var nestedUl = row.nextSibling;
+                if (!nestedUl) return;
+                var open = nestedUl.classList.toggle("open");
+                caret.classList.toggle("right");
+                caret.classList.toggle("down");
+                if (open && nestedUl.children.length === 0 && childUrl) {
+                    GET(buildFetchUrl(childUrl), function(data) {
+                        try {
+                            var parsed = JSON.parse(data);
+                            renderTree(nestedUl, parsed, level + 1, childUrl);
+                        } catch (e) { console.log("parse error", e); }
+                    });
+                }
+            });
+            row.appendChild(makeEl("span", null, [indent, caret, label]));
+            ul.appendChild(row);
+            var nestedUl = makeEl("ul", { className: "nested", "data-url": childUrl, "data-level": level.toString() });
+            ul.appendChild(nestedUl);
+        } else {
+            var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
+            row.appendChild(makeEl("span", null, [indent, makeEl("span", { style: "display:inline-block;width:12px" }), label]));
+            row.addEventListener("click", function(ev) { 
+                ev.stopPropagation(); 
+                selectFile(childUrl, row); 
+            });
+            ul.appendChild(row);
         }
     });
-    
-    
-    
-    
-    /*
-    
-        Editor component:
-        Seed with dawn URL - try to get resource
-        figure write ability
-        
-        Dawn file server - login - file/dir rights, create, write, delete
-        
-        when getting a file - the users rights could be in the header
-        when getting a dir - the users rights could be in the header
-    
-    */
-    
-    
-</script>
+}
 
+GET(buildFetchUrl(environment.dawnPath), function(data) {
+    var project = document.getElementById("project");
+    project.innerHTML = "";
+    try {
+        var parsed = JSON.parse(data);
+        renderTree(project, parsed, 0, environment.dawnPath);
+    } catch (e) {
+        project.textContent = "Parse error: " + (e.message || e);
+    }
+});
+</script>
 </body>
 </html>

@@ -36,5 +36,3 @@ RANGE_TO:
 BNFT:
 Remarks (line start with "#")
 AUTO GEN NEW LIKE ABOVE EXP_NUMBER_TO(1) this will create an entry called exactly that but redirect it to the one without parenthesis
-
-72222894 Skat Aktier

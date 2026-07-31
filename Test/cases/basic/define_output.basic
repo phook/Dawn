@@ -1,0 +1,3 @@
+define WithOutput
+ output out1
+

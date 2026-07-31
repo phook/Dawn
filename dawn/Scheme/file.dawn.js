@@ -11,6 +11,12 @@ if (Dawn.isServer()) {
 
     var read_dir = async function(dirpath, hidden) {
         var jsdir = {};
+        // Directory listing entry shape: { contentType, size, time } — must match dawn_console.js
+        var fdat = {
+          contentType : "",
+          size        : 0,
+          time        : 0
+        }
         files = fs.readdirSync(dirpath)
         for(fileno in files)
         {
@@ -22,18 +28,25 @@ if (Dawn.isServer()) {
                     {
                       file = file.replace(".dawn","");
                       file = file.replace(".js","");
-                      jsdir[file] = "application/dawn";
+                      jsdir[file] = Object.assign({},fdat);
+                      jsdir[file].contentType = "application/dawn";
                     }
                     else
                     {
                       var stat = fs.statSync(filepath);
                       if (stat && stat.isDirectory() && typeof(jsdir[file]) == "undefined") {
-                          jsdir[file] = "text/directory-json";
+                          jsdir[file] = Object.assign({},fdat);
+                          jsdir[file].contentType = "text/directory-json";
+                          jsdir[file].size = stat.size;
+                          jsdir[file].time = stat.mtimeMs;
                       } else {
-                         jsdir[file] = (await mime(createReadStream(filepath))).mime;
+                         jsdir[file] = Object.assign({},fdat);
+                         jsdir[file].contentType = (await mime(createReadStream(filepath))).mime;
+                         jsdir[file].size = stat.size;
+                         jsdir[file].time = stat.mtimeMs;
                       }
                     }
-                } catch (e) {} 
+                } catch (e) {}
         }
         return jsdir;
     }
@@ -124,7 +137,10 @@ function FileResourceProcessor(resource) {
             let json = await read_dir(resource.url);
             for(resourcename in json)
             {
-              this.add(new FileResource(resourcename, resource.url+"/"+resourcename, json[resourcename]));
+              let entry = json[resourcename];
+              // Listing entries are objects { contentType, size, time } — fall back to raw string for compat
+              let contentType = (typeof entry === "object" && entry !== null) ? entry.contentType : entry;
+              this.add(new FileResource(resourcename, resource.url+"/"+resourcename, contentType));
             }
             this.get_resource().json=json;
           }
