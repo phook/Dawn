@@ -1,1 +1,1 @@
-[String:Hello String:World]>>concatenate:
+[[[String:Hello String:World]>>concatenate:]>>NewInput:s]>>NewResource:WithConcat

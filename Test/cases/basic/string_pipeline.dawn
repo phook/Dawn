@@ -1,1 +1,1 @@
-String:Hello>>Console:
+[[String:Hello>>Console:]>>NewInput:s]>>NewResource:WithStringPipeline

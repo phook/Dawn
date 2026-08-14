@@ -1,1 +1,3 @@
-3+4>>Console:
+define WithNumericPipeline
+ input n
+  3+4>>Console:

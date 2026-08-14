@@ -1,1 +1,1 @@
-[Number:3 Number:4]>>multiply:
+[[[Number:3 Number:4]>>multiply:]>>NewInput:n]>>NewResource:WithMultiply

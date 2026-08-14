@@ -1,2 +1,3 @@
-if (Boolean:true) 
- String:Yes
+define WithIf
+ input b
+  if (Boolean:true) String:Yes

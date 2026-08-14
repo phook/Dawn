@@ -14,22 +14,21 @@ body { overflow: hidden; font-family: sans-serif; margin: 0; }
 .project { width: 320px; background: #f5f5f5; overflow: auto; }
 .editor  { flex-grow: 1; background: #fff; position: relative; }
 #editor { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
-.console { height: 200px; background: #222; color: #eee; padding: 8px; }
-ul { list-style: none; margin: 0; padding-left: 12px; }
-li { padding: 1px 0; cursor: pointer; }
-li:hover { background: #e0e0e0; }
-li.selected { background: #b3d9ff; }
-.caret { cursor: pointer; user-select: none; font-weight: bold; margin-right: 4px; display: inline-block; width: 12px; text-align: center; }
-.caret.down::before { content: "v"; }
-.caret.right::before { content: ">" }
-.nested { display: none; }
-.nested.open { display: block; }
-.indent { display: inline-block; }
-.flavor-selector { position: relative; display: inline-block; }
-.flavor-dropdown { display: none; position: absolute; background: #444; min-width: 160px; z-index: 100; }
-.flavor-dropdown.show { display: block; }
-.flavor-option { padding: 8px 12px; color: #eee; cursor: pointer; }
-.flavor-option:hover { background: #666; }
+
+/* Comprehensive fix for ACE cursor positioning - Chrome/Windows */
+.ace_editor,
+.ace_editor * {
+    font-family: "Consolas", "Monaco", "Menlo", "Ubuntu Mono", "Droid Sans Mono", monospace !important;
+    font-size: 14px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    font-variant-ligatures: none !important;
+    font-feature-settings: normal !important;
+    text-rendering: optimizeSpeed !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    line-height: 1.45 !important;
+}
 </style>
 </head>
 <body>
@@ -57,6 +56,52 @@ li.selected { background: #b3d9ff; }
 
 <script src="ace/src-min-noconflict/ace.js"></script>
 <script src="dawn.js"></script>
+<script>
+// Patch ACE FontMetrics to fix ≔ (U+2254 COLON EQUALS) cursor positioning
+// Wait for ace to be fully loaded
+function patchFontMetrics() {
+    console.log("ace.require:", typeof ace.require);
+    ace.require(["ace/layer/font_metrics"], function(fm_module) {
+        console.log("font_metrics module loaded:", fm_module);
+        if (fm_module && fm_module.FontMetrics && fm_module.FontMetrics.prototype) {
+            var proto = fm_module.FontMetrics.prototype;
+            var origGetCharWidth = proto.getCharacterWidth;
+            proto.getCharacterWidth = function(ch) {
+                console.log("PROTOTYPE getCharacterWidth called for:", ch, ch.charCodeAt(0));
+                if (ch === "\u2254") return 1.0;
+                return origGetCharWidth.call(this, ch);
+            };
+            console.log("Patched FontMetrics.prototype for ≔ (U+2254)");
+        }
+    });
+    
+    // Also check if we can directly access the module via ace.require without callback
+    try {
+        var fm = ace.require("ace/layer/font_metrics");
+        console.log("Sync require result:", fm);
+    } catch(e) {
+        console.log("Sync require failed:", e);
+    }
+}
+
+if (ace && ace.require) {
+    patchFontMetrics();
+} else {
+    // ace not ready yet, wait for it
+    var checkAce = setInterval(function() {
+        if (window.ace && window.ace.require) {
+            clearInterval(checkAce);
+            patchFontMetrics();
+        }
+    }, 10);
+}
+// Also monkey-patch ace.require to see what's being loaded
+var origRequire = ace.require;
+ace.require = function(deps, callback) {
+    console.log("ace.require called with:", deps);
+    return origRequire.apply(this, arguments);
+};
+</script>
 <script>
 let environment = Dawn.require("/environment.json");
 let BNFT = null;
@@ -110,8 +155,89 @@ var editor = null;
 if (editElement) {
     try { 
         editor = ace.edit(editElement); 
+        console.log("Editor created:", editor);
+        console.log("Renderer:", editor?.renderer);
+        console.log("TextLayer:", editor?.renderer?.$textLayer);
+        console.log("FontMetrics:", editor?.renderer?.$textLayer?.$fontMetrics);
+        console.log("CursorLayer:", editor?.renderer?.$cursorLayer);
+        
         editor.setTheme("ace/theme/dawn");
         editor.getSession().setMode("ace/mode/javascript");
+        editor.setFontSize(14);
+        
+        // Enable variable character width support AND re-trigger font metrics setup
+        editor.session.$enableVarChar = true;
+        
+        // Re-call $setFontMetrics to install the variable-width getStringScreenWidth
+        if (editor.renderer && editor.renderer.$fontMetrics) {
+            editor.session.$setFontMetrics(editor.renderer.$fontMetrics);
+            console.log("Re-triggered session.$setFontMetrics with $enableVarChar=true");
+        }
+        
+        // Patch FontMetrics instance for ≔
+        setTimeout(function() {
+            if (editor && editor.renderer && editor.renderer.$textLayer && editor.renderer.$textLayer.$fontMetrics) {
+                var fm = editor.renderer.$textLayer.$fontMetrics;
+                
+                // First, measure the actual width of ≔
+                var colonEqualsWidth = fm.$measureCharWidth("\u2254");
+                var avgWidth = fm.$characterSize.width;
+                var actualRatio = colonEqualsWidth / avgWidth;
+                console.log("≔ actual width:", colonEqualsWidth, "avg:", avgWidth, "ratio:", actualRatio);
+                
+                var orig = fm.getCharacterWidth;
+                fm.getCharacterWidth = function(ch) {
+                    var result = orig.call(this, ch);
+                    console.log("FontMetrics.getCharacterWidth:", ch, ch.charCodeAt(0), "->", result);
+                    if (ch === "\u2254") return actualRatio;
+                    return result;
+                };
+                console.log("Patched editor FontMetrics instance for ≔ with actual ratio:", actualRatio);
+            } else {
+                console.log("Could not find FontMetrics instance:", editor?.renderer?.$textLayer?.$fontMetrics);
+            }
+        }, 100);
+        
+// Patch Cursor.prototype.getPixelPosition to use actual pixel widths
+        setTimeout(function() {
+            if (editor && editor.renderer && editor.renderer.$cursorLayer) {
+                var cursorLayer = editor.renderer.$cursorLayer;
+                console.log("CursorLayer found, original getPixelPosition:", cursorLayer.getPixelPosition);
+                var origGetPixelPos = cursorLayer.getPixelPosition;
+                cursorLayer.getPixelPosition = function(position, onScreen) {
+                    console.log(">>> PATCHED getPixelPosition CALLED");
+                    if (!this.config || !this.session)
+                        return { left: 0, top: 0 };
+                    if (!position)
+                        position = this.session.selection.getCursor();
+                    var pos = this.session.documentToScreenPosition(position);
+                    console.log("docToScreen pos:", pos, "position:", position);
+                    
+                    // Get the actual pixel width of the text up to the cursor position
+                    var line = this.session.getLine(pos.row);
+                    var textBeforeCursor = line.substring(0, pos.column);
+                    console.log("textBeforeCursor:", textBeforeCursor);
+                    var screenWidth = this.session.$getStringScreenWidth(textBeforeCursor)[0];
+                    console.log("screenWidth (char units):", screenWidth, "config.characterWidth:", this.config.characterWidth);
+                    
+                    // The issue: screenWidth is in "character units" (ratio to avg char width)
+                    // But config.characterWidth is the average char width in pixels
+                    // So screenWidth * config.characterWidth should give pixels
+                    // But if FontMetrics.getCharacterWidth returns wrong ratios, this is off
+                    
+                    var cursorLeft = this.$padding + screenWidth * this.config.characterWidth;
+                    console.log("cursorLeft:", cursorLeft);
+                    
+                    var cursorTop = (pos.row - (onScreen ? this.config.firstRowScreen : 0)) *
+                        this.config.lineHeight;
+                    return { left: cursorLeft, top: cursorTop };
+                };
+                console.log("Patched Cursor.getPixelPosition for ≔, new:", cursorLayer.getPixelPosition);
+            } else {
+                console.log("Could not find CursorLayer:", editor?.renderer?.$cursorLayer);
+            }
+        }, 100);
+        
         console.log("ACE editor initialized");
     } catch (e) { console.log("ACE init error", e); }
 }

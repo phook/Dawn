@@ -1,1 +1,3 @@
-“Hello”
+define WithString
+ input s
+  “Hello”

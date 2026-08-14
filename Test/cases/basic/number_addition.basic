@@ -1,1 +1,3 @@
-3+4
+define WithAdd
+ input n
+  3+4

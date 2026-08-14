@@ -1,1 +1,1 @@
-[Number:6 Number:2]>>divide:
+[[[Number:6 Number:2]>>divide:]>>NewInput:n]>>NewResource:WithDivide

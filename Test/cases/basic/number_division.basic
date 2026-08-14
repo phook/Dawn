@@ -1,1 +1,3 @@
-6÷2
+define WithDivide
+ input n
+  6÷2

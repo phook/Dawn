@@ -1,1 +1,1 @@
-[Number:3 Number:4]>>add:>>Console:
+[[[Number:3 Number:4]>>add:>>Console:]>>NewInput:n]>>NewResource:WithNumericPipeline

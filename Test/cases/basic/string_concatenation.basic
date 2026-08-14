@@ -1,1 +1,3 @@
-“Hello” & “World”
+define WithConcat
+ input s
+  “Hello” & “World”

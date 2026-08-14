@@ -1,1 +1,3 @@
-Boolean:true>>Console:
+define WithPassthrough
+ input u
+  Boolean:true>>Console:

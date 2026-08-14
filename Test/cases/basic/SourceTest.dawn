@@ -1,3 +1,1 @@
-[Number:5 [Number:1 Number:1001#2]>>add:]>>power:>>console
-x>>console
-String:y>>console
+[[[Number:5 [Number:1 Number:1001#2]>>add:]>>power:>>console x>>console String:y>>console]>>NewInput:x]>>NewResource:SourceTest

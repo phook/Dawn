@@ -1,1 +1,1 @@
-String:Hello
+[[String:Hello]>>NewInput:s]>>NewResource:WithString

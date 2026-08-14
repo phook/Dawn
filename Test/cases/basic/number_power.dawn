@@ -1,1 +1,1 @@
-[Number:2 Number:3]>>power:
+[[[Number:2 Number:3]>>power:]>>NewInput:n]>>NewResource:WithPower

@@ -1,535 +1,97 @@
-#include "shared.bnft"
-URI1:
-  URI
 
-URI2:
-  URI
 
-INDENTED_URI:
-  URI -> #block URI
 
-INDENTED_URI1:
-  URI -> #block URI
 
-TD_SAFE_NOPAREN:
- "$" | "-" | "_" | "@" | "." | "&" | ":" | "#" | "=" | "?"
+BINDER:
+collect all ins and outs
+offer ins that start with name - i.e. _in_string for String...
+then plugs/groups
 
-TD_EXTRA_NOPAREN:
- "\"" -> "\\\""
- "!" | "*" | "\"" | "'" | "|" | "," | "/"
 
-TD_XALPHA_NOPAREN:
- ALPHA | DIGIT | TD_SAFE_NOPAREN | TD_EXTRA_NOPAREN | ESCAPE
+Resources have 3 lists of different types
+inputs, outputs and child resources (for introspection - not mixed up)
 
-TD_IF_URI:
- TD_XALPHA_NOPAREN { TD_XALPHA_NOPAREN }
 
-NUMBER:
- { MYDIGIT }
 
-FLOWEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URI  [ FLOWEND ] -> ">>" URI FLOWEND 
-  OPTWHITESPACE ">>" OPTSEPARATOR FLOW [ FLOWEND ] -> ">>" FLOW FLOWEND
+define foo
+  output all
+  input all obj
+     out all all.dd ->    ._out_all(obj.lookup(dd, true(from owner)))
+
+
+typing in and out?
+
+IMAGE INTERFACE:
+
+_image(self)
+_domelement_image_1(domelement)
+_blob_image_2(blob)
+_image_begin_3(x,y)
+_image_pixel_3(rgba)
+_image_end_3
+
+5 ways of streaming the image only connect 1, based on first matching input
+
+interface image - plugs can be put in interface definition, so more interfaces can be connected but only 1 plug from each ( if only outputs specified 1 interface and 1 plug is implied)
+plug 0
+  out image
+plug 1
+  out image-url
+plug 2
+  out domelement-image
+plug 3
+  out blob-image
+plug 4
+  out image-begin
+  out image-rgba-pixel   (concept type interface = image, type of value = rgba, name = pixel)
+  out image-end
+--- concept, if only rgba-pixel is defined, begin and end binds to next in line or through functions are created in the intermediate  
   
-FLOWLISTEND:
- { SEPARATOR FLOW } 
-
-INNER_FLOWLIST:
- FLOW FLOWLISTEND 
-
-FLOWLIST:
- "[" OPTWHITESPACE [ INNER_FLOWLIST ] OPTWHITESPACE "]" 
-
-DAWN_SYNTAX:
- FLOWLIST
- FLOW
-
-FLOW:
- URI FLOWEND
- URI
- "Meta:" URI FLOWEND -> ""
- FLOWLIST FLOWEND
- FLOWLIST
-
-
-TD_STRING_LITERAL_PARTS:
- { ALPHA | DIGIT | " "} 
-
-TD_STRING_LITERAL:
- TD_STRING_LITERAL_PARTS -> #encodeuri TD_STRING_LITERAL_PARTS
-
-TD_STRING:
- "\"" TD_STRING_LITERAL "\"" -> "String:" TD_STRING_LITERAL
- "\'" TD_STRING_LITERAL "\'" -> "String:" TD_STRING_LITERAL
- "“" TD_STRING_LITERAL "”" -> "String:" TD_STRING_LITERAL
- URI
-
-TD_STRING_END:
- TD_STRING -> " " TD_STRING
-
-TD_STRING_CONCATENATION:
- TD_STRING OPTWHITESPACE "&" OPTWHITESPACE TD_STRING_END { OPTWHITESPACE "&" OPTWHITESPACE TD_STRING_END } -> "[" TD_STRING TD_STRING_END "]>>concatenate:"
-
-TD_STRING_EXPRESSION:
-  TD_STRING_CONCATENATION
-  TD_STRING
-
-TD_DIGIT:
-  DIGIT
-  "A".."F"
-  "a".."f"
-
-TD_NUMBER_INTEGER:
- DIGIT { TD_DIGIT  }
-
-TD_NUMBER_SCIENTIFIC:
- TD_NUMBER_INTEGER [ "." TD_NUMBER_INTEGER ] [ ( "e"| "E" ) ( "+"| "-" ) DIGIT {DIGIT} ] [ "#" DIGIT {DIGIT}] 
-
-TD_NUMBER:
- TD_NUMBER_INTEGER TD_NUMBER_SUB -> "Number:" TD_NUMBER_INTEGER "#" TD_NUMBER_SUB
- TD_NUMBER_SCIENTIFIC            -> "Number:" TD_NUMBER_SCIENTIFIC
- "Number:" URI
-
-TD_BASE:
- "(" TD_NUMERIC_EXPRESSION ")" -> TD_NUMERIC_EXPRESSION 
- TD_NUMBER
- URI
-
-TD_PRIMARY:
- "-" TD_BASE -> TD_BASE ">>negate:"
- ["+"] TD_BASE
-
-TD_DIGITS_SUPER:
- "⁰" -> "0"
- "¹" -> "1"
- "²" -> "2"
- "³" -> "3"
- "⁴" -> "4"
- "⁵" -> "5"
- "⁶" -> "6"
- "⁷" -> "7"
- "⁸" -> "8"
- "⁹" -> "9"
-
-TD_NUMBER_SUPER:
- TD_DIGITS_SUPER { TD_DIGITS_SUPER } -> "Number:" TD_DIGITS_SUPER
-
- 
-TD_DIGITS_SUB:
- "₀" -> "0"
- "₁" -> "1"
- "₂" -> "2"
- "₃" -> "3"
- "₄" -> "4"
- "₅" -> "5"
- "₆" -> "6"
- "₇" -> "7"
- "₈" -> "8"
- "₉" -> "9"
-
-TD_NUMBER_SUB:
- TD_DIGITS_SUB { TD_DIGITS_SUB } 
-
-TD_SECONDARY:
-  TD_PRIMARY
-
-TD_POWER:
- TD_PRIMARY "^" TD_SECONDARY  -> "[" TD_PRIMARY " " TD_SECONDARY "]>>power:"
- TD_PRIMARY TD_NUMBER_SUPER   -> "[" TD_PRIMARY " " TD_NUMBER_SUPER "]>>power:"
- TD_PRIMARY
-
-TD_MULT:
-  ("*" | "×") OPTWHITESPACE TD_POWER -> " " TD_POWER 
-
-TD_DIV:
-  ("/" | "÷") OPTWHITESPACE TD_POWER 
-
-TD_DIVISION:
-  ("/" | "÷") OPTWHITESPACE TD_POWER -> " " TD_POWER ">>reciprocate:" 
-
-TD_MULTDIV:
- TD_MULT
- TD_DIVISION
- 
-TD_MULTIPLICATION:
- TD_POWER OPTWHITESPACE TD_DIV  { TD_DIV }     -> "[" TD_POWER TD_DIV "]>>divide:" 
- TD_POWER OPTWHITESPACE TD_MULT { TD_MULTDIV } -> "[" TD_POWER TD_MULT TD_MULTDIV "]>>multiply:" 
- TD_POWER OPTWHITESPACE TD_DIV  { TD_MULTDIV } -> "[" TD_POWER TD_DIV  TD_MULTDIV "]>>multiply:" 
- TD_POWER
-
-TD_ADDITION:
-  "+" OPTWHITESPACE TD_MULTIPLICATION   -> " " TD_MULTIPLICATION 
-
-TD_SUBTRACT:
-  "-" OPTWHITESPACE TD_MULTIPLICATION -> " " TD_MULTIPLICATION
-
-TD_SUBTRACTION:
-  "-" OPTWHITESPACE TD_MULTIPLICATION -> " " TD_MULTIPLICATION ">>negate:" 
-
-TD_ADDSUB:
- TD_ADDITION
- TD_SUBTRACTION
- 
-TD_NUMERIC_EXPRESSION:
- TD_MULTIPLICATION OPTWHITESPACE TD_SUBTRACT { TD_SUBTRACT }  -> "[" TD_MULTIPLICATION TD_SUBTRACT "]>>subtract:" 
- TD_MULTIPLICATION OPTWHITESPACE TD_ADDITION    { TD_ADDSUB } -> "[" TD_MULTIPLICATION TD_ADDITION    TD_ADDSUB "]>>add:" 
- TD_MULTIPLICATION OPTWHITESPACE TD_SUBTRACTION { TD_ADDSUB } -> "[" TD_MULTIPLICATION TD_SUBTRACTION TD_ADDSUB "]>>add:" 
- TD_MULTIPLICATION
-
-TD_BOOLEAN_BOTTOM:
- "(" OPTWHITESPACE TD_BOOLEAN_EXPRESSION OPTWHITESPACE ")" -> TD_BOOLEAN_EXPRESSION
- IDENTIFIER
-
-TD_NOT_EXPRESSION:
- ("!" | "¬" | "NOT ")  TD_BOOLEAN_BOTTOM -> TD_BOOLEAN_BOTTOM ">>not:" 
- TD_BOOLEAN_BOTTOM
-
-TD_AND_END:
-  ("&&" | "∧" | "AND ") OPTWHITESPACE TD_NOT_EXPRESSION -> " " TD_NOT_EXPRESSION
- 
-TD_AND_EXPRESSION:
- TD_NOT_EXPRESSION OPTWHITESPACE TD_AND_END { TD_AND_END} -> "[" TD_NOT_EXPRESSION TD_AND_END "]>>and:"
- TD_NOT_EXPRESSION
-
-TD_OR_END:
-  ("||" | "∨" | "OR ") OPTWHITESPACE TD_AND_EXPRESSION -> " " TD_AND_EXPRESSION
-
-TD_BOOLEAN_EXPRESSION:
- TD_AND_EXPRESSION OPTWHITESPACE TD_OR_END { TD_OR_END } -> "[" TD_AND_EXPRESSION TD_OR_END "]>>or:"
- TD_AND_EXPRESSION
-
-TD_ASSIGNMENT:
- IDENTIFIER OPTWHITESPACE ("≔" | ":=" ) OPTWHITESPACE TD_BOOLEAN_EXPRESSION -> "Meta:Assignment>>" TD_BOOLEAN_EXPRESSION  ">>" IDENTIFIER 
- IDENTIFIER OPTWHITESPACE ("≔" | ":=" ) OPTWHITESPACE TD_STRING_EXPRESSION  -> "Meta:Assignment>>" TD_STRING_EXPRESSION   ">>" IDENTIFIER 
- IDENTIFIER OPTWHITESPACE ("≔" | ":=" ) OPTWHITESPACE TD_NUMERIC_EXPRESSION -> "Meta:Assignment>>" TD_NUMERIC_EXPRESSION ">>" IDENTIFIER 
-
-TD_STATEMENT:
- TD_ASSIGNMENT
- TD_IF_ELSE
- TD_IF
-
-TD_CHAR:
-  " " {" "} -> " "
-  ANY_CHAR
+inheritance - plug can be defined and inherited - need to do inheritance (or more like composition) so: plug 3 { include image-pipe }
+includes - adds inputs and outputs from resource (how to internally connected stuff? - normally a pipe should be used and act as new object)
   
-TD_NATIVE:
-  { TD_CHAR }  -> #encodeuri TD_CHAR
+define all_red
+  out image-rgba-pixel
+  in image-rgba-pixel
+    pixel.g = 0   (number:0>>pixel.g)
+    pixel.b = 0
+    out image-rgba-pixel pixel
+    
+    
+this will allow
 
-TD_END_NATIVE:
-  OPTSEPARATOR "}" OPTSEPARATOR "endnative" 
+foo.gif >> all_red >> red_foo.gif
 
-TD_FUNCTION_LINES:
-  OPTWHITESPACE TD_STATEMENT -> TD_STATEMENT
-  OPTWHITESPACE FLOW      -> FLOW
 
-TD_FUNCTION_LINES_ALT:
- TD_FUNCTION_LINES -> " " TD_FUNCTION_LINES
+DOCUMENTATION:
+directory:sourcedir?recursive=true;>>[ ToC >> documentation.html [extractRemarks [file >> replaceExtension:html] >> File]]
 
-TD_FUNCTION:
-  TD_NATIVE_BLOCK
-  TD_FUNCTION_LINES { SEPARATOR TD_FUNCTION_LINES_ALT} -> TD_FUNCTION_LINES TD_FUNCTION_LINES_ALT
-  ""
+Defintions:
+Identifier:increment >> [
+    Output:number 
+    Input:number >> [
+        [in:number Number:1] >> add >> out:number
+    ]
+] 
+// Identifier and Input passes scope to the next level so definitions go into then
+// figure out how it suits with the javascript versions? probably unbound javascript statements puts it into scope?
 
-TD_ALL_INPUTS:
- "all" WHITESPACE    -> "_$"
- ""
- 
-TD_SPECIFICATION:
-  OPTWHITESPACE "input" WHITESPACE TD_ALL_INPUTS URI OPTSEPARATOR  "{" OPTSEPARATOR TD_FUNCTION OPTSEPARATOR "}" -> "[" TD_FUNCTION "]>>NewInput:" URI TD_ALL_INPUTS
-  OPTWHITESPACE "output" WHITESPACE URI OPTSEPARATOR -> "NewOutput:" URI
+VARS and REFERENCES:
 
-TD_BLOCK:
-  TD_SPECIFICATION
+String returns a string objects which returns copies of itself but where the data object is referenced
+So to create a var you just need to change the name and add the object to scope
+Oh var can be used for references as well!!! if you lookup a variable and attached it using var it WILL be a reference!!!
+Var is wrong name - should be connect child to scope with the name of ...    nameInScope?
+instanciate is more like getreference - strings returns an instance of a string...
 
-TD_BLOCK_END:
-  TD_SPECIFICATION -> " " TD_SPECIFICATION
 
-TD_NATIVE_BLOCK:
-  "native" WHITESPACE "javascript" OPTSEPARATOR "{" OPTSEPARATOR TD_NATIVE TD_END_NATIVE -> "Native.Javascript:" TD_NATIVE
-  
-TD_NATIVE_CONSTRUCTOR:
- "" -> ""
 
-TD_DEFINITION:
- "define" WHITESPACE URI SEPARATOR "{" [ TD_NATIVE_BLOCK ] OPTSEPARATOR [ TD_BLOCK OPTSEPARATOR { TD_BLOCK_END OPTSEPARATOR } ] "}" -> "[" TD_NATIVE_CONSTRUCTOR TD_BLOCK TD_BLOCK_END "]>>NewResource:" URI
 
-FLOW_BODY_LINE:
-  OPTSEPARATOR FLOW -> FLOW
 
-FLOW_BODY_LINE_NEXT:
-  OPTENDLINE OPTSEPARATOR FLOW_BODY_LINE -> ">>" FLOW_BODY_LINE
+diffusion concept but with text = noise introduced into text?
+long term memory in rnn - network with fingerprint for writing style (training with same author), overall plot - training with different parts of the same book (with order indicated)
+(store author fingerprints)
 
-FLOW_IF_BODY:
-  FLOW_BODY_LINE { FLOW_BODY_LINE_NEXT } -> FLOW_BODY_LINE FLOW_BODY_LINE_NEXT
 
-TD_IF:
-  "if" WHITESPACE "(" TD_IF_URI ")" OPTENDLINE FLOW_BODY_LINE
-   -> TD_IF_URI ">>Boolean.if:?#go_then>>" FLOW_BODY_LINE
-  "if" WHITESPACE "(" TD_IF_URI ")" OPTENDLINE "{" OPTENDLINE FLOW_IF_BODY OPTENDLINE "}"
-   -> TD_IF_URI ">>Boolean.if:?#go_then>>" FLOW_IF_BODY
 
-TD_IF_ELSE:
-  "if" WHITESPACE "(" TD_IF_URI ")" OPTENDLINE FLOW_BODY_LINE WHITESPACE "else" WHITESPACE OPTENDLINE FLOW_BODY_LINE
-   -> TD_IF_URI ">>Boolean.if:?#go_then,go_else>>[" FLOW_BODY_LINE " " FLOW_BODY_LINE "]"
-  "if" WHITESPACE "(" TD_IF_URI ")" OPTENDLINE "{" OPTENDLINE FLOW_IF_BODY OPTENDLINE "}" WHITESPACE "else" WHITESPACE OPTENDLINE "{" OPTENDLINE FLOW_IF_BODY OPTENDLINE "}"
-   -> TD_IF_URI ">>Boolean.if:?#go_then,go_else>>[" FLOW_IF_BODY " " FLOW_IF_BODY "]"
-
-FLOW_PIPELINE:
-  TD_NUMERIC_EXPRESSION FLOWEND -> TD_NUMERIC_EXPRESSION FLOWEND
-  TD_STRING_EXPRESSION FLOWEND -> TD_STRING_EXPRESSION FLOWEND
-  URI FLOWEND -> URI FLOWEND
-
-TD_EXPRESSION:
-  TD_IF_ELSE
-  TD_IF
-  FLOW_PIPELINE
-  URI FLOWEND -> URI FLOWEND
-  TD_NUMERIC_EXPRESSION
-  TD_STRING_EXPRESSION
-  
-MYDIGIT:
- "0".."9"
- ","
- "."
- "-"
-
-FD_DIGITS_SUPER:
- "0" -> "⁰"
- "1" -> "¹"
- "2" -> "²"
- "3" -> "³"
- "4" -> "⁴"
- "5" -> "⁵"
- "6" -> "⁶"
- "7" -> "⁷"
- "8" -> "⁸"
- "9" -> "⁹"
-
-FD_DIGITS_SUB:
- "0" -> "₀"
- "1" -> "₁"
- "2" -> "₂"
- "3" -> "₃"
- "4" -> "₄"
- "5" -> "₅"
- "6" -> "₆"
- "7" -> "₇"
- "8" -> "₈"
- "9" -> "₉"
- 
- 
-FD_DIGITS_SUPER_TAGGED:
- FD_DIGITS_SUPER -> "<span class=\"super\">" FD_DIGITS_SUPER "</span>"
- 
-FD_NUMBER_SUPER:
- "Number:" { FD_DIGITS_SUPER_TAGGED } -> FD_DIGITS_SUPER_TAGGED
-
-FD_NUMBER_SUB:
- { FD_DIGITS_SUB }
-
-FD_NUMBER:
- "Number:" NUMBER [ "#" FD_NUMBER_SUB ] -> NUMBER FD_NUMBER_SUB
-
-FD_NUMBER_BASED:
- "Number:" NUMBER [ "#" NUMBER ]
-
-FD_IF_THEN_BODY:
- URI -> URI
-
-FD_IF_ELSE_THEN:
- URI -> URI
-
-FD_IF_ELSE_ELSE:
- URI -> URI
-
-FD_IF_THEN:
- URI OPTWHITESPACE ">>" OPTWHITESPACE "Boolean.if:?#go_then" OPTWHITESPACE ">>" FD_IF_THEN_BODY [ FD_FLOWEND ] -> "if (" URI ") \n " FD_IF_THEN_BODY FD_FLOWEND
-
-FD_IF_ELSE:
- URI OPTWHITESPACE ">>" OPTWHITESPACE "Boolean.if:?#go_then,go_else" OPTWHITESPACE ">>" "[" FD_IF_ELSE_THEN FD_IF_ELSE_ELSE [ FD_FLOWEND ] "]" -> "if (" URI ") \n" FD_IF_ELSE_THEN "\nelse\n" FD_IF_ELSE_ELSE FD_FLOWEND
- 
-FD_EXP_STRING_DECODE:
-  URI -> #decodeuri URI
-  
-FD_EXP_STRING:
- "String:" FD_EXP_STRING_DECODE -> "“" FD_EXP_STRING_DECODE "”"
-
-FD_EXP_STRING_CONCAT:
- FD_EXP_STRING -> " & " FD_EXP_STRING
-
-FD_EXP_STRING_EXPRESSION:
- "[" OPTWHITESPACE FD_EXP_STRING { WHITESPACE FD_EXP_STRING_CONCAT } OPTWHITESPACE "]" OPTWHITESPACE ">>" OPTWHITESPACE "concatenate:"      -> FD_EXP_STRING FD_EXP_STRING_CONCAT
-
-FD_STRING_EXPRESSION:
- FD_EXP_STRING_EXPRESSION
- FD_EXP_STRING
-
-FD_FLOWEND:
-  OPTWHITESPACE ">>" OPTSEPARATOR URI [ FD_FLOWEND ] -> ">>" URI FD_FLOWEND
-
-TODAWN_COMMANDPROMT:
-  OPTWHITESPACE FLOW OPTWHITESPACE
-  
-FD_STRING_ELEMENT:
- "String:" URI -> "\"" #decodeuri URI "\""
-
-FD_STRING_END:
- FD_STRING_ELEMENT -> " & " FD_STRING_ELEMENT
-
-FD_EXPRESSION_BOTTOM1:
- FD_EXPRESSION_BOTTOM
-
-FD_EXPRESSION_BOTTOM:
- FD_NUMBER
- URI
- "[" FD_MULTIPLY_EXPRESSION FD_ADD_TAIL { FD_ADD_TAIL} OPTWHITESPACE "]>>add:"                 -> "(" FD_MULTIPLY_EXPRESSION FD_ADD_TAIL   ")"
- "[" FD_MULTIPLY_EXPRESSION FD_SUB_TAIL { FD_SUB_TAIL } OPTWHITESPACE "]>>subtract:"           -> "(" FD_MULTIPLY_EXPRESSION FD_SUB_TAIL   ")"
- "[" FD_POWER_EXPRESSION FD_MULTIPLY_TAIL { FD_MULTIPLY_TAIL } OPTWHITESPACE "]>>multiply:"    -> "(" FD_POWER_EXPRESSION FD_MULTIPLY_TAIL ")"
- "[" FD_POWER_EXPRESSION FD_DIVIDE_TAIL   { FD_DIVIDE_TAIL   } OPTWHITESPACE "]>>divide:"      -> "(" FD_POWER_EXPRESSION FD_DIVIDE_TAIL   ")"
- 
-FD_POWER_EXPRESSION1:
- FD_POWER_EXPRESSION
-
-FD_POWER_EXPRESSION:
- "[" FD_EXPRESSION_BOTTOM  WHITESPACE "Number:" { FD_DIGITS_SUPER } OPTWHITESPACE "]>>power:" -> FD_EXPRESSION_BOTTOM FD_DIGITS_SUPER FD_FLOWEND
- "[" FD_EXPRESSION_BOTTOM  WHITESPACE FD_EXPRESSION_BOTTOM1 OPTWHITESPACE "]>>power:"         -> FD_EXPRESSION_BOTTOM "^"FD_EXPRESSION_BOTTOM1 FD_FLOWEND
- FD_EXPRESSION_BOTTOM
-
-FD_MULTIPLY_TAIL:
- WHITESPACE FD_POWER_EXPRESSION -> "×" FD_POWER_EXPRESSION
-
-FD_DIVIDE_TAIL:
- WHITESPACE FD_POWER_EXPRESSION -> "÷" FD_POWER_EXPRESSION
-
-FD_MULTIPLY_EXPRESSION:
- "[" FD_POWER_EXPRESSION FD_MULTIPLY_TAIL { FD_MULTIPLY_TAIL } OPTWHITESPACE "]>>multiply:"    -> FD_POWER_EXPRESSION FD_MULTIPLY_TAIL
- "[" FD_POWER_EXPRESSION FD_DIVIDE_TAIL   { FD_DIVIDE_TAIL   } OPTWHITESPACE "]>>divide:"      -> FD_POWER_EXPRESSION FD_DIVIDE_TAIL
- FD_POWER_EXPRESSION
-
-FD_ADD_TAIL:
- WHITESPACE FD_MULTIPLY_EXPRESSION -> " + " FD_MULTIPLY_EXPRESSION
-
-FD_SUB_TAIL:
- WHITESPACE FD_MULTIPLY_EXPRESSION -> " - " FD_MULTIPLY_EXPRESSION
-
-FD_ADD_EXPRESSION:
- "[" FD_MULTIPLY_EXPRESSION FD_ADD_TAIL { FD_ADD_TAIL} OPTWHITESPACE "]>>add:"         -> FD_MULTIPLY_EXPRESSION FD_ADD_TAIL
- "[" FD_MULTIPLY_EXPRESSION FD_SUB_TAIL { FD_SUB_TAIL } OPTWHITESPACE "]>>subtract:"   -> FD_MULTIPLY_EXPRESSION FD_SUB_TAIL
- FD_MULTIPLY_EXPRESSION
-
-FD_NUMERIC_EXPRESSION:
- FD_ADD_EXPRESSION
-
-FD_COMPARERS:
- "greater:"      -> " > "
- "greaterEqual:" -> " ≥ "
- "less:"         -> " > "
- "lessEqual:"    -> " ≤ "
- "equal:"        -> " = "
- "notEqual:"     -> " ≠ "
-
-FD_COMPARE_EXPRESSION:
- "[" FD_EXPRESSION_BOTTOM WHITESPACE FD_EXPRESSION_BOTTOM1 "]>>" FD_COMPARERS -> FD_EXPRESSION_BOTTOM  FD_COMPARERS FD_EXPRESSION_BOTTOM1
-
-FD_IF_THEN:
-   URI ">>" "Boolean.if:?#go_then" ">>" INDENTED_URI -> #indent "if (" URI ")" INDENTED_URI
-
-FD_IF_ELSE:
-   URI ">>" "Boolean.if:?#go_then,go_else" ">>" "[" OPTWHITESPACE INDENTED_URI OPTWHITESPACE INDENTED_URI1 OPTWHITESPACE "]" -> #indent "if (" URI ")\n" INDENTED_URI "\nelse\n" INDENTED_URI1
-
-FD_BOOLEAN_BOTTOM:
- FD_NUMBER
- IDENTIFIER
- FD_OR          -> "(" FD_OR ")"
-
-FD_NOT:
- FD_BOOLEAN_BOTTOM ">>not:" -> "¬" FD_BOOLEAN_BOTTOM
- FD_BOOLEAN_BOTTOM
-
-FD_NOT_END:
- FD_NOT -> " ∧ " FD_NOT
-
-FD_AND:
- "[" FD_NOT WHITESPACE FD_NOT_END { WHITESPACE FD_NOT_END } "]>>and:" -> FD_NOT FD_NOT_END
- FD_NOT
-
-FD_AND_END:
- FD_AND -> " V " FD_AND
-
-FD_OR:
- "[" FD_AND WHITESPACE FD_AND_END { WHITESPACE FD_AND_END } "]>>or:"  -> FD_AND FD_AND_END
-
-FD_BOOLEAN_EXPRESSION:
- FD_OR
- FD_AND
- FD_COMPARE_EXPRESSION
-
-FD_EXPRESSION:
- FD_NUMERIC_EXPRESSION
- FD_STRING_EXPRESSION
- FD_BOOLEAN_EXPRESSION
-
-FD_ASSIGNMENT:
- "Meta:Assignment>>" FD_EXPRESSION ">>" URI -> URI " ≔ " FD_EXPRESSION 
-
-FD_STATEMENT:
- FD_IF_THEN
- FD_IF_ELSE
- FD_ASSIGNMENT
-
-FD_FLOWEND:
- OPTWHITESPACE ">>" OPTSEPARATOR URI  [ FD_FLOWEND ]    -> ">>" URI FD_FLOWEND 
- OPTWHITESPACE ">>" OPTSEPARATOR FD_FLOW [ FD_FLOWEND ] -> ">>" FD_FLOW FD_FLOWEND
-
-FD_FLOW:
- URI [ FD_FLOWEND ]
- FD_FLOWLIST [ FD_FLOWEND ]
-
-FD_FLOWLIST_END:
- { SEPARATOR FD_FLOW } 
-
-FD_INNER_FLOWLIST:
- FD_FLOW FD_FLOWLIST_END 
-
-FD_FLOWLIST:
- "[" OPTWHITESPACE [ FD_INNER_FLOWLIST ] OPTWHITESPACE "]" 
-
-FD_SYNTAX:
-  OPTWHITESPACE FD_DEFINITION -> FD_DEFINITION
-  OPTWHITESPACE FD_FLOW       -> FD_FLOW
-
-FD_DEFINITION:
-  OPTWHITESPACE "[" OPTSEPARATOR FD_DEFINE_BODY OPTSEPARATOR "]>>NewResource:" URI -> "define " URI "\n" FD_DEFINE_BODY "\n"
-
-FD_DEFINE_BODY:
-  FD_DEFINE_BODY_LINE -> #block FD_DEFINE_BODY_LINE
-
-FD_DEFINE_BODY_LINE:
-  "NewOutput:" URI -> #indent "output " URI "\n"
-  "[" FD_FUNCTION_INNER "]>>NewInput:" URI -> #indent "input " URI "\n" FD_FUNCTION_INNER "\n"
-  ""
-
-FD_FUNCTION_INNER:
-   FD_INNER_CONTENT { SEPARATOR FD_INNER_CONTENT } -> #block FD_INNER_CONTENT
-
-FD_INNER_CONTENT:
-  FD_STATEMENT     -> #indent FD_STATEMENT "\n"
-  FD_FLOW          -> #indent FD_FLOW "\n"
-
-TD_SYNTAX:
-  OPTWHITESPACE TD_DEFINITION  ->  TD_DEFINITION "\n"
-  OPTWHITESPACE TD_EXPRESSION  ->  TD_EXPRESSION "\n"
-  OPTWHITESPACE FLOW           ->  FLOW   "\n"
-
-FROMDAWN_KEYBOARD_COMMANDPROMT:
-  OPTWHITESPACE FD_EXPRESSION OPTWHITESPACE
-
-FROMDAWN_COMMANDPROMT:
-  OPTWHITESPACE FD_EXPRESSION OPTWHITESPACE
-
-FROMDAWN_PROGRAM:
- { OPTWHITESPACE FD_SYNTAX SEPARATOR }
-
-TODAWN_PROGRAM:
-  { OPTWHITESPACE TD_SYNTAX SEPARATOR } -> #significantwhitespace "{\n" "}\n" "" TD_SYNTAX "\n"
 

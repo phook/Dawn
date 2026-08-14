@@ -1,1 +1,1 @@
-Boolean:true>>Boolean.if:?#go_then>>String:Yes
+[[Boolean:true>>Boolean.if:?#go_then>>String:Yes]>>NewInput:b]>>NewResource:WithIf

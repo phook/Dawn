@@ -1,1 +1,3 @@
-“Hello World”
+define WithEncoded
+ input s
+  “Hello World”

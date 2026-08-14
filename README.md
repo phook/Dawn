@@ -67,4 +67,13 @@ The hardest design problem is **binding**: when you connect two resources, the d
 
 None of this is a problem for the intended use case. Dawn is a **playful scripting language** for automating workflows, wiring together internet resources, and exploring language ideas — not a language for systems that need formal verification. In that space, the convention-based, flow-first design is a strength: it is quick to connect things, easy to read simple pipelines, and flexible enough to grow with the task.
 
+Documentation
+-------------
+
+- [`docs/basic-flavor-syntax.md`](docs/basic-flavor-syntax.md) — syntax reference for the `.dawn_basic` surface: numbers, strings, booleans, lists, `if`/`else`, `define`, and `native` blocks. Covers both `TODAWN_PROGRAM` (parse) and `FROMDAWN_PROGRAM` (pretty-print) directions.
+- [`docs/progress.md`](docs/progress.md) — current test pass/fail state, with the specific failing cases and where to look in the grammar to fix them.
+- [`docs/dawn-vs-component-model.md`](docs/dawn-vs-component-model.md) — five semantic gaps between Dawn and the WASM Component Model 0.3, plus proposed resolutions.
+- [`docs/wasm-0.3-plan.md`](docs/wasm-0.3-plan.md) — phased roadmap for the WASM compiler (deferred while Dawn matures in JS guise).
+- [`docs/native-targets.md`](docs/native-targets.md) — `javascript` vs `wasm` native-target conventions, path-walk lookup, and the runtime-target resource.
+
 

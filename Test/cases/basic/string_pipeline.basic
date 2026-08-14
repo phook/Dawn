@@ -1,1 +1,3 @@
-“Hello”>>Console:
+define WithStringPipeline
+ input s
+  “Hello”>>Console:
