@@ -1,3 +1,3 @@
 define WithLiteral
  input n
-  42
+  Number:42

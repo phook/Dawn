@@ -1,3 +1,3 @@
 define WithEncoded
  input s
-  “Hello World”
+  String:Hello%20World

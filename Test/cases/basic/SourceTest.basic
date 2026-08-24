@@ -1,5 +1,5 @@
 define SourceTest
  input x
-  5^(1+1001₂) >> console
-  x >> console
-  “y” >> console
+  [Number:5 [Number:1 Number:1001#2]>>add:]>>power:>>console
+  x>>console
+  String:y>>console

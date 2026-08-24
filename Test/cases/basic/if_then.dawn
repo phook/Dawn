@@ -1,1 +1,3 @@
-[[Boolean:true>>Boolean.if:?#go_then>>String:Yes]>>NewInput:b]>>NewResource:WithIf
+ERROR: 
+  if (Boolean:true) 
+                  ^

@@ -1,4 +1,3 @@
 define WithPipeline
  input inp1
   x>>y
-

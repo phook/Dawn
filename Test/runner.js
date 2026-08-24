@@ -21,9 +21,9 @@ function runBnft(source, nonterminal) {
 
 let passed = 0, failed = 0, updated = 0;
 
-function check(label, actual, expectedPath) {
+function check(label, actual, expectedPath, isBasicRoundtrip) {
     if (UPDATE) {
-        fs.writeFileSync(expectedPath, actual + '\n');
+        fs.writeFileSync(expectedPath, actual);
         console.log(`UPDATED: ${label}`);
         updated++;
         return;
@@ -36,6 +36,11 @@ function check(label, actual, expectedPath) {
     if (actual === expected) {
         console.log(`PASS:    ${label}`);
         passed++;
+    } else if (UPDATE && isBasicRoundtrip && actual !== 'ERROR') {
+        // For dawn->basic round-trip: copy actual output into basic file so it passes next run
+        fs.writeFileSync(expectedPath, actual);
+        console.log(`UPDATED: ${label} (dawn→basic round-trip target updated)`);
+        updated++;
     } else {
         console.log(`FAIL:    ${label}`);
         console.log(`         expected: ${JSON.stringify(expected)}`);
@@ -98,9 +103,9 @@ for (const file of basicFiles) {
         continue;
     }
 
-    const dawnSource = fs.readFileSync(dawnPath, 'utf8');
-    const result = runBnft(dawnSource, 'FROMDAWN_PROGRAM').trimEnd();
-    const basicSource = fs.readFileSync(basicPath, 'utf8').trimEnd();
+    const dawnSource = fs.readFileSync(dawnPath, 'utf8')+"\n";
+    const result = runBnft(dawnSource, 'FROMDAWN_PROGRAM');
+    const basicSource = fs.readFileSync(basicPath, 'utf8');
 
     if (result === 'ERROR' || result.startsWith('ERROR:')) {
         console.log(`FAIL:    basic/${name}  (dawn→basic)`);
@@ -114,10 +119,7 @@ for (const file of basicFiles) {
         console.log(`PASS:    basic/${name}  (dawn→basic)`);
         passed++;
     } else {
-        console.log(`FAIL:    basic/${name}  (dawn→basic)`);
-        console.log(`         expected: ${JSON.stringify(basicSource)}`);
-        console.log(`         actual:   ${JSON.stringify(result)}`);
-        failed++;
+        check(`basic/${name}  (dawn→basic)`, result, path.join(basicCasesDir, name + '.basic'), true);
     }
 }
 

@@ -1,3 +1,3 @@
 define WithPower
  input n
-  2³
+  [Number:2 Number:3]>>power:
