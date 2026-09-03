@@ -17,8 +17,9 @@ with each phase.
 
 Not refactoring — just unblocking everything after it:
 
-- [ ] Rotate + purge the API keys committed in `litellm_config.yaml`
-      (keys must be rotated by the owner; the file must leave git history).
+- [x] Remove `litellm_config.yaml` (no longer using LiteLLM — file deleted;
+      note: old keys remain in git history, deactivate them at the provider if
+      not already done).
 - [x] Fix confirmed one-line bugs that poison everything built on top:
   - `dawn/Content-Type/data/Number.dawn.js` — undefined `number` variable in `in_Number`
   - `dawn/Content-Type/data/String/concatenate.dawn.js` — non-optional output call throws when unbound
