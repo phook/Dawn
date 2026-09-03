@@ -20,7 +20,7 @@ function _NumberProcessor(resource)
 	this.out_Number = null;
   this.in_Number_$all = function(input)
   {   
-      this.get_resource().value = number.value;
+      this.get_resource().value = input.value;
   }
   this.in_go = function()
   {

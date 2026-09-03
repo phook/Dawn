@@ -11,6 +11,11 @@ const hub     = require('./hubserver.js');
 const app = express();
 const server = http.createServer(app);
 
+// Only serve filesystem and environment routes to local clients
+function isLocalRequest(request) {
+  return ["localhost", "127.0.0.1", "::1", "::ffff:127.0.0.1"].includes(request.hostname);
+}
+
 
 
 app.use((req, res, next) => {
@@ -195,12 +200,12 @@ let environment =
 
 app.get("*",async function (request, result, next) {
   let { url } = request;
-  if (url==="/environment.json" /*&& request.hostname === "localhost"*/)
+  if (url==="/environment.json" && isLocalRequest(request))
   {
      result.status(200).setHeader("Content-Type","text/json").send(JSON.stringify(environment));
   }
   else
-  if (url.indexOf("/file:///") === 0 /*&& request.hostname === "localhost"*/)
+  if (url.indexOf("/file:///") === 0 && isLocalRequest(request))
   {
     filepath = url.replace("/file:///","");
     try {
@@ -260,6 +265,7 @@ app.get("*",async function (request, result, next) {
 app.use(express.static('public'));
 app.use(express.static('BNFT'));
 app.use(express.static('dawn'));
+app.use(express.static('uil'));
 
 
 
@@ -310,13 +316,12 @@ app.put('/_file', async (request, result) => {
 });
 */
 
-// LAST CATCH ALL CONT SEND 404, send 204 - prevent 404 errors in debugging
-app.use(function (req, res, next) {
-  res.status(204).send()
-})
-
 app.put("/_file", async (request, result) => {
     try {
+        if (!isLocalRequest(request)) {
+            result.status(403).send("Local requests only");
+            return;
+        }
         let filePath = request.query.path;
         if (!filePath) {
             result.status(400).send("Missing path query parameter");
@@ -338,6 +343,11 @@ app.put("/_file", async (request, result) => {
         result.status(500).send(err.message);
     }
 });
+
+// LAST CATCH ALL CONT SEND 404, send 204 - prevent 404 errors in debugging
+app.use(function (req, res, next) {
+  res.status(204).send()
+})
 
 server.listen(process.env.PORT || 5000, function () {
 })

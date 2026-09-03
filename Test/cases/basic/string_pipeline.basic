@@ -1,3 +1,6 @@
 define WithStringPipeline
  input s
   String:Hello>>Console:
+
+
+

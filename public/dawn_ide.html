@@ -148,7 +148,7 @@ ul, li {
 <body>
 <script src="require.js"></script>
 <script>
-    var BNFT = require('/BNFT/BNFT.js');
+    var BNFT = require('/BNFT.js');
     var template_path = "/templates/";
 
     function Do(method,url,json,callback)
@@ -247,9 +247,9 @@ ul, li {
             getTemplate(template);
     }
     
-    GET("/uil/uil_to_html.bnft", function(uilBNFT)
+    GET("/uil_to_html.bnft", function(uilBNFT)
     {
-        GET("/uil/uil_templatelist.bnft", function(uilTemplateExtracorBNFT)
+        GET("/uil_templatelist.bnft", function(uilTemplateExtracorBNFT)
         {
             uilParser = new BNFT(uilBNFT,{alert:console.log});
             uilTemplateExtractor = new BNFT(uilTemplateExtracorBNFT,{alert:console.log});

@@ -22,7 +22,7 @@ function orProcessor(resource)
     }
 	this.in_end = function()
     {
-        this?.out_Boolean({value:this.tempBoolean}); 
+        this?.out_Boolean?.({value:this.tempBoolean}); 
     }
 }
 or.Processor=orProcessor;

@@ -1,0 +1,3 @@
+[Number:1 Number:2 Number:3]>>Number.less:>>Console:
+[Number:3 Number:2]>>Number.less:>>Console:
+[Number:2 Number:2]>>Number.less:>>Console:

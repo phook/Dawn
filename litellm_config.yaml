@@ -1,0 +1,19 @@
+model_list:
+  - model_name: deepseek-coder
+    litellm_params:
+      model: custom_openai/deepseek-ai/deepseek-v4-pro
+      api_key: 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
+      api_base: ttps://integrate.api.nvidia.com/v1/chat/completions
+  - model_name: gemini-2.5-flash
+    litellm_params:
+      model: gemini/gemini-2.5-flash
+      api_key: AIzaSyDZPi-Ug9TCAO-iNdPwhDMGVRlYfshdGI4
+
+litellm_settings:
+  drop_params: true                    # Automatically strips Claude Code's reasoning_effort parameter
+  set_custom_headers: true             # Permits header transformations
+  proxy_allow_user_keys: false         # Forces LiteLLM to use the config file's API key
+
+  
+general_settings:
+    master_key: AIzaSyDZPi-Ug9TCAO-iNdPwhDMGVRlYfshdGI4

@@ -1,3 +1,6 @@
 define WithPower
  input n
   [Number:2 Number:3]>>power:
+
+
+

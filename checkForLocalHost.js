@@ -7,7 +7,7 @@ function checkForLocalHost(addressToCheck)
   {
     dns.lookup(addressToCheck, function(error, address)
     {
-      if (err)
+      if (error)
       {
         resolve(false);
         return;

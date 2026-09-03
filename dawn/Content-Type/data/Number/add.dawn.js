@@ -14,10 +14,10 @@ function addProcessor(resource)
 	Resource.Processor.call(this,resource); 
 	this.resource = resource;
 	this.out_Number = null;
-	this.tempNumber = new resource.Number.bigRat(0,10);
+	this.tempNumber = new resource.Number.bigRat(0);
 	this.in_begin = function()
 	{
-		this.tempNumber=resource.Number.bigRat(0, 10)
+		this.tempNumber=resource.Number.bigRat(0)
     }
 	this.in_Number_$all = function(input)
     {   

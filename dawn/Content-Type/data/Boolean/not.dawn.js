@@ -14,7 +14,7 @@ function notProcessor(resource)
 	this.out_Boolean = null;
 	this.in_Boolean_$all = function(input)
     {   
-        this?.out_Boolean({value:!input.value}); 
+        this?.out_Boolean?.({value:!input.value}); 
     }
 }
 not.Processor=notProcessor;
