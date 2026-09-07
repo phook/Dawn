@@ -1,0 +1,13 @@
+Meta.documentation:dawn
+Meta.documentation:
+Meta.documentation:Dawn itself, as a resource.
+Meta.documentation:
+Meta.documentation:The meta resource: a Dawn interpreter reachable from inside Dawn, so Dawn
+Meta.documentation:programs can construct and run Dawn programs (source in, results out). The
+Meta.documentation:foundation of self-hosting (Phase 3) and the future chat harness (Phase 7).
+Meta.documentation:
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+Meta.documentation:
+
+[Native.Javascript:]>>NewResource:dawn

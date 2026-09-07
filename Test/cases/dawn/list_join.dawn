@@ -1,0 +1,1 @@
+[String:I Number:42 String:you]>>List.join:>>Console:

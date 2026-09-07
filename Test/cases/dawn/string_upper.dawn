@@ -1,0 +1,2 @@
+String:Hello>>String.upper:>>Console:
+[String:Abc String:Def]>>String.upper:>>Console:

@@ -6,3 +6,5 @@
 **/ace/src-min
 **/ace/src-noconflict
 **/ace/demo
+docs/api/
+Test/cases/**/.tmp_*

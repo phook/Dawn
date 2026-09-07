@@ -1,0 +1,2 @@
+String:Hello>>String.length:>>Console:
+[String:Abc String:X]>>String.length:>>Console:

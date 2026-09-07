@@ -1,0 +1,20 @@
+Meta.documentation:Number.negate
+Meta.documentation:
+Meta.documentation:Flips the sign of each Number passing through.
+Meta.documentation:
+Meta.documentation:Streaming operator: each input Number is emitted negated.
+Meta.documentation:
+Meta.documentation:@port in_Number_$all — each Number to negate
+Meta.documentation:@port out_Number — the negated result
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:Number:5>>Number.negate:>>Console:
+Meta.documentation:---
+Meta.documentation:-5
+Meta.documentation:
+Meta.documentation:@see Number.subtract Number.reciprocate
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20negate()%0A%7B%0A%09Resource.call(this%2C%22negate%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%09this.Processor%3DnegateProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20negateProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09this.out_Number%3F.(%7Bvalue%3Ainput.value.negate()%7D)%3B%20%09%09%0A%09%7D%0A%7D%0Anegate.Processor%3DnegateProcessor%3B%0Amodule.exports%3Dnegate%3B]>>NewResource:Number.negate

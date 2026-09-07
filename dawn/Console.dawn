@@ -1,0 +1,23 @@
+Meta.documentation:Console
+Meta.documentation:
+Meta.documentation:Prints everything that flows into it.
+Meta.documentation:
+Meta.documentation:The canonical sink for Dawn programs: Strings print as-is, Numbers in decimal
+Meta.documentation:form, Booleans as true/false. Anything routed through the error channel is
+Meta.documentation:printed too, making Console the simplest way to observe a program.
+Meta.documentation:
+Meta.documentation:@port in_String_$all — String to print, as-is
+Meta.documentation:@port in_Number_$all — Number to print, in decimal form
+Meta.documentation:@port in_Boolean_$all — Boolean to print, as true or false
+Meta.documentation:@port in_error_$all — error value to print
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:String:Hello>>Console:
+Meta.documentation:---
+Meta.documentation:Hello
+Meta.documentation:
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:%2F%2F%20%20define%20Console%0Aconst%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20Console()%0A%7B%0A%09Resource.call(this%2C%22Console%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%09this.Processor%3DConsoleProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20ConsoleProcessor(resource)%0A%7B%0A%20%20this.print%20%3D%20Dawn.print%3B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.in_String_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20%20%20this.print(input.value)%0A%20%20%20%20%7D%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20%20%20this.print(input.value.toDecimal())%0A%20%20%20%20%7D%0A%09this.in_Boolean_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20%20%20this.print(input.value%3F%22true%22%3A%22false%22)%0A%20%20%20%20%7D%0A%09this.in_error_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20%20%20this.print(input.value)%0A%20%20%20%20%7D%0A%09return%20this%3B%0A%7D%0AConsole.Processor%3DConsoleProcessor%3B%0Amodule.exports%3DConsole%3B]>>NewResource:Console

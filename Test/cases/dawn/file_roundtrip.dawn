@@ -1,0 +1,2 @@
+[String:roundtrip%20works]>>file:Test/cases/dawn/.tmp_roundtrip.txt?write>>Console:
+file:Test/cases/dawn/.tmp_roundtrip.txt?read>>Console:

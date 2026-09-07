@@ -1,0 +1,22 @@
+Meta.documentation:String.indexOf
+Meta.documentation:
+Meta.documentation:Finds the position of one String inside another.
+Meta.documentation:
+Meta.documentation:The first String in the flow is the subject, the second is
+Meta.documentation:what to search for. Emits the position of the first
+Meta.documentation:occurrence, or −1 when not found.
+Meta.documentation:
+Meta.documentation:@port in_String_subject — the String to search in
+Meta.documentation:@port in_String_search — the String to find
+Meta.documentation:@port out_Number — the position, −1 when absent
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[String:hello String:llo]>>String.indexOf:>>Console:
+Meta.documentation:---
+Meta.documentation:2
+Meta.documentation:
+Meta.documentation:@see String.substring
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0A%2F%2F%20Finds%20the%20position%20of%20a%20search%20String%20inside%20a%20subject%20String.%0A%2F%2F%20%5BString%3Ahello%20String%3Allo%5D%3E%3EString.indexOf%3A%20emits%202%3B%20-1%20when%20not%20found.%0Afunction%20indexOf()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22indexOf%22)%3B%0A%09this.Processor%3DindexOfProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20indexOfProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.subject%20%3D%20null%3B%0A%09%09this.search%20%3D%20null%3B%0A%09%09this.emitted%20%3D%20false%3B%0A%09%09return%20this.fire_end_parameters()%3B%20%2F%2F%20pre-positioned%20parameter%20inputs%0A%20%20%20%20%7D%0A%09this.tryEmit%20%3D%20function()%0A%09%7B%0A%09%09if%20(!this.emitted%20%26%26%20this.subject%20!%3D%3D%20null%20%26%26%20this.search%20!%3D%3D%20null)%0A%09%09%7B%0A%09%09%09this.emitted%20%3D%20true%3B%0A%09%09%09return%20this%3F.out_Number%3F.(%7Bvalue%3Aresource.Number.bigRat(this.subject.indexOf(this.search))%7D)%3B%0A%09%09%7D%0A%20%20%20%20%7D%0A%09this.in_String_subject%20%3D%20function(input)%20%7B%20this.subject%20%3D%20input.value%3B%20return%20this.tryEmit()%3B%20%7D%0A%09this.in_String_search%20%3D%20function(input)%20%7B%20this.search%20%3D%20input.value%3B%20return%20this.tryEmit()%3B%20%7D%0A%09this.in_end%20%3D%20function()%20%7B%20return%20this.tryEmit()%3B%20%7D%0A%7D%0AindexOf.Processor%3DindexOfProcessor%3B%0Amodule.exports%3DindexOf%3B]>>NewResource:String.indexOf

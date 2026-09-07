@@ -1,1 +1,2 @@
-
+[Boolean:false Boolean:false]>>Boolean.or:>>Console:
+[Boolean:false Boolean:true]>>Boolean.or:>>Console:

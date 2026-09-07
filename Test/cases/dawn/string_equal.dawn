@@ -1,0 +1,2 @@
+[String:Hello String:Hello]>>String.equal:>>Console:
+[String:Hello String:World]>>String.equal:>>Console:

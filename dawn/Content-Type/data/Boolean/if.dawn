@@ -1,0 +1,22 @@
+Meta.documentation:Boolean.if
+Meta.documentation:
+Meta.documentation:Routes the flow: then for true, else for false.
+Meta.documentation:
+Meta.documentation:For each incoming Boolean, fires the then output when it is true, the else
+Meta.documentation:output when it is false. Downstream resources bound to those outputs are
+Meta.documentation:triggered.
+Meta.documentation:
+Meta.documentation:@port in_Boolean_$all — the condition
+Meta.documentation:@port out_go_then — fired when the condition is true
+Meta.documentation:@port out_go_else — fired when the condition is false
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:Boolean:true>>Boolean.if:>>String:Yes>>Console:
+Meta.documentation:---
+Meta.documentation:Yes
+Meta.documentation:
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20_if()%0A%7B%0A%09Resource.call(this%2C%22if%22)%3B%0A%09this.Processor%3DifProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20ifProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_go_then%20%3D%20null%3B%0A%09this.out_go_else%20%3D%20null%3B%0A%09this.in_Boolean_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%20%20if%20(input.value)%0A%09%09this.out_go_then%3F.()%3B%0A%09%20%20else%0A%09%09this.out_go_else%3F.()%3B%0A%20%20%20%20%7D%0A%7D%0A_if.Processor%3DifProcessor%3B%0Amodule.exports%3D_if%3B]>>NewResource:Boolean.if

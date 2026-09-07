@@ -31,8 +31,13 @@ node dawn_run.js <filename.dawn>
 dawn.bat <filename.dawn>
 
 # Run test suite
-node run_tests.js
+node Test/runner.js
 ```
+
+Then rebuild generated artifacts after touching sources:
+```
+node build_sources.js    # regenerate stale .dawn.js from .dawn sources
+node build_docs.js       # regenerate docs/api/ HTML from Meta.documentation sources
 
 ### Dependencies
 ```bash
@@ -60,7 +65,7 @@ Installs: Express, Socket.io, @xterm/xterm, big-rational for arbitrary precision
 - `dawn_run.js` - CLI runner; parses source, instantiates processor, executes program
 - `dawn_console.js` - Web server; handles file I/O, directory listing, compilation routes
 - `hubserver.js` - Socket.io configuration for real-time communication
-- `run_tests.js` - Test runner
+- `run_tests.js` is gone — the test suite is `Test/runner.js` (dawn execution + basic-flavor round-trips + doc examples + integration tests)
 - `checkForLocalHost.js` - Host validation utility
 
 **Language Implementation** (`/dawn`):
@@ -97,10 +102,9 @@ Installs: Express, Socket.io, @xterm/xterm, big-rational for arbitrary precision
 - See `/BNFT/README.md` for BNFT grammar documentation
 
 **Test Programs**:
-- `Test/SourceTest.dawn` - Integration test for source evaluation
-- `public/codeexamples/HelloWorld.dawn` - Demonstrates primitives and operations
-- `public/codeexamples/TheQuestion.dawn` - Arbitrary-precision computation (42 = x³+y³+z³)
-- `public/codeexamples/Test.dawn` - Number literal format tests
+- `Test/cases/dawn/*.dawn` + `Test/cases/basic/*.basic` - real cases, one per feature
+- `Test/integration/*.test.js` - server-backed integration tests
+- `public/codeexamples/*.dawn` - runnable samples (HelloWorld and others)
 
 ### Compilation Pipeline
 
@@ -186,10 +190,9 @@ Module paths are normalized to `.dawn.js` extensions automatically.
 
 ### Testing
 
-No automated test framework currently. To verify functionality:
-1. Run the test suite: `node run_tests.js`
-2. Run a specific program: `node dawn_run.js Test/SourceTest.dawn`
-3. Use the web IDE: `node dawn_console.js` then open `http://localhost:5000`
+`node Test/runner.js` runs everything: dawn execution cases, basic-flavor
+round-trips, doc `@example` assertions, and `Test/integration/` scripts.
+Use `node Test/runner.js --update` to refresh snapshots.
 
 ### Important Conventions
 

@@ -1,0 +1,2 @@
+[String:abcdef Number:1 Number:4]>>String.substring:>>Console:
+String:abcdef>>String.substring:?|start=2>>Console:

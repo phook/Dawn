@@ -1,4 +1,5 @@
 const Resource = Dawn.require("Content-Type/data/Resource");
+const castLib  = Dawn.require("Scheme/cast");
 
 if (Dawn.isServer()) {
     const fs = Dawn.require('fs');
@@ -67,9 +68,9 @@ else
     let response = await fetch(request);
     if(response.ok)
     {
-      return await response.json();
+      try { return await response.json(); } catch (e) { return {}; }
     } 
-    else 
+    else
     {
       return {};
     }
@@ -98,6 +99,84 @@ else
 //    
 }
 
+
+// file:<path>?read — the file as a data source: in_go emits the content as a String.
+// (mirrors the write/append sink; reading uses a selection, not an input)
+// file:<path>?read — the file as a data source: in_go loads the content and
+// casts it by content-type (text/* → String, image/* → Image, json → Data),
+// then late-connects that value to the next resource in the flow. Same
+// late-cast philosophy as http: — the type is only known after loading.
+function FileReadProcessor(resource) {
+    Resource.Processor.call(this, resource);
+    const EXT_TO_TYPE = {
+        ".txt":"text/plain", ".md":"text/markdown", ".dawn":"text/dawn", ".html":"text/html",
+        ".xml":"text/xml", ".json":"application/json",
+        ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".gif":"image/gif",
+        ".webp":"image/webp", ".svg":"image/svg+xml"
+    };
+    this.in_go = function() {
+        const self = this;
+        const ext = (resource.url.match(/\.[a-z0-9]+$/i) || [""])[0].toLowerCase();
+        const extType = EXT_TO_TYPE[ext] || "text/plain";
+        if (Dawn.isServer()) {
+            try {
+                const _fs = Dawn.require('fs');
+                const text = _fs.readFileSync(resource.url, "utf8");
+                castLib.cast(extType, text, resource.url).then(cast => {
+                    if (cast && self.connectee) { cast.connect(self.connectee); cast.in_go?.(); }
+                });
+            } catch (e) {
+                this?.out_error?.({ value: "file: read failed: " + e.message });
+            }
+            return;
+        }
+        const src = "/" + (resource.url.startsWith("/") ? resource.url.substring(1) : resource.url);
+        fetch(src)
+          .then(async r => {
+              if (!r.ok) { self?.out_error?.({ value: "file: read failed (" + r.status + ")" }); return; }
+              const contentType = r.headers.get("content-type") || extType;
+              const text = await r.text();
+              let cast = await castLib.cast(contentType, text, resource.url);
+              if (cast && self.connectee) { cast.connect(self.connectee); cast.in_go?.(); }
+          })
+          .catch(e => self?.out_error?.({ value: "file: read failed: " + e.message }));
+    }
+}
+
+// file: used as a data sink — the input that receives content after begin
+// decides the operation; write and append are mutually exclusive.
+// Created fresh for every file:<path>?write|append reference.
+function FileSinkProcessor(resource) {
+    Resource.Processor.call(this, resource);
+    this.in_begin = function() {
+        this.operation = null;
+        this.content = null;
+        this.out_begin?.();
+    }
+    function fileInput(operation) {
+        return function(input) {
+            if (this.operation && this.operation !== operation)
+                return this?.out_error?.({value: "file: write and append are mutually exclusive"});
+            this.operation = operation;
+            this.content = input.value;
+        };
+    }
+    this.in_String_write  = fileInput("write");
+    this.in_String_append = fileInput("append");
+    this.in_end = function() {
+        this.fire_end_parameters();
+        if (this.operation && Dawn.isServer()) {
+            const _fs = Dawn.require('fs');
+            try {
+                if (this.operation === "write")  _fs.writeFileSync(resource.url, this.content);
+                if (this.operation === "append") _fs.appendFileSync(resource.url, this.content);
+            } catch (e) {
+                return this?.out_error?.({value: "file: " + this.operation + " failed: " + e.message});
+            }
+        }
+        this.out_end?.();
+    }
+}
 
 function FileResource(name,url,contentType) {
   Resource.call(this, name ? name : "");
@@ -132,9 +211,19 @@ function FileResourceProcessor(resource) {
             const _fs   = Dawn.require('fs');
             try { isDir = _fs.statSync(_path.resolve(resource.url)).isDirectory(); } catch(e) {}
         }
+        let json = null;
+        if (!isDir && !Dawn.isServer()) {
+            // browser: the parent listing holds a single entry per name, but a
+            // resource may be BOTH a module (X.dawn.js / X.dawn) and a folder (X/)
+            // of children (Number + Number/add…). Ask the server directly.
+            try {
+                let probe = await read_dir(resource.url);
+                if (probe && Object.keys(probe).length) { json = probe; isDir = true; }
+            } catch (e) {}
+        }
         if (isDir)
           {
-            let json = await read_dir(resource.url);
+            if (!json) json = await read_dir(resource.url);
             for(resourcename in json)
             {
               let entry = json[resourcename];
@@ -148,16 +237,20 @@ function FileResourceProcessor(resource) {
     }
 
     this.in_instanciate = async function(data) {
-      /*
-      if (url.value !== "")
-      {
-        let deconstructedUrl = url.value.split('/')
-        resource.name = deconstructedUrl.pop();
-        resource.url = url.value;
- 
-        await this.populate_children();
+      // file:<path>?write / ?append: the file as a data sink (writes).
+      // Any other file: URI keeps the loader role — path resolution is the
+      // module system, don't hijack it.
+      let raw = (data && data.value) ? data.value : "";
+      let sinkMode = null;
+      if (raw.indexOf("?write") !== -1) sinkMode = "write";
+      if (raw.indexOf("?append") !== -1) sinkMode = "append";
+      if (raw.indexOf("?read") !== -1) sinkMode = "read";
+      if (sinkMode) {
+        let url = raw.split("?")[0];
+        if (sinkMode === "read")
+          return new FileReadProcessor({ url: url });
+        return new FileSinkProcessor({ url: url });
       }
-      */
       if (resource.contentType)
       {
         // FIND CONTENT TYPE 

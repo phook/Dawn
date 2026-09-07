@@ -548,7 +548,7 @@ let DawnCompiler = function () {
 
 	this.parse = function(source) {
 		
-		this.tokenizer = new Tokenizer("["+source+"]");
+		this.tokenizer = new Tokenizer("["+source.trim()+"]");
 			
 		if (this.program() && this.tokenizer.position == this.tokenizer.source.length)
 			return this.compilation;

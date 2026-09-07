@@ -1,1 +1,2 @@
-
+Boolean:true>>Boolean.not:>>Console:
+Boolean:false>>Boolean.not:>>Console:

@@ -1,0 +1,3 @@
+[String:written%20by%20dawn]>>file:Test/cases/dawn/.tmp_write.txt?write>>Console:
+[String:%20again]>>file:Test/cases/dawn/.tmp_write.txt?append>>Console:
+

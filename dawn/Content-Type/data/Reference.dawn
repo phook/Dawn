@@ -1,0 +1,20 @@
+Meta.documentation:Reference
+Meta.documentation:
+Meta.documentation:A handle that points at a resource without instantiating it.
+Meta.documentation:
+Meta.documentation:Reference:Number.negate is the resource Number.negate as a
+Meta.documentation:value — it can flow, be passed to other resources, and be
+Meta.documentation:resolved later. This is how operations receive resources as
+Meta.documentation:arguments (List.map:?|using=Number.negate feeds a Reference
+Meta.documentation:of the operator through the parameter channel).
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[Reference:String.upper String:hello]>>List.map:>>Console:
+Meta.documentation:---
+Meta.documentation:HELLO
+Meta.documentation:
+Meta.documentation:@see List.map List.filter
+Meta.documentation:@kind value
+Meta.documentation:@status stable
+
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20A%20Reference%20points%20at%20a%20resource%20without%20instantiating%20it%3A%0A%2F%2F%20Reference%3ANumber.negate%20is%20a%20handle%20meaning%20%22that%20resource%20over%20there%22.%0A%2F%2F%20Used%20to%20pass%20resources%20as%20values%20%E2%80%94%20e.g.%20List.map%3A%3F%7Cusing%3DNumber.negate%0Afunction%20Reference()%0A%7B%0A%20%20%20%20Resource.call(this%2C%22Reference%22)%3B%0A%20%20%20%20this.Processor%20%3D%20ReferenceProcessor%3B%0A%7D%0A%0Afunction%20ReferenceProcessor(resource)%0A%7B%0A%20%20Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Reference%20%3D%20null%3B%0A%20%20%20%20this.in_go%20%3D%20function()%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20return%20this.out_Reference%3F.(resource)%3B%0A%20%20%20%20%7D%0A%20%20%20%20this.in_instanciate%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%09%09%20let%20newObject%3Dthis.get_resource().clone()%3B%20%2F%2F%20Clone%0A%09%09%20if%20(input)%0A%09%20%20%20%20%20%20%20%20%20newObject.reference%20%3D%20input.value%3B%20%2F%2F%20the%20URI%20of%20the%20referenced%20resource%0A%20%20%20%20%20%20%20%20%20return%20newObject.instanciate_processor()%3B%0A%20%20%20%20%7D%0A%09return%20this%3B%0A%7D%0AReference.Processor%3DReferenceProcessor%3B%0Amodule.exports%3DReference%3B]>>NewResource:Reference

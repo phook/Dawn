@@ -77,16 +77,21 @@ for (const file of dawnFiles) {
 }
 
 // ── Basic flavor: basic → dawn ───────────────────────────────────────────────
+// `prompt_*` cases exercise the console's command-prompt grammar
+// (TODAWN_/FROMDAWN_COMMANDPROMT instead of PROGRAM).
 console.log('\n── Basic flavor: basic → dawn ──');
 
 const basicFiles = fs.readdirSync(basicCasesDir)
     .filter(f => f.endsWith('.basic'))
     .sort();
 
+const isPrompt = name => name.startsWith('prompt_');
+
 for (const file of basicFiles) {
     const name = file.replace('.basic', '');
     const basicSource = fs.readFileSync(path.join(basicCasesDir, file), 'utf8');
-    const result = runBnft(basicSource, 'TODAWN_PROGRAM').trimEnd();
+    const nt = isPrompt(name) ? 'TODAWN_COMMANDPROMT' : 'TODAWN_PROGRAM';
+    const result = runBnft(basicSource, nt).trimEnd();
     check(`basic/${name}  (basic→dawn)`, result, path.join(basicCasesDir, name + '.dawn'));
 }
 
@@ -103,8 +108,8 @@ for (const file of basicFiles) {
         continue;
     }
 
-    const dawnSource = fs.readFileSync(dawnPath, 'utf8')+"\n";
-    const result = runBnft(dawnSource, 'FROMDAWN_PROGRAM');
+    const dawnSource = fs.readFileSync(dawnPath, 'utf8') + (isPrompt(name) ? "" : "\n");
+    const result = runBnft(dawnSource, isPrompt(name) ? 'FROMDAWN_COMMANDPROMT' : 'FROMDAWN_PROGRAM');
     const basicSource = fs.readFileSync(basicPath, 'utf8');
 
     if (result === 'ERROR' || result.startsWith('ERROR:')) {
@@ -120,6 +125,94 @@ for (const file of basicFiles) {
         passed++;
     } else {
         check(`basic/${name}  (dawn→basic)`, result, path.join(basicCasesDir, name + '.basic'), true);
+    }
+}
+
+// ── Documentation examples ─────────────────────────────────────────────────
+// Every @example in a Meta.documentation sidecar (docs/documentation-standard.md)
+// is executed and its output compared — docs are tests.
+console.log('\n── Documentation examples ──');
+
+function* walkDocFiles(dir) {
+    for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
+        const p = path.join(dir, ent.name);
+        if (ent.isDirectory()) { if (!/backup|Sync|Copy|_old|\.bak/i.test(ent.name)) yield* walkDocFiles(p); }
+        else if (ent.name.endsWith('.dawn')) yield p;
+    }
+}
+
+// minimal mirror of build_docs.js's @example parser.
+// Doc files are legal Dawn programs: EVERY line (including example code and
+// expected output) carries the Meta.documentation: prefix, stripped here first.
+function extractExamples(source) {
+    const PREFIX = 'Meta.documentation:';
+    const lines = source.split(/\r?\n/)
+        .map(l => (l.startsWith(PREFIX) || l.trim() === '') ? l.substring(l.startsWith(PREFIX) ? PREFIX.length : 0) : null)
+        .filter(l => l !== null);
+    const examples = [];
+    let current = null, section = null;
+    for (const line of lines) {
+        if (line.startsWith('@')) {
+            if (line.startsWith('@example')) { current = { code: [], expected: null }; examples.push(current); section = 'code'; }
+            else if (current) { if (section === 'code') current.expected = []; section = null; current = null; }
+            continue;
+        }
+        if (!current) continue;
+        if (section === 'code') {
+            if (line.trim() === '---') { current.expected = []; section = 'expected'; continue; }
+            current.code.push(line);
+        } else current.expected.push(line);
+    }
+    for (const ex of examples) {
+        ex.code = ex.code.join('\n').trim();
+        ex.expected = (ex.expected || []).join('\n').replace(/\s+$/, '');
+    }
+    return examples.filter(e => e.code);
+}
+
+for (const docPath of walkDocFiles(path.join(rootDir, 'dawn'))) {
+    const source = fs.readFileSync(docPath, 'utf8');
+    if (!source.startsWith('Meta.documentation:')) continue;
+    const subject = source.split(/\r?\n/)[0].substring('Meta.documentation:'.length).trim();
+    extractExamples(source).forEach((ex, i) => {
+        const label = `doc/${subject} example ${i + 1}`;
+        const tmp = path.join(rootDir, 'Test', '.tmp_doc_example.dawn');
+        fs.writeFileSync(tmp, ex.code);
+        let actual;
+        try {
+            actual = execSync(`node dawn_run.js "${tmp}"`, { cwd: rootDir, timeout: 10000, encoding: 'utf8' }).trimEnd();
+        } catch (err) {
+            actual = (err.stdout || '').trimEnd();
+            if (err.stderr) actual += (actual ? '\n' : '') + err.stderr.trimEnd();
+        } finally {
+            fs.unlinkSync(tmp);
+        }
+        if (actual === ex.expected) { console.log(`PASS:    ${label}`); passed++; }
+        else {
+            console.log(`FAIL:    ${label}`);
+            console.log(`         expected: ${JSON.stringify(ex.expected)}`);
+            console.log(`         actual:   ${JSON.stringify(actual)}`);
+            failed++;
+        }
+    });
+}
+
+// ── Integration tests (Test/integration/*.test.js) ───────────────────────────
+// Self-contained scripts (own fixture servers); integration asserts by exit code.
+const integrationDir = path.join(__dirname, 'integration');
+if (fs.existsSync(integrationDir)) {
+    console.log('\n── Integration tests ──');
+    for (const file of fs.readdirSync(integrationDir).filter(f => f.endsWith('.test.js')).sort()) {
+        const label = `integration/${file}`;
+        try {
+            execSync(`node "${path.join(integrationDir, file)}"`, { cwd: rootDir, timeout: 60000, stdio: ['ignore', 'pipe', 'pipe'] });
+            console.log(`PASS:    ${label}`);
+            passed++;
+        } catch (err) {
+            console.log(`FAIL:    ${label}`);
+            console.log('         ' + String(err.stdout || '').trim().split('\n').join('\n         '));
+            failed++;
+        }
     }
 }
 

@@ -82,25 +82,25 @@ async function read_dir(dirpath, hidden) {
         filepath = path.resolve(dirpath, file);
         if (!/^\./.test(file) || hidden)
             try {
-                if (file.endsWith(".dawn")) // if there is a dawn file there is a dawn source editable and an executable
+                if (file.endsWith(".dawn")) // a .dawn file: documentation source AND executable loader entry
                 {
                   jsdir[file] = Object.assign({},fdat);
                   jsdir[file].contentType = "text/dawn";
                   file = file.replace(".dawn","");
-                  jsdir[file] = Object.assign({},fdat);
-                  jsdir[file].contentType = "application/dawn";
+                  if (typeof(jsdir[file]) == "undefined") // don't clobber a directory of the same name
+                  {
+                    jsdir[file] = Object.assign({},fdat);
+                    jsdir[file].contentType = "application/dawn";
+                  }
                 }
                 else
-                if (file.endsWith(".dawn.js")) // if there is a dawn.js file there is an executable
+                if (file.endsWith(".dawn.js")) // artifacts of .dawn sources — never shown in listings
                 {
-                  file = file.replace(".dawn.js","");
-                  jsdir[file] = Object.assign({},fdat);
-                  jsdir[file].contentType = "application/dawn";
                 }
                 else
                 {
                   var stat = fs.statSync(filepath);
-                  if (stat && stat.isDirectory() && typeof(jsdir[file]) == "undefined") {
+                  if (stat && stat.isDirectory()) { // directories always win the name (a module/doc with the same name coexists)
                     jsdir[file] = Object.assign({},fdat);
                     jsdir[file].contentType = "text/directory-json";
                     jsdir[file].size     = stat.size;
@@ -335,6 +335,10 @@ app.put("/_file", async (request, result) => {
             try {
                 fs.writeFileSync(filePath, data);
                 result.status(200).send("OK");
+                // editing a .dawn source inside the repo → regenerate its .dawn.js artifact
+                if (filePath.endsWith(".dawn") && filePath.startsWith(path.join(__dirname, "dawn"))) {
+                    try { require("child_process").execFileSync("node", [path.join(__dirname, "build_sources.js")]); } catch (e) {}
+                }
             } catch (e) {
                 result.status(500).send(e.message);
             }

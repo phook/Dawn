@@ -1,0 +1,31 @@
+Meta.documentation:List.map
+Meta.documentation:
+Meta.documentation:Routes every element of a flowing list through a resource
+Meta.documentation:and emits what it emits.
+Meta.documentation:
+Meta.documentation:The operation is named by a Reference — either as a parameter
+Meta.documentation:(?|using=Number.negate) or flowing in ([Reference:String.upper
+Meta.documentation:String:hello]>>List.map:). Each element gets a fresh processor
+Meta.documentation:of the referenced resource, so stateful operators start clean.
+Meta.documentation:
+Meta.documentation:@port in_Reference_using — the operation to apply, by reference
+Meta.documentation:@port in_String_using_$explicit — the operation's URI as a parameter string
+Meta.documentation:@port in_String_$all — String element to transform
+Meta.documentation:@port in_Number_$all — Number element to transform
+Meta.documentation:@port in_Boolean_$all — Boolean element to transform
+Meta.documentation:@port out_String — String results, one (or more) per element
+Meta.documentation:@port out_Number — Number results
+Meta.documentation:@port out_Boolean — Boolean results
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[Number:1 Number:2 Number:3]>>List.map:?|using=Number.negate>>Console:
+Meta.documentation:---
+Meta.documentation:-1
+Meta.documentation:-2
+Meta.documentation:-3
+Meta.documentation:
+Meta.documentation:@see List.filter Reference
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20Routes%20every%20element%20of%20a%20flowing%20list%20through%20a%20referenced%20resource%20and%0A%2F%2F%20emits%20what%20that%20resource%20emits%2C%20per%20element.%0A%2F%2F%20The%20resource%20is%20referenced%20by%20URI%3A%20parameter%20%3F%7Cusing%3DNumber.negate%20or%20a%0A%2F%2F%20Reference%3ANumber.negate%20in%20the%20flow.%0Afunction%20runElementThrough(self%2C%20target%2C%20element)%20%2F%2F%20synchronous%20burst%2C%20keeps%20program%20lines%20from%20interleaving%0A%7B%0A%09let%20op%20%3D%20target.instanciate_processor%20%3F%20target.instanciate_processor()%20%3A%20target%3B%0A%09op.out_String%20%20%3D%20(o)%20%3D%3E%20self%3F.out_String%3F.(o)%3B%0A%09op.out_Number%20%20%3D%20(o)%20%3D%3E%20self%3F.out_Number%3F.(o)%3B%0A%09op.out_Boolean%20%3D%20(o)%20%3D%3E%20self%3F.out_Boolean%3F.(o)%3B%0A%09op.in_begin%3F.()%3B%0A%09let%20port%20%3D%20Object.keys(op).find(k%20%3D%3E%20k.startsWith(%22in_%22%20%2B%20element.type)%20%26%26%20!%5B%22in_begin%22%2C%22in_end%22%2C%22in_go%22%2C%22in_error%22%2C%22in_instanciate%22%5D.includes(k))%3B%0A%09if%20(port)%20op%5Bport%5D(%7B%20value%3A%20element.value%20%7D)%3B%0A%09op.in_end%3F.()%3B%0A%7D%0A%0Afunction%20map()%0A%7B%0A%09Resource.call(this%2C%22map%22)%3B%0A%09this.Processor%3DmapProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20mapProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String%20%3D%20null%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.out_Boolean%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.using%20%3D%20null%3B%0A%09%09this.elements%20%3D%20%5B%5D%3B%0A%09%09return%20this.fire_end_parameters()%3B%20%2F%2F%20pre-positioned%20parameter%20inputs%0A%20%20%20%20%7D%0A%20%20%20%20function%20collect(type)%0A%20%20%20%20%7B%0A%09%09return%20function(input)%20%7B%20this.elements.push(%7Btype%3Atype%2C%20value%3Ainput.value%7D)%3B%20%7D%3B%0A%20%20%20%20%7D%0A%09this.in_Reference_using%20%3D%20function(input)%20%7B%20this.using%20%3D%20input.reference%3B%20%7D%0A%09this.in_String_using_%24explicit%20%3D%20function(input)%20%7B%20this.using%20%3D%20input.value%3B%20%7D%20%2F%2F%20parameter%20drop-in%0A%09this.in_String_%24all%20%3D%20collect(%22String%22)%3B%0A%09this.in_Number_%24all%20%3D%20collect(%22Number%22)%3B%0A%09this.in_Boolean_%24all%20%3D%20collect(%22Boolean%22)%3B%0A%09this.in_end%20%3D%20async%20function()%0A%20%20%20%20%7B%0A%09%09if%20(!this.using)%0A%09%09%09return%20this%3F.out_error%3F.(%7Bvalue%3A%22map%3A%20missing%20'using'%20parameter%20(e.g.%20%3F%7Cusing%3DNumber.negate)%22%7D)%3B%0A%09%09let%20target%20%3D%20await%20this.lookup(this.using%20%2B%20%22%3A%22)%3B%0A%09%09if%20(!target)%0A%09%09%09return%20this%3F.out_error%3F.(%7Bvalue%3A%22map%3A%20cannot%20resolve%20Reference%3A%22%20%2B%20this.using%7D)%3B%0A%09%09for%20(let%20i%20in%20this.elements)%0A%09%09%09runElementThrough(this%2C%20target%2C%20this.elements%5Bi%5D)%3B%0A%20%20%20%20%7D%0A%7D%0Amap.Processor%3DmapProcessor%3B%0Amodule.exports%3Dmap%3B]>>NewResource:List.map

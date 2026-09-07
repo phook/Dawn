@@ -1,0 +1,22 @@
+Meta.documentation:String.length
+Meta.documentation:
+Meta.documentation:Counts the characters in each String passing through.
+Meta.documentation:
+Meta.documentation:INTERIM: length is conceptually an output of String itself
+Meta.documentation:(String:Hello#length), not an operator resource — it is implemented this way
+Meta.documentation:only until output interfaces/pins land. See docs/output-interfaces.md.
+Meta.documentation:
+Meta.documentation:@port in_String_$all — each input String
+Meta.documentation:@port out_Number — the character count of that String
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:String:Hello>>String.length:>>Console:
+Meta.documentation:---
+Meta.documentation:5
+Meta.documentation:
+Meta.documentation:@see List.length
+Meta.documentation:@kind operator
+Meta.documentation:@status interim
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0A%2F%2F%20INTERIM%3A%20length%20is%20conceptually%20an%20output%20of%20String%20(see%20docs%2Foutput-interfaces.md)%0A%2F%2F%20implemented%20as%20an%20operator%20resource%20until%20named%20outputs%2Fpins%20land.%0Afunction%20length()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22length%22)%3B%0A%09this.Processor%3DlengthProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20lengthProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_String_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09return%20this%3F.out_Number%3F.(%7Bvalue%3Aresource.Number.bigRat(input.value.length)%7D)%3B%0A%20%20%20%20%7D%0A%7D%0Alength.Processor%3DlengthProcessor%3B%0Amodule.exports%3Dlength%3B]>>NewResource:String.length

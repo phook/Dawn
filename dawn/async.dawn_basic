@@ -1,6 +1,0 @@
-define async
-  native javascript
-    this._out_go=null;
-    this._in_go = function()
-        this._out_go();
-  endnative

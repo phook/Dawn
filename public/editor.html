@@ -14,6 +14,9 @@ body { overflow: hidden; font-family: sans-serif; margin: 0; }
 .project { width: 320px; background: #f5f5f5; overflow: auto; }
 .editor  { flex-grow: 1; background: #fff; position: relative; }
 #editor { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
+.caret { display: inline-block; width: 12px; cursor: pointer; user-select: none; }
+.caret.right::before { content: "▸"; color: #666; }
+.caret.down::before  { content: "▾"; color: #666; }
 
 /* Comprehensive fix for ACE cursor positioning - Chrome/Windows */
 .ace_editor,
@@ -153,92 +156,52 @@ function DELETE(url, json, callback) { Do("DELETE", url, json, callback); return
 var editElement = document.getElementById("editor");
 var editor = null;
 if (editElement) {
-    try { 
-        editor = ace.edit(editElement); 
-        console.log("Editor created:", editor);
-        console.log("Renderer:", editor?.renderer);
-        console.log("TextLayer:", editor?.renderer?.$textLayer);
-        console.log("FontMetrics:", editor?.renderer?.$textLayer?.$fontMetrics);
-        console.log("CursorLayer:", editor?.renderer?.$cursorLayer);
-        
+    try {
+        editor = ace.edit(editElement);
         editor.setTheme("ace/theme/dawn");
         editor.getSession().setMode("ace/mode/javascript");
         editor.setFontSize(14);
-        
-        // Enable variable character width support AND re-trigger font metrics setup
-        editor.session.$enableVarChar = true;
-        
-        // Re-call $setFontMetrics to install the variable-width getStringScreenWidth
+        editor.session.$enableVarChar = true; // variable char width for ≔ etc.
         if (editor.renderer && editor.renderer.$fontMetrics) {
             editor.session.$setFontMetrics(editor.renderer.$fontMetrics);
-            console.log("Re-triggered session.$setFontMetrics with $enableVarChar=true");
         }
-        
-        // Patch FontMetrics instance for ≔
+
+        // Patch FontMetrics: ≔ (U+2254) is wider than the average character
         setTimeout(function() {
             if (editor && editor.renderer && editor.renderer.$textLayer && editor.renderer.$textLayer.$fontMetrics) {
                 var fm = editor.renderer.$textLayer.$fontMetrics;
-                
-                // First, measure the actual width of ≔
-                var colonEqualsWidth = fm.$measureCharWidth("\u2254");
-                var avgWidth = fm.$characterSize.width;
-                var actualRatio = colonEqualsWidth / avgWidth;
-                console.log("≔ actual width:", colonEqualsWidth, "avg:", avgWidth, "ratio:", actualRatio);
-                
+                var actualRatio = fm.$measureCharWidth("≔") / fm.$characterSize.width;
                 var orig = fm.getCharacterWidth;
                 fm.getCharacterWidth = function(ch) {
-                    var result = orig.call(this, ch);
-                    console.log("FontMetrics.getCharacterWidth:", ch, ch.charCodeAt(0), "->", result);
-                    if (ch === "\u2254") return actualRatio;
-                    return result;
+                    if (ch === "≔") return actualRatio;
+                    return orig.call(this, ch);
                 };
-                console.log("Patched editor FontMetrics instance for ≔ with actual ratio:", actualRatio);
-            } else {
-                console.log("Could not find FontMetrics instance:", editor?.renderer?.$textLayer?.$fontMetrics);
             }
         }, 100);
-        
-// Patch Cursor.prototype.getPixelPosition to use actual pixel widths
+
+        // Patch Cursor for correct pixel positions on variable-width chars
         setTimeout(function() {
             if (editor && editor.renderer && editor.renderer.$cursorLayer) {
                 var cursorLayer = editor.renderer.$cursorLayer;
-                console.log("CursorLayer found, original getPixelPosition:", cursorLayer.getPixelPosition);
                 var origGetPixelPos = cursorLayer.getPixelPosition;
                 cursorLayer.getPixelPosition = function(position, onScreen) {
-                    console.log(">>> PATCHED getPixelPosition CALLED");
-                    if (!this.config || !this.session)
-                        return { left: 0, top: 0 };
-                    if (!position)
-                        position = this.session.selection.getCursor();
-                    var pos = this.session.documentToScreenPosition(position);
-                    console.log("docToScreen pos:", pos, "position:", position);
-                    
-                    // Get the actual pixel width of the text up to the cursor position
-                    var line = this.session.getLine(pos.row);
-                    var textBeforeCursor = line.substring(0, pos.column);
-                    console.log("textBeforeCursor:", textBeforeCursor);
-                    var screenWidth = this.session.$getStringScreenWidth(textBeforeCursor)[0];
-                    console.log("screenWidth (char units):", screenWidth, "config.characterWidth:", this.config.characterWidth);
-                    
-                    // The issue: screenWidth is in "character units" (ratio to avg char width)
-                    // But config.characterWidth is the average char width in pixels
-                    // So screenWidth * config.characterWidth should give pixels
-                    // But if FontMetrics.getCharacterWidth returns wrong ratios, this is off
-                    
-                    var cursorLeft = this.$padding + screenWidth * this.config.characterWidth;
-                    console.log("cursorLeft:", cursorLeft);
-                    
-                    var cursorTop = (pos.row - (onScreen ? this.config.firstRowScreen : 0)) *
-                        this.config.lineHeight;
-                    return { left: cursorLeft, top: cursorTop };
+                    try {
+                        if (!this.config || !this.session)
+                            return { left: 0, top: 0 };
+                        if (!position) position = this.session.selection.getCursor();
+                        var pos = this.session.documentToScreenPosition(position);
+                        var line = this.session.getLine(pos.row);
+                        var screenWidth = this.session.$getStringScreenWidth(line.substring(0, pos.column))[0];
+                        return {
+                            left: this.$padding + screenWidth * this.config.characterWidth,
+                            top: (pos.row - (onScreen ? this.config.firstRowScreen : 0)) * this.config.lineHeight
+                        };
+                    } catch (e) { return origGetPixelPos.call(this, position, onScreen); }
                 };
-                console.log("Patched Cursor.getPixelPosition for ≔, new:", cursorLayer.getPixelPosition);
-            } else {
-                console.log("Could not find CursorLayer:", editor?.renderer?.$cursorLayer);
             }
         }, 100);
-        
-        console.log("ACE editor initialized");
+
+
     } catch (e) { console.log("ACE init error", e); }
 }
 
@@ -246,6 +209,63 @@ function buildFetchUrl(url) {
     if (url && url.indexOf("file:///") === 0) return "/file:///" + url.substring(8);
     if (url && url.indexOf("file:/") === 0) return "/" + url;
     return url;
+}
+
+// Canonical docs: doc-bearing .dawn sources get the native block decoded for
+// display (docs lines become #doc comments; everything else goes through the
+// flavor grammar).
+function convertToFlavor(text, flavor) {
+	if (flavor === "Pure") return text;
+	if (basicParser) {
+		let parsed = basicParser.parse(text + "\n", { nonterminal: "FROMDAWN_PROGRAM", alert: function() {} });
+		if (parsed && parsed.indexOf("ERROR") !== 0) return parsed;
+	}
+	let out = [];
+	for (const line of text.split("\n")) {
+		if (line.startsWith("Meta.documentation:")) { out.push("#doc " + line.substring("Meta.documentation:".length)); continue; }
+		const m = line.match(/^\[?\s*Native\.Javascript:([^\]]*)\]?\s*>>\s*NewResource:(\S+)\s*$/);
+		if (m) { out.push("define " + m[2]); out.push(" native javascript"); out.push(decodeURIComponent(m[1])); out.push(" endnative"); continue; }
+		const m2 = line.match(/^\[?\s*Native\.Javascript:([^\]]*)\]?\s*$/);
+		if (m2) { out.push(" native javascript"); out.push(decodeURIComponent(m2[1])); out.push(" endnative"); continue; }
+		out.push(line);
+	}
+	return out.join("\n");
+}
+
+// reverse of convertToFlavor: #doc lines and define/native javascript blocks
+// back into canonical [Native.Javascript:…]>>NewResource: form.
+function convertFromBasicView(text) {
+	let out = [];
+	const lines = text.split("\n");
+	let i = 0;
+	while (i < lines.length) {
+		const line = lines[i];
+		if (line.startsWith("#doc ")) {
+			out.push("Meta.documentation:" + line.substring(5));
+			i++;
+			continue;
+		}
+		const trimmed = line.trim();
+		if (trimmed.startsWith("define ")) {
+			const uri  = trimmed.substring(7).trim();
+			let   j    = i + 1;
+			let   body = [];
+			if ((lines[j] || "").trim() === "native javascript") {
+				j++;
+				while (j < lines.length && lines[j].trim() !== "endnative") {
+					body.push(lines[j].replace(/^\s+/, ""));
+					j++;
+				}
+				j++; // skip endnative
+				out.push("[Native.Javascript:" + encodeURIComponent(body.join("\n").replace(/\n$/, "")) + "]>>NewResource:" + uri);
+				i = j;
+				continue;
+			}
+		}
+		out.push(line);
+		i++;
+	}
+	return out.join("\n");
 }
 
 function makeEl(tag, attrs, children) {
@@ -272,16 +292,15 @@ function selectFile(path, el) {
 	loadFile(path);
 }
 
+var lastLoadedCanonical = null; // pristine file content for the Pure view
+
 function loadFile(path) {
     currentFilePath = path;
     updateFilename(path.split("/").pop());
     GET(buildFetchUrl(path), function(data) {
         var source = data || "";
-        if (currentFlavor !== "Pure" && BNFT && basicParser) {
-			var converted = basicParser.parse(data + "\n", { nonterminal: currentFlavor == "BasicPretty" ? "FROMDAWN_PROGRAM" : "FROMDAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
-			if (converted && converted.indexOf("ERROR") !== 0) 
-				source = converted;
-        }
+        lastLoadedCanonical = source;
+        source = convertToFlavor(source, currentFlavor);
         editor.setValue(source, -1);
         editor.getSession().getUndoManager().reset();
         checkSyntax();
@@ -316,12 +335,26 @@ function saveFile() {
         currentFilePath = "file:///" + name;
         updateFilename(name);
     }
-    if (flavor !== "TODAWN_PROGRAM" && BNFT && basicParser) {
+    if (flavor !== "Pure" && BNFT && basicParser) {
         try {
             var toParse = content;
             if (!toParse.endsWith("\n")) toParse += "\n";
-            var dawnSource = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
-            if (dawnSource && dawnSource.indexOf("ERROR") !== 0) content = dawnSource.trimEnd();
+            // canonical sources (loaded from .dawn files with docs/definitions)
+            // must go back through the structural converter, not the flavor parser
+            var isCanonicalOrConverted = content.indexOf("Meta.documentation:") !== -1
+                || content.indexOf("Native.Javascript:") !== -1
+                || content.indexOf("]>>NewResource:") !== -1
+                || content.indexOf("#doc ") !== -1
+                || content.indexOf("native javascript") !== -1;
+            if (isCanonicalOrConverted)
+            {
+                content = convertFromBasicView(toParse);
+            }
+            else
+            {
+                var dawnSource = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
+                if (dawnSource && dawnSource.indexOf("ERROR") !== 0) content = dawnSource.trimEnd();
+            }
         } catch (e) {}
     }
     var http = new XMLHttpRequest();
@@ -348,10 +381,16 @@ document.getElementById("flavorSelect").addEventListener("change", function() {
 	
 	var newCode = "";
 	
+	if (currentFlavor === "Pure" && lastLoadedCanonical !== null)
+	{
+		editor.setValue(lastLoadedCanonical); // the Pure view IS the canonical file as-is
+		editor.getSession().getUndoManager().reset();
+	}
+	else
 	if (lastFlavor === "Pure")
 	{
-		newCode = basicParser.parse(toParse, { nonterminal: "FROMDAWN_PROGRAM", alert: function() {} });
-		if (newCode.indexOf("ERROR") !== 0)
+		newCode = convertToFlavor(toParse, currentFlavor);
+		if (newCode && newCode.indexOf("ERROR") !== 0)
 			editor.setValue(newCode);
 	}
 	else
@@ -372,17 +411,41 @@ function checkSyntax() {
     var content = editor.getValue();
     if (!content.endsWith("\n")) content += "\n";
 	
+	// Meta.documentation lines are comments (docs live in-source); they are not
+	// syntax, and the flow compiler mustn't judge them. Strip them for checking.
+	var checkable = content.split("\n").filter(l => !l.startsWith("Meta.documentation:")).join("\n");
+	
 	if (currentFlavor == "Pure")
 	{
-		let result = dawnCompiler.parse(content);
+		let result = dawnCompiler.parse(checkable);
 		syntaxOK = result.indexOf("ERROR") !== 0;
 	}
 	else
 	{
-		let result =  basicParser.parse(content, { nonterminal: currentFlavor == "BasicPretty" ? "TODAWN_PROGRAM" : "TODAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
+		// "Canonical" sources (docs/definitions — contain Meta.documentation: or
+		// NewResource:/Native.Javascript: markers) are checked by the real dawn
+		// compiler; basic-flavor sources go through the flavor grammar.
+	var isCanonical = content.indexOf("Meta.documentation:") !== -1
+	               || content.indexOf("Native.Javascript:") !== -1
+	               || content.indexOf("]>>NewResource:") !== -1;
+	// the basic VIEW of a canonical source: reassemble into canonical, then check
+	var looksLikeConverted = content.indexOf("#doc ") !== -1 || (content.indexOf("native javascript") !== -1 && content.indexOf("endnative") !== -1);
+	if (isCanonical)
+	{
+		syntaxOK = dawnCompiler.parse(checkable).indexOf("ERROR") !== 0;
+	}
+	else if (looksLikeConverted)
+	{
+		let reconstructed = convertFromBasicView(content).split("\n").filter(l => !l.startsWith("Meta.documentation:")).join("\n");
+		syntaxOK = dawnCompiler.parse(reconstructed).indexOf("ERROR") !== 0;
+	}
+	else
+	{
+		let result =  basicParser.parse(checkable, { nonterminal: currentFlavor == "BasicPretty" ? "TODAWN_PROGRAM" : "TODAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
 		syntaxOK = result.indexOf("ERROR") !== 0;
 	}
-	document.getElementById("flavorSelect").disabled = !syntaxOK; // dont allow syntax change with errorneous source
+	}
+document.getElementById("flavorSelect").disabled = false; // flavor switching is a view choice, never blocked
 	document.getElementById("filename").style.color = syntaxOK ? "#0f0" : "#f44"; // color bar to alert user
 }
 
@@ -397,13 +460,16 @@ function renderTree(parentEl, tree, level, parentUrl) {
     parentEl.appendChild(ul);
     Object.keys(tree).sort().forEach(function(name) {
         var entry = tree[name];
+        // an application/dawn entry "X" next to its source "X.dawn" is the loader's
+        // alias — present only for resource resolution, not a file to edit. Hide it.
+        if (entry && entry.contentType === "application/dawn" && tree[name + ".dawn"]) return;
         var indent = makeEl("span", { className: "indent", style: "display:inline-block;width:" + (level * 12) + "px" });
         var row = makeEl("li");
         var label = makeEl("span", { text: "  " + name, style: "margin-left:4px" });
         if (entry && entry.contentType === "text/directory-json") {
             var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
             var caret = makeEl("span", { className: "caret right", style: "margin-right:4px" });
-            caret.addEventListener("click", function(ev) {
+            var toggleDir = function(ev) {
                 ev.stopPropagation();
                 var nestedUl = row.nextSibling;
                 if (!nestedUl) return;
@@ -418,7 +484,11 @@ function renderTree(parentEl, tree, level, parentUrl) {
                         } catch (e) { console.log("parse error", e); }
                     });
                 }
-            });
+            };
+            row.addEventListener("click", toggleDir);   // anywhere on the directory row opens/closes
+            caret.addEventListener("click", toggleDir);
+            row.style.cursor = "pointer";
+            row.style.userSelect = "none";
             row.appendChild(makeEl("span", null, [indent, caret, label]));
             ul.appendChild(row);
             var nestedUl = makeEl("ul", { className: "nested", "data-url": childUrl, "data-level": level.toString() });

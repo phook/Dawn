@@ -1,0 +1,21 @@
+Meta.documentation:Number.add
+Meta.documentation:
+Meta.documentation:Adds every Number in the flow together.
+Meta.documentation:
+Meta.documentation:Accumulates all incoming Numbers and emits their sum when the input ends.
+Meta.documentation:Addition is exact (arbitrary precision).
+Meta.documentation:
+Meta.documentation:@port in_Number_$all — each Number to add
+Meta.documentation:@port out_Number — the sum, emitted at end of input
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[Number:1 Number:2 Number:3]>>Number.add:>>Console:
+Meta.documentation:---
+Meta.documentation:6
+Meta.documentation:
+Meta.documentation:@see Number.subtract Number.multiply
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0Afunction%20add()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22add%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%09this.Processor%3DaddProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20addProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.tempNumber%20%3D%20new%20resource.Number.bigRat(0)%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.tempNumber%3Dresource.Number.bigRat(0)%0A%20%20%20%20%7D%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20this.tempNumber%20%3D%20this.tempNumber.add(input.value)%3B%0A%20%20%20%20%7D%0A%09this.in_end%20%3D%20function()%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20return%20this%3F.out_Number%3F.(%7Bvalue%3Athis.tempNumber%7D)%3B%20%0A%20%20%20%20%7D%0A%7D%0Aadd.Processor%3DaddProcessor%3B%0Amodule.exports%3Dadd%3B]>>NewResource:Number.add

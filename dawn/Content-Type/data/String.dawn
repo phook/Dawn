@@ -1,0 +1,20 @@
+Meta.documentation:String
+Meta.documentation:
+Meta.documentation:A piece of text.
+Meta.documentation:
+Meta.documentation:Strings are immutable value resources: a String carries its text, and passing
+Meta.documentation:it downstream emits that text (unless a named output like an eventual
+Meta.documentation:length-pin is selected — see docs/output-interfaces.md). URI payloads are
+Meta.documentation:percent-decoded, so String:Hello%20World holds "Hello World".
+Meta.documentation:
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:String:Hello%20World>>Console:
+Meta.documentation:---
+Meta.documentation:Hello World
+Meta.documentation:
+Meta.documentation:@kind value
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20THIS%20IS%20THE%20DATA%20HOLDER%20-%20MAPPING%20TO%20NATIVE%20TYPE%20-%20IN%20THIS%20CASE%20A%20JAVASCRIPT%20STRING%0Afunction%20_String()%0A%7B%0A%20%20%20%20Resource.call(this%2C%22String%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%20%20%20%20this.Processor%20%3D%20StringProcessor%3B%0A%7D%0A%0A%2F%2F%20THIS%20IS%20THE%20PROCESSOR%20ASSOCIATED%20WITH%20STRING%20-%20EVERY%20FLOW%20ACCESSING%20STRING%20MUST%20INSTANCIATE%20ON%20OF%20THESE%20TO%20OPERATE%20ON%20THE%20VALUE%0A%2F%2F%20SINCE%20STRING%20IS%20AN%20OBJECT%2C%20MULTIPLE%20PROCESSORS%20FOR%20THE%20DATA%20CAN%20BE%20CREATED%2C%20EACH%20POINTING%20TO%20THE%20ORIGINAL%20PIECE%20OF%20DATA%0Afunction%20StringProcessor(resource)%0A%7B%0A%20%20Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String%20%3D%20null%3B%0A%20%20%20%20this.in_String_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20resource.value%20%3D%20input.value%3B%0A%20%20%20%20%7D%0A%20%20%20%20this.in_go%20%3D%20function()%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20return%20this.out_String%3F.(resource)%3B%0A%20%20%20%20%7D%0A%20%20%20%20this.in_instanciate%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%09%09%20let%20newObject%3Dthis.get_resource().clone()%3B%20%2F%2F%20Clone%0A%09%09%20if%20(input)%0A%09%20%20%20%20%20%20%20%20%20newObject.value%20%3D%20decodeURIComponent(input.value)%3B%0A%09%09%20else%0A%09%09%09%20newObject.value%20%3D%20%22%22%3B%0A%20%20%20%20%20return%20newObject.instanciate_processor()%3B%0A%20%20%20%20%7D%0A%09return%20this%3B%0A%7D%0A_String.Processor%3DStringProcessor%3B%0Amodule.exports%3D_String%3B]>>NewResource:String

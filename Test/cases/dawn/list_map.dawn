@@ -1,0 +1,2 @@
+[Number:1 Number:2 Number:3]>>List.map:?|using=Number.negate>>Console:
+[Reference:String.upper String:hello String:world]>>List.map:>>Console:

@@ -1,0 +1,8 @@
+String:Hello%20World>>Console:
+String:Hello>>String.upper:>>Console:
+[String:Hello String:%20World]>>String.concatenate:>>Console:
+[Number:0.1 Number:0.2]>>Number.add:>>Console:
+Number:FF#16>>Console:
+Boolean:true>>Boolean.not:>>Console:
+[Boolean:true Boolean:false]>>Boolean.and:>>Console:
+Number:5>>times:>>String:Odelay>>Console:

@@ -1,8 +1,0 @@
-define Clock
-  output number
-  input go
-    native javascript
-      if (this._out_number)
-        this._value = Dawn.bigRat(Date.now());
-        this._out_number(this);
-    endnative

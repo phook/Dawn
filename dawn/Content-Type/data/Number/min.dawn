@@ -1,0 +1,21 @@
+Meta.documentation:Number.min
+Meta.documentation:
+Meta.documentation:Picks the smallest Number in the flow.
+Meta.documentation:
+Meta.documentation:Emits the smallest of all incoming Numbers when the input ends. Emits
+Meta.documentation:nothing if there is no input.
+Meta.documentation:
+Meta.documentation:@port in_Number_$all — each Number to consider
+Meta.documentation:@port out_Number — the smallest of them, emitted at end of input
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[Number:3 Number:1 Number:2]>>Number.min:>>Console:
+Meta.documentation:---
+Meta.documentation:1
+Meta.documentation:
+Meta.documentation:@see Number.max
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0Afunction%20min()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22min%22)%3B%0A%09this.Processor%3DminProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20minProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.tempNumber%20%3D%20null%3B%0A%20%20%20%20%7D%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09if%20(this.tempNumber%20%3D%3D%20null%20%7C%7C%20input.value.compare(this.tempNumber)%20%3C%200)%0A%09%09%09this.tempNumber%20%3D%20input.value%3B%0A%20%20%20%20%7D%0A%09this.in_end%20%3D%20function()%0A%09%7B%0A%09%09if%20(this.tempNumber%20!%3D%20null)%0A%09%09%09return%20this%3F.out_Number%3F.(%7Bvalue%3Athis.tempNumber%7D)%3B%0A%20%20%20%20%7D%0A%7D%0Amin.Processor%3DminProcessor%3B%0Amodule.exports%3Dmin%3B]>>NewResource:Number.min

@@ -1,0 +1,11 @@
+Meta.documentation:async
+Meta.documentation:
+Meta.documentation:Run a flow without blocking the one that triggered it.
+Meta.documentation:
+Meta.documentation:Deferred control-flow resource (see ROADMAP Phase 1): kicks
+Meta.documentation:its downstream into a separate asynchronous path. The old
+Meta.documentation:sketch only chained out_go; the real design needs the
+Meta.documentation:flow/scope work of Phase 2.
+Meta.documentation:
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental

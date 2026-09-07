@@ -1,0 +1,12 @@
+Meta.documentation:Clock
+Meta.documentation:
+Meta.documentation:Epoch time as a resource — emitted when driven.
+Meta.documentation:
+Meta.documentation:Deferred control-flow resource (see ROADMAP Phase 1): a Clock
+Meta.documentation:hands out the current time as a Number (epoch ms) when
+Meta.documentation:ticked. The original sketch (git history) used the old
+Meta.documentation:processor API and output "number" — needs a rethink for the
+Meta.documentation:output-interfaces model (output-interfaces.md).
+Meta.documentation:
+Meta.documentation:@kind value
+Meta.documentation:@status experimental

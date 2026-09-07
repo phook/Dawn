@@ -1,0 +1,11 @@
+Meta.documentation:https
+Meta.documentation:
+Meta.documentation:http: over TLS — same resource, secure transport.
+Meta.documentation:
+Meta.documentation:Identical to http: (see its page); only the protocol differs.
+Meta.documentation:
+Meta.documentation:@see http
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+
+[Native.Javascript:const%20http%20%3D%20Dawn.require(%22Scheme%2Fhttp%22)%3B%0A%0A%2F%2F%20https%3A%20%E2%80%94%20the%20http%3A%20resource%20with%20the%20secure%20protocol.%0Afunction%20https()%0A%7B%0A%20%20%20%20let%20r%20%3D%20new%20http()%3B%0A%20%20%20%20r.protocol%20%3D%20%22https%3A%22%3B%0A%20%20%20%20return%20r%3B%0A%7D%0Amodule.exports%20%3D%20https%3B]>>NewResource:https

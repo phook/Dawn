@@ -24,6 +24,8 @@ function _NumberProcessor(resource)
   }
   this.in_go = function()
   {
+      if (resource.error)
+          return this.out_error?.({value: resource.error});
       return this.out_Number?.(resource);
   }
   this.in_instanciate = function(input)
@@ -39,12 +41,14 @@ function _NumberProcessor(resource)
         let base = parseInt(val.substr(hashpos+1));
         if (isNaN(base))
         {
-          // raise error
+          newObject.error = "Number: invalid base in " + input.value;
+          return newObject.instanciate_processor();
         }
         val = val.substr(0,hashpos).toUpperCase() + "_";
         if (base<2 || base>16)
         {
-          // raise error
+          newObject.error = "Number: base out of range (2..16) in " + input.value;
+          return newObject.instanciate_processor();
         }
         base = new resource.bigRat(base);
         for(let x=0; x<val.length; x++)
@@ -59,7 +63,8 @@ function _NumberProcessor(resource)
             let exp = parseInt(val.substr(x+2));
             if (isNaN(exp))
             {
-              // raise error
+              newObject.error = "Number: invalid exponent in " + input.value;
+              return newObject.instanciate_processor();
             }
             multiplier = base.pow(new resource.bigRat(exp)); 
             val="";
@@ -73,9 +78,10 @@ function _NumberProcessor(resource)
           if ("." == ch)
             divider = new resource.bigRat(1);
           else
-          if ("_" !== ch || "," !== ch)
+          if ("_" !== ch && "," !== ch)
           {
-            // raise error
+            newObject.error = "Number: invalid digit " + ch + " in " + input.value;
+            return newObject.instanciate_processor();
           }
         }
         if (divider.compare(0)!==0)  
@@ -83,7 +89,13 @@ function _NumberProcessor(resource)
         newObject.value=calcval.multiply(multiplier);
     }
     else
-        newObject.value=new resource.bigRat(input.value);
+    {
+        try {
+            newObject.value=new resource.bigRat(input.value.replace(/_/g,"")); // strip _ separators
+        } catch(e) {
+            newObject.error = "Number: invalid literal " + input.value;
+        }
+    }
 
     return newObject.instanciate_processor();
   }

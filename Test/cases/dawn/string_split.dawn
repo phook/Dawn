@@ -1,0 +1,2 @@
+[String:abcdef Number:2 Number:4]>>String.split:>>Console:
+String:hello>>String.split:?|position=2>>Console:

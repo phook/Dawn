@@ -139,40 +139,20 @@ let Dawn = {
         context = Dawn;	
 	  if (command.indexOf("Console:") == -1)
         command += ">>Console:";
-      
+
       let jsSource = this.compiler.parse(command);
 
       if (jsSource != "ERROR")
       {
-        function evalInContext(js, context) {
-          return function() {
-          return eval(js);
-          }.call(context);
-        }
-
         Dawn.print = print;
-/*
-        Dawn.print = function(string)
-        {
-          if (!Dawn.returnResult)
-            Dawn.returnResult = "";
-
-          Dawn.returnResult += string + "\n";
-          
-          if (print)
-            print(string + "\n");
-        }
-*/
-        // ALL THIS COULD PROBABLY BE List.go() ??? so execute is hidden
-
-        // Should get processor from context and eval in it
         let processor = context.instanciate_processor();
-//        let program_lines = evalInContext("async function command() {let self=this; await "+jsSource+"}; command.call(this);",processor).then(foo => {
-        evalInContext("let self=this;"+jsSource.replace("await","")+"",processor).then(command => {
-            processor.execute([command]);
-        });
-
-      }        
+        // same execution as dawn_run.js: compile to an async fn, call it as the
+        // processor, trigger the resulting flow
+        const AsyncFn = Object.getPrototypeOf(async function(){}).constructor;
+        return (new AsyncFn("return " + jsSource)).call(processor)
+          .then(list => { if (list) list.in_go(); })
+          .catch(e => { if (print) print(String(e && e.stack || e) + "\n"); });
+      }
     },
     initialize : async function(rootUrl)
     {

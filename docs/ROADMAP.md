@@ -30,29 +30,83 @@ Not refactoring — just unblocking everything after it:
 
 Exit criteria: existing test suite still passes; no behavior changes.
 
-### Phase 1 — Standard library ("the system")
+### Phase 1.5 — Documentation system — ✅ DONE (intermediate phase)
+
+Documentation is a resource: `Meta.documentation:` sidecars next to every
+`.dawn.js` implementation (docs only ever live in `.dawn` files, never in the
+future precompiled `.js`). Delivered:
+
+- `docs/documentation-standard.md` — the form (one-line summary, `@port`,
+  `@example`, `@see`, `@status`) and the project standard (one top resource,
+  pages link downward through the hierarchy)
+- `build_docs.js` — extractor: introspects ports from source, cross-checks
+  them against documented ports (mismatch = build failure), emits one HTML
+  page per resource + tree index into `docs/api/` (gitignored, regenerated)
+- Sidecar docs for all 40 resources in the library
+- `Test/runner.js` executes every `@example` — **docs are tests** (34 doc
+  examples currently green)
+
+Future: extractor becomes a Dawn flow (Note 7's pipeline); docs become
+runtime-queryable resources (IDE hover, Phase 7 LLM corpus); HTML output
+replaced by UIL pages.
+
+### Phase 1.75 — Sources live in `.dawn` — ✅ DONE (intermediate)
+
+Every library resource's source is now its `.dawn` file: `Meta.documentation:`
+lines plus a `define <URI>` block with `native javascript {...} endnative`
+(verbatim JS inside — real native lowering arrives with Phase 2).
+`build_sources.js` generates `.dawn.js` only when the source is newer
+(staleness = mtime mismatch; artifacts carry source timestamps and the Windows
+hidden attribute). The doc extractor and runner ignore implementation lines.
+52 .dawn.js artifacts are generated, never hand-written.
+
+Future: `.dawn.js` becomes the timestamp-checked precompile of a true `.dawn`
+grammar resource (when Phase 2's `define` semantics land); editor edits the
+.dawn with embedded JS directly.
+
+### Phase 1 — Standard library ("the system") — ✅ DONE
 
 Goal: a reasonable battery-included library so real programs are writable.
 
 1. Complete the core data resources (`dawn/Content-Type/data/`):
-   - Number: comparisons (`less`, `greater`, `equal`), modulo, min/max, floor/ceil/round
-   - String: `length`, `indexOf`, `substring`, `split`, `replace`, `upper`/`lower`, `trim`, encode/decode
-   - List: `get`, `remove`, `length`, `map`, `filter`, `join` (add/iterate exist)
-   - Boolean: verify complete; error propagation polish
-2. Control-flow resources: `times:`, `loop:`/`while:`, `clock:`/`interval:`,
-   `async:`/`await:`, `Identifier:` (mutable reference — needed by `Meta:Assignment`).
-   Sketches exist: `dawn/loop.js`, `dawn/Identifier.js`, `dawn/times.dawn_basic`,
-   `dawn/Clock.dawn_basic`, `dawn/async.dawn_basic`.
+   - [x] Number: comparisons (`less`, `greater`, `equal` — chained semantics), modulo, min/max, floor/ceil/round
+   - [x] String: `length`, `upper`/`lower`/`trim`, `split`, `substring`, `replace`, `indexOf`
+     (parameter convention established: `?|name=value` drop-in inputs — see library.md)
+   - [x] List: `length`, `join` (stream semantics over mixed String/Number/Boolean)
+   - [x] List: `get` (index as named port or parameter; element re-emitted with its own type)
+   - [x] List: `get`, `remove` (index-named port or `?|index=n`), `map`, `filter`
+     (`Reference:` resource added — `Reference:Number.negate` passes resources as values;
+     map/filter take it via `?|using=` param or flowing `Reference:`)
+   - [ ] Boolean: verify complete; error propagation polish
+2. Control-flow resources:
+   - [x] `times:` (already existed as `Number.times:` — enhanced with `out_Number` index)
+   - [ ] `Identifier:` — DEFERRED to Phase 2 (needs scope/assignment per Note 7 VARS)
+   - [ ] `loop:`/`while:` — DEFERRED (user decision): needs break semantics
+   - [ ] `clock:`/`interval:` — DEFERRED (user decision)
 3. Scheme resources (`dawn/Scheme/`):
-   - `file:` — extend beyond read: write, append, list (directory-as-JSON), stat, delete, mkdir
-   - `http:`/`https:` client (finish the `dawn/http.dawn_basic` sketch)
-   - `http:` server (`http:port` with `out_Request` / `in_Response`) — required by Phase 3
-4. Error model standardization: one documented `in_error`/`out_error` convention
-   on every resource; the empty "raise error" comments in `Number.dawn.js` become real.
-5. `docs/library.md` — coverage matrix: every resource, its ports, its test status.
+   - [x] `file:` data writing: `file:<path>?write` / `?append` — the receiving input
+     picks the operation (mutually exclusive); loader role intact (diversion gated
+     on the `?write`/`?append` selection only)
+   - [x] `file:` data read: `file:<path>?read` — casts by content-type, late-connects
+   - [x] content-type casting: `dawn/Scheme/cast.dawn.js` — text/*→String, json→Data,
+     image/*→Data until a proper `image` content-type is built per convention
+     (lowercase under `Content-Type/`). Values late-connect to the flow with
+     their true type.
+   - [x] `http:`/`https:` client (late-cast on content-type; error channel on failure;
+     integration test: Test/integration/http_client.test.js)
+   - [ ] `http:` server (`http:port` with `out_Request` / `in_Response`) —
+     **MOVED TO PHASE 3**: needs content-types it can serve to be meaningful
+     (user decision 2026-09-03).
+4. Error model: DONE (first pass) — errors are values on the `out_error` channel,
+   never thrown; `Console:` prints the error channel; invalid `Number:` literals
+   emit real errors (convention codified in docs/library.md).
+5. `docs/library.md` — coverage matrix: every resource, its ports, its test status. (started)
 
-Exit criteria: every resource has a passing case in `Test/cases/dawn/`;
-`docs/library.md` is green; the codeexamples run on the library alone.
+Design concept noted for a later phase (NOT to be implemented ad hoc):
+**output interfaces / pin groups** (`docs/output-interfaces.md`, from Dawn
+Notes/Note 7 + preamp analogy; numeric `_N_` port grouping with binder trial order).
+
+Exit criteria met 2026-09-03: every resource has a passing case in Test/cases/dawn/; docs/library.md is green; the codeexamples all run (HelloWorld rewritten; Tester: removed from it � it returns in Phase 2 when define/Meta:Assignment land).
 
 ### Phase 2 — The basic flavor, finished
 
@@ -64,8 +118,9 @@ Goal: basic flavor is *the* way humans write Dawn; canonical URI form is the ass
    - `÷` surviving into literals
    - the `subtract` vs `negate`+`add` round-trip mismatch
 2. Extend the flavor: comparisons in TD rules (FD side exists), loops (`for`/`while` —
-   `Basic.dawn_basic` already sketches the aspiration), function definitions
-   (not just resource `define`), override of existing resources, `Meta:Assignment` runtime.
+   the aspirational BASIC loop sketch lived in `Basic.dawn_basic`; since flavors are
+   just views, see git history), function definitions (not just resource `define`),
+   override of existing resources, `Meta:Assignment` runtime.
 3. Round-trip guarantee: basic → dawn → basic is identity; extend `Test/cases/`.
 4. Run `check_grammar.js` clean (kills the contradictory duplicate `FD_IF_*` pairs);
    update `docs/basic-flavor-syntax.md` to match the final grammar exactly.

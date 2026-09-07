@@ -214,11 +214,12 @@ function ResourceProcessor(resource) {
                            inputsCleared=true;
                            Object.keys(result.inputList).forEach(key=>{if (!protectedFunctions.includes(key)) delete result.inputList[key];});
                         }
-                        let inputFullName = keys.find(v => v.indexOf("_" + input) != -1); // possible error if input is foo and fooBAR is returned
-                        if (inputFullName)
-                        {
-                           result.inputList[inputFullName] = result[inputFullName];
-                        }
+                         let inputFullName = keys.find(v => v.indexOf("_" + input) != -1); // possible error if input is foo and fooBAR is returned
+                         if (inputFullName)
+                         {
+                            result.inputList[inputFullName] = result[inputFullName];
+                            (result.inputSelection = result.inputSelection || []).push(inputFullName);
+                         }
                     }
                 }
                 let outputsCleared = false;
@@ -246,16 +247,21 @@ function ResourceProcessor(resource) {
                     let input = urlParametersToInputs[i].input;
                     let value = urlParametersToInputs[i].value;
                     if (value.indexOf("\"") == 0) {
-                        value.replace("\"", "");
+                        value = value.replace(/^"|"$/g, "");
                         type = "String";
                         constInput = await this.lookup("String:" + value);
                     } else
                     if (["true", "false"].includes(value.toLowerCase())) {
                         type = "Boolean";
                         constInput = await this.lookup("Boolean:" + value);
-                    } else {
+                    } else
+                    if (/^[-+.0-9]/.test(value)) {
                         type = "Number";
                         constInput = await this.lookup("Number:" + value);
+                    } else {
+                        // unquoted text that is not a number/boolean is a String literal
+                        type = "String";
+                        constInput = await this.lookup("String:" + value);
                     }
                     let inputname  = "in_"  + type + "_" + input;
                     let outputname = "out_" + type;
@@ -264,7 +270,7 @@ function ResourceProcessor(resource) {
                         result.inputList[inputname]=undefined;
                     } else
                     if (inputname + "_$explicit" in result) {
-                        result.endParameters[inputname + "$explicit"]=constInput.get_resource();
+                        result.endParameters[inputname + "_$explicit"]=constInput.get_resource();
                         result.inputList[inputname+ "_$explicit"]=undefined;
                     }
                 }
@@ -327,7 +333,13 @@ this.in_instanciate = function(input) {
 this.build_input_list = function() {
     this.input_list = {};
     for (fn in this)
-        if (fn.indexOf("in_") == 0)
+        if (fn.indexOf("in_") == 0
+            && fn.indexOf(isExplicit) === -1                    // _$explicit ports only via parameters/name-selection
+            && !(fn in this.endParameters)                      // occupied by a parameter
+            && !(fn + "_$explicit" in this.endParameters)
+            && (!this.inputSelection                            // ?name input selection, when present, gates the list
+                || this.inputSelection.includes(fn)
+                || protectedFunctions.includes(fn)))
             this.input_list[fn] = this[fn];
 }
 
@@ -392,6 +404,7 @@ this.offer_connection = function(match) {
 // when a group is connected remove all other groups from list
 
 this.connect = function(resource_to_connect_to) {
+    this.connectee = resource_to_connect_to;
   /*
     if (typeof(resource_to_connect_to) == "string") {
         let result = resource.lookup(resource_to_connect_to, true);

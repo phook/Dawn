@@ -1,0 +1,23 @@
+Meta.documentation:List.join
+Meta.documentation:
+Meta.documentation:Joins the elements of a flowing List into one String.
+Meta.documentation:
+Meta.documentation:Accumulates every element of the incoming list and emits a single String when
+Meta.documentation:the list ends. Numbers join by their decimal form, Booleans by true/false.
+Meta.documentation:
+Meta.documentation:@port in_String_$all — String element, appended as-is
+Meta.documentation:@port in_Number_$all — Number element, appended in decimal form
+Meta.documentation:@port in_Boolean_$all — Boolean element, appended as true/false
+Meta.documentation:@port out_String — the joined String, emitted once at end of the list
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:[String:I Number:42 String:you]>>List.join:>>Console:
+Meta.documentation:---
+Meta.documentation:I42you
+Meta.documentation:
+Meta.documentation:@see String.concatenate List.length
+Meta.documentation:@kind operator
+Meta.documentation:@status stable
+Meta.documentation:
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20Joins%20the%20elements%20of%20a%20flowing%20list%20into%20one%20String.%0A%2F%2F%20Numbers%20join%20by%20decimal%20form%2C%20Booleans%20by%20true%2Ffalse.%0Afunction%20join()%0A%7B%0A%09Resource.call(this%2C%22join%22)%3B%0A%09this.Processor%3DjoinProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20joinProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.tempString%20%3D%20%22%22%3B%0A%20%20%20%20%7D%0A%09this.in_String_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09this.tempString%20%2B%3D%20input.value%3B%0A%20%20%20%20%7D%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09this.tempString%20%2B%3D%20input.value.toDecimal()%3B%0A%20%20%20%20%7D%0A%09this.in_Boolean_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09this.tempString%20%2B%3D%20input.value%20%3F%20%22true%22%20%3A%20%22false%22%3B%0A%20%20%20%20%7D%0A%09this.in_end%20%3D%20function()%0A%09%7B%0A%09%09return%20this%3F.out_String%3F.(%7Bvalue%3Athis.tempString%7D)%3B%0A%20%20%20%20%7D%0A%7D%0Ajoin.Processor%3DjoinProcessor%3B%0Amodule.exports%3Djoin%3B]>>NewResource:List.join
