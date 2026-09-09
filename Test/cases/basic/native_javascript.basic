@@ -1,0 +1,20 @@
+define Doubler
+ native javascript
+const Resource = Dawn.require("Content-Type/data/Resource");
+function Doubler() {
+ Resource.call(this,"Doubler");
+ this.Processor = DoublerProcessor;
+ return this;
+}
+
+function DoublerProcessor(resource) {
+ Resource.Processor.call(this,resource);
+ this.in_Number_$all = function(input) {
+ this.out_Number(input.value.multiply(2));
+ };
+}
+Doubler.Processor = DoublerProcessor;
+module.exports = Doubler;
+endnative
+
+

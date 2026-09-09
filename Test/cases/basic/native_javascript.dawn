@@ -1,0 +1,2 @@
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Afunction%20Doubler()%20%7B%0A%20Resource.call(this%2C%22Doubler%22)%3B%0A%20this.Processor%20%3D%20DoublerProcessor%3B%0A%20return%20this%3B%0A%7D%0A%0Afunction%20DoublerProcessor(resource)%20%7B%0A%20Resource.Processor.call(this%2Cresource)%3B%0A%20this.in_Number_%24all%20%3D%20function(input)%20%7B%0A%20this.out_Number(input.value.multiply(2))%3B%0A%20%7D%3B%0A%7D%0ADoubler.Processor%20%3D%20DoublerProcessor%3B%0Amodule.exports%20%3D%20Doubler%3B ]>>NewResource:Doubler
+

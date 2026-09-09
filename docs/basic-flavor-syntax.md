@@ -362,9 +362,11 @@ Notes:
 ## 10. Native blocks: JavaScript interop
 
 The `native` keyword introduces a host-language body
-(`basic.bnft:214-219` for the generic `TD_CHAR`/`TD_NATIVE`/`TD_END_NATIVE`
-machinery, `basic.bnft:250-251` for the `native javascript` block form).
-Today only `javascript` is recognised:
+(`basic.bnft:207-216` for the generic `TD_CHAR`/`TD_NATIVE`/`TD_END_NATIVE`
+machinery, `basic.bnft:244-245` for the `native javascript` block form).
+The `TODAWN_PROGRAM` entry declares `"native javascript"`/`"endnative"` as
+raw-block markers to `#significantwhitespace`, so the body is exempt from
+indentation preprocessing. Today only `javascript` is recognised:
 
 ```
 native javascript
