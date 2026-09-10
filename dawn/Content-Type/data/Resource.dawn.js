@@ -214,8 +214,8 @@ function ResourceProcessor(resource) {
                            inputsCleared=true;
                            Object.keys(result.inputList).forEach(key=>{if (!protectedFunctions.includes(key)) delete result.inputList[key];});
                         }
-                         let inputFullName = keys.find(v => v.indexOf("_" + input) != -1); // possible error if input is foo and fooBAR is returned
-                         if (inputFullName)
+                         let inputFullNames = keys.filter(v => v.indexOf("_" + input) != -1); // all same-named inputs across types: name picks the meaning, type picks the plug
+                         for (let inputFullName of inputFullNames)
                          {
                             result.inputList[inputFullName] = result[inputFullName];
                             (result.inputSelection = result.inputSelection || []).push(inputFullName);
@@ -386,8 +386,8 @@ this.offer_connection = function(match) {
         {
           let newBoundFunction = this[input].bind(this);
           
-          if (!catchall)
-            delete this.input_list[input]; // remove from list
+          if (!catchall && !["in_begin","in_end","in_error"].includes(input))
+            delete this.input_list[input]; // remove from list — begin/end/error stay multi-bindable (plumbing); in_go stays single-use (routing depends on it)
           
           // here if group selected, remove all other groups from list
           

@@ -1,0 +1,19 @@
+Meta.documentation:Blob
+Meta.documentation:
+Meta.documentation:Binary byte array — the universal transport value.
+Meta.documentation:
+Meta.documentation:Holds a JavaScript Uint8Array. http:, file: and Scheme/cast produce
+Meta.documentation:Blobs for binary content (image/*, octet-stream, anything unmapped);
+Meta.documentation:the blob interface (in_Blob_$all / out_Blob) is how value resources
+Meta.documentation:convert to and from bytes.
+Meta.documentation:
+Meta.documentation:
+Meta.documentation:@example
+Meta.documentation:file:public/images/favicon.png?read>>Console:
+Meta.documentation:---
+Meta.documentation:Blob(908 bytes)
+Meta.documentation:
+Meta.documentation:@kind value
+Meta.documentation:@status stable
+
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20Binary%20byte%20array%20%E2%80%94%20the%20universal%20transport%20value.%20Holds%20a%20JavaScript%0A%2F%2F%20Uint8Array%20(a%20server%20Buffer%20is%20one).%20http%3A%2C%20file%3A%20and%20Scheme%2Fcast%20produce%0A%2F%2F%20Blobs%20for%20binary%20content%3B%20the%20blob%20interface%20(in_Blob_%24all%20%2F%20out_Blob)%20is%0A%2F%2F%20how%20every%20value%20resource%20converts%20to%20and%20from%20bytes.%0Afunction%20Blob()%0A%7B%0A%09Resource.call(this%2C%22Blob%22)%3B%0A%09this.Processor%20%3D%20BlobProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20BlobProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Blob%20%3D%20null%3B%0A%09this.in_Blob_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09resource.value%20%3D%20input.value%20instanceof%20Uint8Array%20%3F%20input.value%20%3A%20new%20Uint8Array(input.value)%3B%0A%20%20%20%20%7D%0A%09this.in_go%20%3D%20function()%0A%20%20%20%20%7B%0A%09%09return%20this.out_Blob%3F.(resource)%3B%0A%20%20%20%20%7D%0A%09this.toBlob%20%3D%20function()%0A%20%20%20%20%7B%0A%09%09return%20resource.value%3B%0A%20%20%20%20%7D%0A%09this.in_instanciate%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09let%20newObject%20%3D%20this.get_resource().clone()%3B%0A%09%09newObject.value%20%3D%20new%20Uint8Array(0)%3B%0A%09%09return%20newObject.instanciate_processor()%3B%0A%20%20%20%20%7D%0A%09return%20this%3B%0A%7D%0ABlob.Processor%3DBlobProcessor%3B%0Amodule.exports%3DBlob%3B]>>NewResource:Blob

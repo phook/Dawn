@@ -18,11 +18,11 @@ if (Dawn.isServer()) {
           size        : 0,
           time        : 0
         }
-        files = fs.readdirSync(dirpath)
-        for(fileno in files)
+        let files = fs.readdirSync(dirpath)
+        for(let fileno in files)
         {
           let file = files[fileno];
-            filepath = path.resolve(dirpath, file);
+            let filepath = path.resolve(dirpath, file);
             if (!/^\./.test(file) || hidden)
                 try {
                     if (file.endsWith(".dawn") || file.endsWith(".dawn.js"))
@@ -103,9 +103,10 @@ else
 // file:<path>?read — the file as a data source: in_go emits the content as a String.
 // (mirrors the write/append sink; reading uses a selection, not an input)
 // file:<path>?read — the file as a data source: in_go loads the content and
-// casts it by content-type (text/* → String, image/* → Image, json → Data),
-// then late-connects that value to the next resource in the flow. Same
-// late-cast philosophy as http: — the type is only known after loading.
+// loads the content as bytes; the resource found for the content-type in
+// the Content-Type tree parses them through its blob interface, then
+// late-connects that value to the next resource in the flow. Same late-cast
+// philosophy as http: — the type is only known after loading.
 function FileReadProcessor(resource) {
     Resource.Processor.call(this, resource);
     const EXT_TO_TYPE = {
@@ -121,9 +122,9 @@ function FileReadProcessor(resource) {
         if (Dawn.isServer()) {
             try {
                 const _fs = Dawn.require('fs');
-                const text = _fs.readFileSync(resource.url, "utf8");
-                castLib.cast(extType, text, resource.url).then(cast => {
-                    if (cast && self.connectee) { cast.connect(self.connectee); cast.in_go?.(); }
+                const bytes = _fs.readFileSync(resource.url);
+                castLib.cast(extType, bytes, resource.url).then(cast => {
+                    if (cast && self.connectee) { cast.connect(self.connectee); cast.in_begin?.(); cast.in_go?.(); cast.in_end?.(); }
                 });
             } catch (e) {
                 this?.out_error?.({ value: "file: read failed: " + e.message });
@@ -135,9 +136,9 @@ function FileReadProcessor(resource) {
           .then(async r => {
               if (!r.ok) { self?.out_error?.({ value: "file: read failed (" + r.status + ")" }); return; }
               const contentType = r.headers.get("content-type") || extType;
-              const text = await r.text();
-              let cast = await castLib.cast(contentType, text, resource.url);
-              if (cast && self.connectee) { cast.connect(self.connectee); cast.in_go?.(); }
+              const bytes = new Uint8Array(await r.arrayBuffer());
+              let cast = await castLib.cast(contentType, bytes, resource.url);
+              if (cast && self.connectee) { cast.connect(self.connectee); cast.in_begin?.(); cast.in_go?.(); cast.in_end?.(); }
           })
           .catch(e => self?.out_error?.({ value: "file: read failed: " + e.message }));
     }
@@ -163,13 +164,16 @@ function FileSinkProcessor(resource) {
     }
     this.in_String_write  = fileInput("write");
     this.in_String_append = fileInput("append");
+    this.in_Blob_write  = fileInput("write");
+    this.in_Blob_append = fileInput("append");
     this.in_end = function() {
         this.fire_end_parameters();
         if (this.operation && Dawn.isServer()) {
             const _fs = Dawn.require('fs');
             try {
-                if (this.operation === "write")  _fs.writeFileSync(resource.url, this.content);
-                if (this.operation === "append") _fs.appendFileSync(resource.url, this.content);
+                let data = (this.content instanceof Uint8Array) ? Buffer.from(this.content) : this.content;
+                if (this.operation === "write")  _fs.writeFileSync(resource.url, data);
+                if (this.operation === "append") _fs.appendFileSync(resource.url, data);
             } catch (e) {
                 return this?.out_error?.({value: "file: " + this.operation + " failed: " + e.message});
             }

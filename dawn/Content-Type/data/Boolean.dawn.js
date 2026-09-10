@@ -14,9 +14,19 @@ function BooleanProcessor(resource)
   Resource.Processor.call(this,resource); 
 	this.resource = resource;
 	this.out_Boolean = null;
+	this.out_Blob = null;
     this.in_Boolean_$all = function(input)
     {   
       resource.value = input.value;
+    }
+	this.in_Blob_$all = function(input)
+    {
+      let text = new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value)));
+      resource.value = text.trim().toLowerCase() === "true";
+    }
+	this.toBlob = function()
+    {
+      return new TextEncoder().encode(resource.value ? "true" : "false");
     }
     this.in_go = function()
     {

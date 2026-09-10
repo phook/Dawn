@@ -1,4 +1,4 @@
-const Resource = Dawn.require('./dawn/Resource.dawn.js');
+const Resource = Dawn.require("Content-Type/data/Resource");
 
 // THIS IS THE DATA HOLDER - MAPPING TO NATIVE TYPE - IN THIS CASE A JAVASCRIPT DATASTREAM
 function Data()
@@ -14,7 +14,18 @@ function DataProcessor(resource)
   Resource.Processor.call(this,resource); 
 	this.resource = resource;
 	this.out_Data = null;
-    this.in_Data = function(input)
+	this.out_Blob = null;
+	this.in_Blob_$all = function(input)
+    {
+      let text = new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value)));
+      try { resource.value = JSON.parse(text); }
+      catch(e) { resource.value = text; }
+    }
+	this.toBlob = function()
+    {
+      return new TextEncoder().encode(JSON.stringify(resource.value));
+    }
+	this.in_Data = function(input)
     {   
       resource.value = input.value;
     }

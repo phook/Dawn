@@ -24,6 +24,11 @@ function ConsoleProcessor(resource)
     {   
         this.print(input.value?"true":"false")
     }
+	this.in_Blob_$all = function(input)
+    {
+        let n = input.value && input.value.length !== undefined ? input.value.length : 0;
+        this.print("Blob(" + n + " bytes)");
+    }
 	this.in_error_$all = function(input)
     {   
         this.print(input.value)

@@ -47,6 +47,7 @@ Legend: ✅ exists+tested · ⚠️ exists, untested/incomplete · ❌ missing �
 | `List.remove:` (index via param; streams the rest, order-preserving) | ✅ |
 | `List.map:` / `List.filter:` (`Reference:`-based, param or flow) | ✅ |
 | `Data:` `Flow:` | ⚠️ |
+| `Blob:` (binary byte arrays; every value resource has the blob interface `in_Blob_$all`/`out_Blob` + `toBlob()`) | ✅ |
 
 ## Control flow
 
@@ -64,7 +65,7 @@ Legend: ✅ exists+tested · ⚠️ exists, untested/incomplete · ❌ missing �
 | `file:` module loader | ✅ (documented) |
 | `file:<path>?write` / `?append` data sink (mutually-exclusive inputs pick the op) | ✅ |
 | `file:<path>?read` read + content-type cast + late-connect | ✅ |
-| `http:` / `https:` client (late-cast into String/Image/Data; error channel on failure) | ✅ (integration-tested) |
+| `http:` / `https:` client (bytes → cast via Content-Type tree + blob interface; error channel on failure) | ✅ (integration-tested) |
 | `http:` server | ❌ (Phase 3 keystone) |
 | `socket:` / websocket | ❌ (needed to port `hubserver.js`) |
 | `mime:` | ❌ (casting rules currently live in `Scheme/cast`) |
@@ -74,10 +75,22 @@ Legend: ✅ exists+tested · ⚠️ exists, untested/incomplete · ❌ missing �
 
 Schemes that load external content (`http:`, `https:`, `file:?read`) cannot know
 the content's type before loading it. The rule per design: **cast after load,
-then connect**. `Scheme/cast` owns the mapping (text/* → String, image/* →
-Image, application/json → Data, else → Data) and the cast value late-connects
-to the next resource in the flow. Anticipates the pin/interface model
-(`output-interfaces.md`).
+then connect**. Loading produces **bytes** (a `Uint8Array`); `Scheme/cast`
+resolves the resource to instantiate **through the dawn tree** — first hit wins:
+
+1. `Content-Type.<type>.<subtype>` — a specialized mimetype resource dropped
+   into the tree (extension point),
+2. `Content-Type.<type>` — a family main resource (`Content-Type/text`,
+   `Content-Type/image`, `Content-Type/application/json` are seeded),
+3. built-in defaults: `text/*` → `data.String`, `image/svg+xml` → `data.String`
+   (markup text), `application/json` → `data.Data`, anything else → `data.Blob`.
+
+The found resource is fed the bytes through its **blob interface**
+(`in_Blob_$all` — every value resource parses its own bytes: String=UTF-8,
+Number=`num/den` fraction (exact), Boolean text, Data/List=JSON). The cast
+value then late-connects to the next resource in the flow **with the full
+begin/go/end bracket** (sinks like `file:?write` flush on `in_end`).
+Anticipates the pin/interface model (`output-interfaces.md`).
 
 ## Resource placement & naming (the MIME convention)
 
@@ -119,6 +132,11 @@ to the next resource in the flow. Anticipates the pin/interface model
   die silently if nothing listens — bind the error channel when diagnosing.
 
 - `in_begin` resets accumulator; `in_<Type>_$all` consumes; `in_end` emits.
+- **Binder deletion rules**: connecting a data plug consumes that input
+  (single-use); `in_begin`/`in_end`/`in_error` stay **multi-bindable** (they
+  are the plumbing bracket — flow chains and late-connects must re-offer
+  them); `in_go` stays **single-use** — routing depends on it (`Boolean.if`'s
+  `go_else` must not bind after `go_then` took `in_go`).
 - **Never use arrow closures capturing `this` for ports.** Processors are cloned
   via `Object.assign` — arrow functions keep the *original* `this`, so state
   silently updates the wrong instance. Always `function(){ ... }`.

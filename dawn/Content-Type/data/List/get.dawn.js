@@ -1,9 +1,12 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
+const castLib   = Dawn.require("Scheme/cast");
 
 // Picks one element out of a flowing list by position (0-based).
 // The first Number in the flow is the index; every other element is a
-// candidate. The element is emitted with its own type.
-// [String:a String:b String:c Number:1]>>List.get: emits "b" (as a String)
+// candidate. A list can mix any types, so the picked element's type is known
+// only at execution time — get declares no typed outputs. Like http:, it
+// late-connects: the picked element is wrapped in its own typed resource,
+// connected to the downstream connectee, and fired.
 function get()
 {
 	Resource.call(this,"get");
@@ -13,11 +16,8 @@ function get()
 
 function getProcessor(resource)
 {
-	Resource.Processor.call(this,resource); 
+	Resource.Processor.call(this,resource);
 	this.resource = resource;
-	this.out_String = null;
-	this.out_Number = null;
-	this.out_Boolean = null;
 	this.in_begin = function()
 	{
 		this.index = null;
@@ -35,12 +35,19 @@ function getProcessor(resource)
 	this.in_String_$all = addElement("String");
 	this.in_Number_$all = addElement("Number");
 	this.in_Boolean_$all = addElement("Boolean");
+	this.in_Blob_$all = addElement("Blob");
 	this.in_end = function()
     {
 		if (this.index === null) return;
 		let element = this.elements[this.index];
-		if (element)
-			return this?.["out_"+element.type]?.({value:element.value});
+		if (!element || !this.connectee) return;
+		// late connect (like http:) — the type is known only now
+		let cast = castLib.castValue(element.type, element.value);
+		if (cast)
+		{
+			cast.connect(this.connectee);
+			cast.in_go?.();
+		}
     }
 }
 get.Processor=getProcessor;

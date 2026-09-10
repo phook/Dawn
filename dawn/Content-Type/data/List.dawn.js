@@ -1,4 +1,5 @@
 const Resource = Dawn.require("Content-Type/data/Resource");
+const castLib   = Dawn.require("Scheme/cast");
 
 function List() {
     Resource.call(this, "List");
@@ -111,6 +112,21 @@ this.get_output_types = function() {
 
     
     
+    this.out_Blob = null;
+    this.in_Blob_$all = function(input) {
+		let specs = JSON.parse(new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value))));
+		resource.elements = [];
+		this.elements = [];
+		for (let spec of specs) {
+			let proc = buildElement(spec);
+			if (!proc) continue;
+			resource.elements.push(proc.get_resource());
+			this.elements.push(proc);
+		}
+    };
+    this.toBlob = function() {
+		return new TextEncoder().encode(JSON.stringify(resource.elements.map(serializeElement)));
+    };
     this.in_begin = function() {
         for (element in this.elements) {
             if (this.elements[element])
@@ -133,5 +149,24 @@ this.get_output_types = function() {
     }
     return this;
 }
-List.Processor = ListProcessor;
+function serializeElement(el) {
+    let name = el.name;
+    if (name === "String")  return { type: "String",  value: el.value };
+    if (name === "Number")  return { type: "Number",  value: el.value && el.value.toString ? el.value.toString() : String(el.value) };
+    if (name === "Boolean") return { type: "Boolean", value: !!el.value };
+    if (name === "Blob")    return { type: "Blob",    value: castLib.u8ToBase64(el.value || new Uint8Array(0)) };
+    if (name === "List")    return { type: "List",    value: (el.elements || []).map(serializeElement) };
+    return { type: "Data",    value: el.value !== undefined ? el.value : null };
+}
+function buildElement(spec) {
+    if (spec && spec.type === "List") {
+        let sub = new List();
+        sub.elements = (spec.value || []).map(buildElement).filter(p => p).map(p => p.get_resource());
+        return sub.instanciate_processor();
+    }
+    let value = spec ? spec.value : null;
+    if (spec && spec.type === "Blob" && typeof value === "string") value = castLib.base64ToU8(value);
+    return castLib.castValue(spec && spec.type, value);
+}
+List.Processor=ListProcessor;
 module.exports = List;

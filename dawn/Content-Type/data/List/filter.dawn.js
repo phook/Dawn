@@ -1,9 +1,13 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
+const castLib   = Dawn.require("Scheme/cast");
 
 // Keeps the elements of a flowing list for which a referenced resource
 // answers true. The predicate is referenced by URI: ?|using=Boolean.not or
-// with Reference:Boolean.not in the flow.
-function testElement(self, target, element) // synchronous burst, keeps program lines from interleaving
+// with Reference:Boolean.not in the flow. A list can mix any types, so each
+// kept element's type is known only at execution time — filter declares no
+// typed outputs; like http:, it late-connects each kept element in its own
+// typed resource.
+function testElement(target, element) // synchronous burst, keeps program lines from interleaving
 {
 	let keep = false;
 	let op = target.instanciate_processor ? target.instanciate_processor() : target;
@@ -12,8 +16,7 @@ function testElement(self, target, element) // synchronous burst, keeps program 
 	let port = Object.keys(op).find(k => k.startsWith("in_" + element.type) && !["in_begin","in_end","in_go","in_error","in_instanciate"].includes(k));
 	if (port) op[port]({ value: element.value });
 	op.in_end?.();
-	if (keep)
-		self?.["out_" + element.type]?.({ value: element.value });
+	return keep;
 }
 
 function filter()
@@ -25,11 +28,8 @@ function filter()
 
 function filterProcessor(resource)
 {
-	Resource.Processor.call(this,resource); 
+	Resource.Processor.call(this,resource);
 	this.resource = resource;
-	this.out_String = null;
-	this.out_Number = null;
-	this.out_Boolean = null;
 	this.in_begin = function()
 	{
 		this.using = null;
@@ -45,6 +45,7 @@ function filterProcessor(resource)
 	this.in_String_$all = collect("String");
 	this.in_Number_$all = collect("Number");
 	this.in_Boolean_$all = collect("Boolean");
+	this.in_Blob_$all = collect("Blob");
 	this.in_end = async function()
     {
 		if (!this.using)
@@ -53,7 +54,16 @@ function filterProcessor(resource)
 		if (!target)
 			return this?.out_error?.({value:"filter: cannot resolve Reference:" + this.using});
 		for (let i in this.elements)
-			testElement(this, target, this.elements[i]);
+		{
+			if (!testElement(target, this.elements[i]) || !this.connectee) continue;
+			// late connect (like http:) — the type is known only now
+			let cast = castLib.castValue(this.elements[i].type, this.elements[i].value);
+			if (cast)
+			{
+				cast.connect(this.connectee);
+				cast.in_go?.();
+			}
+		}
     }
 }
 filter.Processor=filterProcessor;

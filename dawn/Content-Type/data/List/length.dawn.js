@@ -25,6 +25,7 @@ function lengthProcessor(resource)
 	this.in_String_$all = count_element;
 	this.in_Number_$all = count_element;
 	this.in_Boolean_$all = count_element;
+	this.in_Blob_$all = count_element;
 	this.in_end = function()
 	{
 		return this?.out_Number?.({value:resource.Number.bigRat(this.count)});

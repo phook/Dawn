@@ -75,11 +75,11 @@ async function read_dir(dirpath, hidden) {
       size     : 0,
       time     : 0
     }
-    files = fs.readdirSync(dirpath)
-    for(fileno in files)
+    let files = fs.readdirSync(dirpath)
+    for(let fileno in files)
     {
         let file = files[fileno];
-        filepath = path.resolve(dirpath, file);
+        let filepath = path.resolve(dirpath, file);
         if (!/^\./.test(file) || hidden)
             try {
                 if (file.endsWith(".dawn")) // a .dawn file: documentation source AND executable loader entry

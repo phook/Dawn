@@ -1,7 +1,11 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
+const castLib   = Dawn.require("Scheme/cast");
 
 // Removes one element from a flowing list by position (0-based);
 // every other element passes through with its own type, in order.
+// A list can mix any types, so each passing element's type is known only at
+// execution time — remove declares no typed outputs; like http:, it
+// late-connects each passing element in its own typed resource.
 // The index is a Number in the flow or a parameter: ?|index=1
 // [String:a String:b String:c]>>List.remove:?|index=1 emits a, c
 function remove()
@@ -13,11 +17,8 @@ function remove()
 
 function removeProcessor(resource)
 {
-	Resource.Processor.call(this,resource); 
+	Resource.Processor.call(this,resource);
 	this.resource = resource;
-	this.out_String = null;
-	this.out_Number = null;
-	this.out_Boolean = null;
 	this.in_begin = function()
 	{
 		this.index = null;
@@ -35,11 +36,20 @@ function removeProcessor(resource)
 	this.in_String_$all = collect("String");
 	this.in_Number_$all = collect("Number");
 	this.in_Boolean_$all = collect("Boolean");
+	this.in_Blob_$all = collect("Blob");
 	this.in_end = function()
     {
 		for (let i in this.elements)
-			if (Number(i) !== this.index)
-				this?.["out_" + this.elements[i].type]?.({value: this.elements[i].value});
+		{
+			if (Number(i) === this.index || !this.connectee) continue;
+			// late connect (like http:) — the type is known only now
+			let cast = castLib.castValue(this.elements[i].type, this.elements[i].value);
+			if (cast)
+			{
+				cast.connect(this.connectee);
+				cast.in_go?.();
+			}
+		}
     }
 }
 remove.Processor=removeProcessor;
