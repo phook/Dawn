@@ -327,7 +327,7 @@ app.put("/_file", async (request, result) => {
             result.status(400).send("Missing path query parameter");
             return;
         }
-        filePath = filePath.replace(/^file:\/\//, "");
+        filePath = filePath.replace(/^file:\/+/, "");
         filePath = path.resolve(filePath);
         let data = "";
         request.on("data", chunk => { data += chunk; });

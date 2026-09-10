@@ -6,7 +6,7 @@
 <style>
 body { overflow: hidden; font-family: sans-serif; margin: 0; }
 .column { display: flex; flex-direction: column; height: 100vh; }
-.row    { display: flex; flex-direction: row; flex-grow: 1; }
+.row    { display: flex; flex-direction: row; flex-grow: 1; min-height: 0; }
 .toolbar { display: flex; flex-direction: row; padding: 4px; background: #333; gap: 8px; align-items: center; }
 .toolbar button, .toolbar select { height: 28px; padding: 0 12px; cursor: pointer; }
 .toolbar span { color: #eee; font-size: 12px; }
@@ -14,9 +14,16 @@ body { overflow: hidden; font-family: sans-serif; margin: 0; }
 .project { width: 320px; background: #f5f5f5; overflow: auto; }
 .editor  { flex-grow: 1; background: #fff; position: relative; }
 #editor { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
-.caret { display: inline-block; width: 12px; cursor: pointer; user-select: none; }
+.caret { display: inline-block; width: 12px; cursor: pointer; user-select: none; margin-left: 4px; }
 .caret.right::before { content: "▸"; color: #666; }
 .caret.down::before  { content: "▾"; color: #666; }
+#project ul { list-style: none; margin: 0; padding: 0; }
+#project ul.nested { display: none; }
+#project ul.nested.open { display: block; }
+#project li { padding: 1px 4px; white-space: nowrap; }
+#project li.selected { background: #d6e4ff; }
+.treeicon { width: 14px; height: 14px; margin: 0 4px 0 2px; vertical-align: -2px; }
+.treeicon-spacer { display: inline-block; width: 20px; }
 
 /* Comprehensive fix for ACE cursor positioning - Chrome/Windows */
 .ace_editor,
@@ -358,9 +365,12 @@ function saveFile() {
         } catch (e) {}
     }
     var http = new XMLHttpRequest();
-    http.open("PUT", "/_file?path=" + currentFilePath, true);
+    http.open("PUT", "/_file?path=" + encodeURIComponent(currentFilePath), true);
     http.onreadystatechange = function() {
-        if (http.readyState == 4 && http.status == 200) console.log("Saved:", currentFilePath);
+        if (http.readyState == 4) {
+            if (http.status == 200) console.log("Saved:", currentFilePath);
+            else console.log("Save failed:", http.status, http.responseText);
+        }
     };
     http.send(content);
 }
@@ -465,10 +475,11 @@ function renderTree(parentEl, tree, level, parentUrl) {
         if (entry && entry.contentType === "application/dawn" && tree[name + ".dawn"]) return;
         var indent = makeEl("span", { className: "indent", style: "display:inline-block;width:" + (level * 12) + "px" });
         var row = makeEl("li");
-        var label = makeEl("span", { text: "  " + name, style: "margin-left:4px" });
+        var label = makeEl("span", { text: name, style: "margin-left:2px" });
         if (entry && entry.contentType === "text/directory-json") {
             var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
-            var caret = makeEl("span", { className: "caret right", style: "margin-right:4px" });
+            var caret = makeEl("span", { className: "caret right" });
+            var icon = makeEl("img", { className: "treeicon", src: "images/folder.svg", draggable: "false" });
             var toggleDir = function(ev) {
                 ev.stopPropagation();
                 var nestedUl = row.nextSibling;
@@ -489,13 +500,16 @@ function renderTree(parentEl, tree, level, parentUrl) {
             caret.addEventListener("click", toggleDir);
             row.style.cursor = "pointer";
             row.style.userSelect = "none";
-            row.appendChild(makeEl("span", null, [indent, caret, label]));
+            row.appendChild(makeEl("span", null, [indent, icon, label, caret]));
             ul.appendChild(row);
             var nestedUl = makeEl("ul", { className: "nested", "data-url": childUrl, "data-level": level.toString() });
             ul.appendChild(nestedUl);
         } else {
             var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
-            row.appendChild(makeEl("span", null, [indent, makeEl("span", { style: "display:inline-block;width:12px" }), label]));
+            var fileIcon = name.endsWith(".dawn")
+                ? makeEl("img", { className: "treeicon", src: "images/dawnfile.svg", draggable: "false" })
+                : makeEl("span", { className: "treeicon-spacer" });
+            row.appendChild(makeEl("span", null, [indent, fileIcon, label]));
             row.addEventListener("click", function(ev) { 
                 ev.stopPropagation(); 
                 selectFile(childUrl, row); 
