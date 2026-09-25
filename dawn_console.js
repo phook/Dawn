@@ -329,21 +329,29 @@ app.put("/_file", async (request, result) => {
         }
         filePath = filePath.replace(/^file:\/+/, "");
         filePath = path.resolve(filePath);
+        console.log("DEBUG: saving to", filePath);
         let data = "";
-        request.on("data", chunk => { data += chunk; });
+        request.on("data", chunk => { 
+            console.log("DEBUG: received data chunk, length:", chunk.length); 
+            data += chunk; 
+        });
         request.on("end", () => {
+            console.log("DEBUG: save complete, data length:", data.length, "file:", filePath);
             try {
                 fs.writeFileSync(filePath, data);
+                console.log("DEBUG: file written successfully");
                 result.status(200).send("OK");
                 // editing a .dawn source inside the repo → regenerate its .dawn.js artifact
                 if (filePath.endsWith(".dawn") && filePath.startsWith(path.join(__dirname, "dawn"))) {
                     try { require("child_process").execFileSync("node", [path.join(__dirname, "build_sources.js")]); } catch (e) {}
                 }
             } catch (e) {
+                console.log("DEBUG: save error:", e.message);
                 result.status(500).send(e.message);
             }
         });
     } catch (err) {
+        console.log("DEBUG: put _file error:", err.message);
         result.status(500).send(err.message);
     }
 });

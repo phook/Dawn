@@ -43,7 +43,7 @@ future precompiled `.js`). Delivered:
   them against documented ports (mismatch = build failure), emits one HTML
   page per resource + tree index into `docs/api/` (gitignored, regenerated)
 - Sidecar docs for all 40 resources in the library
-- `Test/runner.js` executes every `@example` — **docs are tests** (34 doc
+- `Test/runner.js` executes every `@example` — **docs are tests** (48 doc
   examples currently green)
 
 Future: extractor becomes a Dawn flow (Note 7's pipeline); docs become
@@ -89,8 +89,9 @@ Goal: a reasonable battery-included library so real programs are writable.
      on the `?write`/`?append` selection only)
    - [x] `file:` data read: `file:<path>?read` — casts by content-type, late-connects
    - [x] content-type casting: `dawn/Scheme/cast.dawn.js` — text/*→String, json→Data,
-     image/*→Data until a proper `image` content-type is built per convention
-     (lowercase under `Content-Type/`). Values late-connect to the flow with
+     `application/octet-stream`→`octetstream` resource (the universal binary
+     fallback, `Content-Type/application/octetstream`), `image/*`→image family
+     resource bridging to octetstream bytes. Values late-connect to the flow with
      their true type.
    - [x] `http:`/`https:` client (late-cast on content-type; error channel on failure;
      integration test: Test/integration/http_client.test.js)
@@ -108,27 +109,39 @@ Notes/Note 7 + preamp analogy; numeric `_N_` port grouping with binder trial ord
 
 Exit criteria met 2026-09-03: every resource has a passing case in Test/cases/dawn/; docs/library.md is green; the codeexamples all run (HelloWorld rewritten; Tester: removed from it � it returns in Phase 2 when define/Meta:Assignment land).
 
-### Phase 2 — The basic flavor, finished
+### Phase 2 — The basic flavor, finished — 🚧 IN PROGRESS
 
 Goal: basic flavor is *the* way humans write Dawn; canonical URI form is the assembly.
 
-1. Fix the four known grammar bugs (diagnosed in `docs/progress.md`):
-   - `TD_FUNCTION_LINES` accepting bare expressions (all 12 basic→dawn failures)
-   - FD body-printer wiring (all 13 dawn→basic failures)
-   - `÷` surviving into literals
-   - the `subtract` vs `negate`+`add` round-trip mismatch
-2. Extend the flavor: comparisons in TD rules (FD side exists), loops (`for`/`while` —
-   the aspirational BASIC loop sketch lived in `Basic.dawn_basic`; since flavors are
-   just views, see git history), function definitions (not just resource `define`),
-   override of existing resources, `Meta:Assignment` runtime.
-3. Round-trip guarantee: basic → dawn → basic is identity; extend `Test/cases/`.
-4. Run `check_grammar.js` clean (kills the contradictory duplicate `FD_IF_*` pairs);
-   update `docs/basic-flavor-syntax.md` to match the final grammar exactly.
+Done so far:
+- [x] Round-trip corpus stable: 21 basic→dawn + 21 dawn→basic cases pinned by snapshot
+- [x] Native blocks in define bodies: indentation, nested braces, `%`-leading and
+      empty payloads all survive the round trip
+- [x] Comments as metas: `#` → `Meta.Comment:>>`, `#doc` ↔ `Meta.documentation:`
+- [x] Editor enforces the flavor end-to-end (load/save/switch all go through
+      the grammar); syntax gating blocks switching/saving on errors
+- [x] `check_grammar.js` duplicate-free (URI1/URI2 unused-but-defined remain)
+- [x] `Meta:` skip machinery removed from the compiler; metas are ignored via
+      `dawn/Flavors/removeMeta.bnft` instead
+- [x] `Meta:Assignment` clarified — canonical hint for flavors only
+      (`Meta:Assignment>>expr>>x` pretty-prints as `x ≔ expr`; no runtime
+      semantics needed and none planned)
 
-Exit criteria: 100% round-trip on the full corpus; any Phase-1 library feature
-writable in basic flavor without touching URI form.
+Still open (see docs/progress.md "Known remaining gaps"):
+- [ ] Mixed arithmetic chains (`1 + 2 - 3`)
+- [ ] Comparisons in TD syntax (FD side exists)
+- [ ] Loops (`for`/`while`) and function-definition statements beyond
+      resource `define`; resource override statements
+- [ ] Regenerate `docs/basic-flavor-syntax.md` to match the final grammar
 
-### Phase 3 — The server, in Dawn
+Non-goals recorded 2026-09-22: bare expressions in bodies are rejected *by
+design* (Dawn has no return values — everything must flow to an output), so
+that item is off the list, not deferred.
+
+Exit criteria (unchanged): 100% round-trip on the full corpus; any Phase-1
+library feature writable in basic flavor without touching URI form.
+
+### Phase 3 — The server, in Dawn — 🚧 IN PROGRESS (see `docs/phase3-plan.md`)
 
 Goal: `dawn_console.js`, `hubserver.js`, `dawn_run.js` reimplemented as `.dawn`
 sources, readable in basic flavor via `define` blocks, `native javascript` only

@@ -1,0 +1,59 @@
+# removeMeta.bnft - strip Meta statements from canonical Dawn source
+#
+# Meta statements are comments / documentation and carry no runtime meaning:
+#   Meta:xxx        bare statement form: head and rest of line are dropped
+#   Meta:xxx>>      flow-head form: only the "Meta:xxx>>" head is dropped
+#   Meta.xxx ...    dotted form (Meta.documentation, Meta.Comment, ...): whole line dropped
+#
+# Meta markers are recognised only at unit boundaries: line start or directly
+# after "[" so list-embedded forms like [Meta:Assignment>>...] are caught
+# while Meta inside ordinary identifiers such as String:Metadata is untouched
+#
+# rm = removeMeta
+
+RM_EOL:
+  "\r\n"
+  "\n"
+  "\r"
+
+RM_LINE_CHAR:
+  "\0x0000".."\0x0009"
+  "\0x000B".."\0x000C"
+  "\0x000E".."\0xFFFF"
+
+RM_TEXT_CHAR:
+  "\0x0000".."\0x0009"
+  "\0x000B".."\0x000C"
+  "\0x000E".."\0x005A"
+  "\0x005C".."\0xFFFF"
+
+RM_NAME_CHAR:
+  "\0x0000".."\0x0009"
+  "\0x000B".."\0x000C"
+  "\0x000E".."\0x003D"
+  "\0x003F".."\0xFFFF"
+
+RM_LINE_TAIL:
+  RM_LINE_CHAR { RM_LINE_CHAR } -> RM_LINE_CHAR
+
+RM_TEXT:
+  RM_TEXT_CHAR { RM_TEXT_CHAR } -> RM_TEXT_CHAR
+
+RM_NAME:
+  RM_NAME_CHAR { RM_NAME_CHAR } -> RM_NAME_CHAR
+
+RM_AFTER_META:
+  ">>" -> ""
+  RM_LINE_TAIL [ RM_EOL ] -> ""
+  [ RM_EOL ] -> ""
+
+RM_UNIT:
+  "Meta." RM_LINE_TAIL [ RM_EOL ] -> ""
+  "Meta:" RM_NAME RM_AFTER_META -> ""
+  "[" -> "["
+  RM_TEXT RM_EOL -> RM_TEXT RM_EOL
+  RM_EOL -> RM_EOL
+  RM_TEXT -> RM_TEXT
+
+RM_PROGRAM:
+  { RM_UNIT }

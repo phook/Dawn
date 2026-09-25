@@ -8,12 +8,46 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 
 | Suite                                                       | Pass | Fail |
 |-------------------------------------------------------------|-----:|-----:|
-| Dawn execution (`dawn_run.js` against `.dawn`)               |  26  |   0  |
-| Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  22  |   0  |
+| Dawn execution (`dawn_run.js` against `.dawn`)               |  49  |   0  |
+| Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  21  |   0  |
 | Basic flavor pretty-print (`dawn → basic`, incl. prompt)     |  21  |   0  |
-| Documentation `@example` execution                           |  55  |   0  |
-| Integration (`Test/integration/`)                            |   3  |   0  |
-| **Total**                                                    | **137** | **0** |
+| Documentation `@example` execution                           |  48  |   0  |
+| Integration (`Test/integration/`)                            |   2  |   0  |
+| **Total**                                                    | **141** | **0** |
+
+## What changed 2026-09-22 (blob→octetstream + editor/flavor pipeline)
+
+**Blob is gone; binary = `application/octetstream`.** The old universal
+`Content-Type/data/Blob` resource was deleted and replaced by a resource named
+`octetstream` living at `dawn/Content-Type/application/octetstream.dawn` —
+the true `application/octet-stream` fallback in `Scheme/cast`. The binary
+transport ports on every value resource (`String`, `Number`, `Boolean`,
+`Data`, `List`, `text`, `image`, `json`, `Console`, `file:`) are now
+`in_octetstream_$all` / `out_octetstream`; Console prints `octetstream(N bytes)`.
+`image/*` resolves to the real `Content-Type/image` family resource, which now
+endpoints into octetstream bytes.
+
+**Editor BasicPretty is now a real view, not a decoration.** The editor
+(`public/editor.html`) converts canonical `.dawn` ↔ basic form via the flavor
+grammar on load, on save and on every flavor switch — no regex fallbacks, no
+silent file writes:
+
+- `#doc …` lines ↔ `Meta.documentation:` lines round-trip in both
+  `TD_SYNTAX_PATHS` (to-dawn) and `FD_DOC` (from-dawn); plain `#` comments map
+  to `Meta.Comment:>>`.
+- Native blocks: first-line indentation is no longer eaten by the separator
+  (new `TD_EOL` rule), `%`-leading and empty payloads decode correctly
+  (`FD_NATIVE_PAYLOAD`), and `define`-level bodies with nested `{`/`}`
+  round-trip byte-identical (raw-block markers on `#significantwhitespace`).
+- `removeMeta.bnft` (in `dawn/Flavors/`) strips Meta statements before the
+  compiler sees the check source; docs/comments are metas that are simply
+  ignored downstream. Saved content always keeps the metas.
+- Editing protection: debounced syntax check drives tab color *and* control
+  state — red tab ⇒ flavor selector + Save disabled, immediate re-check on
+  switch attempts so an error can never be converted/lost mid-flight.
+- Save plumbing fixed: editor content is actually converted and sent; a
+  conversion or compile failure refuses the write instead of truncating the
+  file to empty.
 
 ## What changed 2026-09-03 (Phase 2 kickoff)
 
@@ -45,29 +79,37 @@ grammar and have been regenerated (`Test/runner.js --update`).
 
 ## Known remaining gaps (Phase 2 continuation, by priority)
 
-1. **Mixed-chains**: `1 + 2 - 3` doesn't parse (only all-`+`, all-`-`, all-`*`,
-   all-`/` chains). Canonical nested form should be `[[1 2]>>add: 3]>>subtract:`.
-2. **Bare expressions in define bodies**: `input n { 3+4 }` still fails —
-   widened `TD_FUNCTION_LINES` caused ambiguity regressions; needs the
-   statement/expression split cleaned up.
-3. **Comparisons in TD**: FD_COMPARERS exists (pretty-print), but no TD side.
-4. **Native blocks with braces in content or at program top level**: the
-   `#significantwhitespace` program preprocessing mangles literal `{`/`}` that
-   native javascript needs; works inside define bodies only for simple content.
-5. **`Meta:Assignment` runtime** (identity/scope for `≔`), `Identifier:`/
-   `loop:`/`clock:` (deferred by user to Phase 2/3).
-6. **UIL pages as sources** — Phase 5.
+1. **Mixed chains**: `1 + 2 - 3` doesn't parse (same-op chains only).
+2. **Comparisons in TD**: FD side only; `3 > 2`, `3 < 2` don't parse in a
+   basic program.
+3. **Native blocks at program top level**: work inside `define` bodies
+   (braces survive now); top-level raw blocks and blank-line normalization
+   edge cases remain.
+4. **`Identifier:`/`loop:`/`clock:`** (deferred by user to Phase 2/3).
+5. **UIL pages as sources** — Phase 5.
+6. **`check_grammar.js` hygiene**: duplicate-free now; two stale definitions
+   (`URI1`, `URI2`) unused.
+
+Resolved-not-issues (recorded 2026-09-22):
+- *Bare expressions in define bodies* (`input n { 3+4 }`): **not a gap** —
+  Dawn has no return values; every value must flow to an output. A bare
+  expression in a body has nowhere to go and rightly fails.
+- *`Meta:Assignment` runtime*: **no runtime semantics needed** — it is a
+  canonical hint for flavors: the basic view prints `Meta:Assignment>>expr>>x`
+  as `x ≔ expr`; plain `expr>>x` stays a plain flow. There is nothing to
+  implement at runtime.
 
 ## Tooling status
 
 | Tool | Status |
 |---|---|
-| `node Test/runner.js` | 137/0 today, snapshots enforced |
-| `node build_docs.js` | regenerates `docs/api/` from `Meta.documentation:` blocks |
+| `node Test/runner.js` | 141/0 today, snapshots enforced |
+| `node build_docs.js` | regenerates `docs/api/` from `Meta.documentation:` blocks (56 pages) |
 | `node build_sources.js` | rebuilds stale `.dawn.js` from `.dawn` sources (hidden, timestamp-stamped) |
 | `node dawn_run.js <x.dawn>` | works |
 | `node dawn_console.js` | web IDE works; keyboard fixed 2026-09-03 (pinned jQuery/jquery.terminal, textarea input) |
 | editor.html | works; hidden `.dawn.js` artifacts don't confuse it (they're never edited) |
+| `node check_grammar.js` | no duplicate nonterminals; two unused definitions flagged (`URI1`, `URI2`) |
 
 ## See also
 

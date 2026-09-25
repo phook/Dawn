@@ -35,7 +35,7 @@ function getProcessor(resource)
 	this.in_String_$all = addElement("String");
 	this.in_Number_$all = addElement("Number");
 	this.in_Boolean_$all = addElement("Boolean");
-	this.in_Blob_$all = addElement("Blob");
+	this.in_octetstream_$all = addElement("octetstream");
 	this.in_end = function()
     {
 		if (this.index === null) return;

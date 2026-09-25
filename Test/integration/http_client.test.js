@@ -37,7 +37,7 @@ srv.listen(0, '127.0.0.1', async () => {
   const port = srv.address().port;
   check('http body',  await runCase(`http:127.0.0.1:${port}/hello>>Console:`), 'hi from dawn');
   check('http error', await runCase(`http:127.0.0.1:${port}/oops>>Console:`), 'http: status 404 for http://127.0.0.1:' + port + '/oops');
-  check('http binary', await runCase(`http:127.0.0.1:${port}/img>>Console:`), 'Blob(4 bytes)');
+  check('http binary', await runCase(`http:127.0.0.1:${port}/img>>Console:`), 'octetstream(4 bytes)');
   srv.close();
   console.log(`${successes} passed, ${failures} failed (integration)`);
   process.exit(failures ? 1 : 0);

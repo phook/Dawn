@@ -18,12 +18,12 @@ function _NumberProcessor(resource)
   Resource.Processor.call(this,resource); 
 	this.resource = resource;
 	this.out_Number = null;
-	this.out_Blob = null;
+	this.out_octetstream = null;
   this.in_Number_$all = function(input)
   {   
       this.get_resource().value = input.value;
   }
-	this.in_Blob_$all = function(input)
+	this.in_octetstream_$all = function(input)
   {
       let text = new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value)));
       try { resource.value = new resource.bigRat(text); }

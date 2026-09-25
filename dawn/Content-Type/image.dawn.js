@@ -14,14 +14,14 @@ function imageProcessor(resource)
 {
 	Resource.Processor.call(this,resource);
 	this.resource = resource;
-	this.out_Blob = null;
-	this.in_Blob_$all = function(input)
+	this.out_octetstream = null;
+	this.in_octetstream_$all = function(input)
     {
 		resource.value = input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value);
     }
 	this.in_go = function()
     {
-		return this.out_Blob?.(resource);
+		return this.out_octetstream?.(resource);
     }
 	this.in_instanciate = function(input)
     {

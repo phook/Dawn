@@ -36,7 +36,7 @@ function removeProcessor(resource)
 	this.in_String_$all = collect("String");
 	this.in_Number_$all = collect("Number");
 	this.in_Boolean_$all = collect("Boolean");
-	this.in_Blob_$all = collect("Blob");
+	this.in_octetstream_$all = collect("octetstream");
 	this.in_end = function()
     {
 		for (let i in this.elements)

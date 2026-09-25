@@ -2,31 +2,28 @@ const Resource  = Dawn.require("Content-Type/data/Resource");
 
 // Binary byte array — the universal transport value. Holds a JavaScript
 // Uint8Array (a server Buffer is one). http:, file: and Scheme/cast produce
-// Blobs for binary content; the blob interface (in_Blob_$all / out_Blob) is
-// how every value resource converts to and from bytes.
-function Blob()
+// octetstreams for binary content; the octetstream interface
+// (in_octetstream_$all / out_octetstream) is how every value resource
+// converts to and from bytes.
+function octetstream()
 {
-	Resource.call(this,"Blob");
-	this.Processor = BlobProcessor;
+	Resource.call(this,"octetstream");
+	this.Processor = octetstreamProcessor;
 	return this;
 }
 
-function BlobProcessor(resource)
+function octetstreamProcessor(resource)
 {
 	Resource.Processor.call(this,resource);
 	this.resource = resource;
-	this.out_Blob = null;
-	this.in_Blob_$all = function(input)
+	this.out_octetstream = null;
+	this.in_octetstream_$all = function(input)
     {
 		resource.value = input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value);
     }
 	this.in_go = function()
     {
-		return this.out_Blob?.(resource);
-    }
-	this.toBlob = function()
-    {
-		return resource.value;
+		return this.out_octetstream?.(resource);
     }
 	this.in_instanciate = function(input)
     {
@@ -36,5 +33,5 @@ function BlobProcessor(resource)
     }
 	return this;
 }
-Blob.Processor=BlobProcessor;
-module.exports=Blob;
+octetstream.Processor=octetstreamProcessor;
+module.exports=octetstream;

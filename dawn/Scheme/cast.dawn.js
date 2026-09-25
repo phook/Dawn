@@ -3,7 +3,7 @@ const StringRes  = Dawn.require("Content-Type/data/String");
 const NumberRes  = Dawn.require("Content-Type/data/Number");
 const BooleanRes = Dawn.require("Content-Type/data/Boolean");
 const DataRes    = Dawn.require("Content-Type/data/Data");
-const BlobRes    = Dawn.require("Content-Type/data/Blob");
+const OctetstreamRes    = Dawn.require("Content-Type/application/octetstream");
 
 // Central content-type → resource casting, shared by the schemes that load
 // external data (http:, https:, file:). The moment of cast is late: only when
@@ -15,9 +15,9 @@ const BlobRes    = Dawn.require("Content-Type/data/Blob");
 //   Content-Type.<type>             family main resource (e.g. Content-Type/image)
 //   built-in defaults: text/* → data.String, image/svg+xml → data.String
 //                      (markup text), application/json → data.Data,
-//                      anything else → data.Blob
+//                      anything else → application.octetstream
 // The found resource is fed the raw bytes through its blob interface
-// (in_Blob_$all) — every value resource knows how to parse its own bytes.
+// (in_octetstream_$all) — every value resource knows how to parse its own bytes.
 async function cast(contentType, bytes, url)
 {
     contentType = (contentType || "").split(";")[0].trim().toLowerCase();
@@ -32,13 +32,13 @@ async function cast(contentType, bytes, url)
     if (type === "text") candidates.push("Content-Type.data.String:");
     if (contentType === "image/svg+xml") candidates.push("Content-Type.data.String:");
     if (contentType === "application/json") candidates.push("Content-Type.data.Data:");
-    candidates.push("Content-Type.data.Blob:");
+    candidates.push("Content-Type.application.octetstream:");
     for (let id of candidates)
     {
         let proc = null;
         try { proc = await root.lookup(id); } catch (e) { proc = null; }
         if (!proc) continue;
-        let blobInput = proc.in_Blob_$all || proc.in_Blob;
+        let blobInput = proc.in_octetstream_$all || proc.in_octetstream;
         if (blobInput)
         {
             blobInput.call(proc, { value: u8 });
@@ -61,7 +61,7 @@ function castValue(type, value)
     if (type === "Number")  res = new NumberRes();
     if (type === "Boolean") res = new BooleanRes();
     if (type === "Data")    res = new DataRes();
-    if (type === "Blob")    res = new BlobRes();
+    if (type === "octetstream")    res = new OctetstreamRes();
     if (!res) return null;
     res.value = value;
     let proc = res.instanciate_processor();
@@ -73,7 +73,7 @@ function castValue(type, value)
     return proc;
 }
 
-// base64 helpers (Uint8Array ↔ base64), used by Blob serialization in List
+// base64 helpers (Uint8Array ↔ base64), used by octetstream serialization in List
 function u8ToBase64(u8)
 {
     if (typeof Buffer !== "undefined") return Buffer.from(u8).toString("base64");

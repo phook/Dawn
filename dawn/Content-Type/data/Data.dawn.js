@@ -14,8 +14,8 @@ function DataProcessor(resource)
   Resource.Processor.call(this,resource); 
 	this.resource = resource;
 	this.out_Data = null;
-	this.out_Blob = null;
-	this.in_Blob_$all = function(input)
+	this.out_octetstream = null;
+	this.in_octetstream_$all = function(input)
     {
       let text = new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value)));
       try { resource.value = JSON.parse(text); }

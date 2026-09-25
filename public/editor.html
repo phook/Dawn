@@ -77,11 +77,9 @@ function patchFontMetrics() {
             var proto = fm_module.FontMetrics.prototype;
             var origGetCharWidth = proto.getCharacterWidth;
             proto.getCharacterWidth = function(ch) {
-                console.log("PROTOTYPE getCharacterWidth called for:", ch, ch.charCodeAt(0));
                 if (ch === "\u2254") return 1.0;
                 return origGetCharWidth.call(this, ch);
             };
-            console.log("Patched FontMetrics.prototype for ≔ (U+2254)");
         }
     });
     
@@ -117,6 +115,7 @@ let environment = Dawn.require("/environment.json");
 let BNFT = null;
 let basicFlavor = null;
 let basicParser = null;
+let metaStripper = null;
 let dawnCompiler = null;
 let currentFilePath = null;
 let currentFlavor = "BasicPretty";
@@ -131,6 +130,7 @@ let syntaxOK = false;
         BNFT = Dawn.require("../BNFT/BNFT.js");
         basicFlavor = Dawn.require("Flavors/basic.bnft");
         basicParser = new BNFT(basicFlavor, { fileToString: fileToString });
+        metaStripper = new BNFT(Dawn.require("Flavors/removeMeta.bnft"), { fileToString: fileToString });
         dawnCompiler = new (Dawn.require("DawnCompiler.dawn.js"));
     } catch (e) {
         console.log("init error", e && e.message);
@@ -169,6 +169,7 @@ if (editElement) {
         editor.getSession().setMode("ace/mode/javascript");
         editor.setFontSize(14);
         editor.session.$enableVarChar = true; // variable char width for ≔ etc.
+		editor.session.setOptions({ tabSize: 2, useSoftTabs: true });
         if (editor.renderer && editor.renderer.$fontMetrics) {
             editor.session.$setFontMetrics(editor.renderer.$fontMetrics);
         }
@@ -186,6 +187,7 @@ if (editElement) {
             }
         }, 100);
 
+/*
         // Patch Cursor for correct pixel positions on variable-width chars
         setTimeout(function() {
             if (editor && editor.renderer && editor.renderer.$cursorLayer) {
@@ -207,13 +209,13 @@ if (editElement) {
                 };
             }
         }, 100);
-
+*/
 
     } catch (e) { console.log("ACE init error", e); }
 }
 
 function buildFetchUrl(url) {
-    if (url && url.indexOf("file:///") === 0) return "/file:///" + url.substring(8);
+    if (url && url.indexOf("file:///") === 0) return "/file:///" + url.substring(8);l
     if (url && url.indexOf("file:/") === 0) return "/" + url;
     return url;
 }
@@ -241,7 +243,14 @@ function convertToFlavor(text, flavor) {
 
 // reverse of convertToFlavor: #doc lines and define/native javascript blocks
 // back into canonical [Native.Javascript:…]>>NewResource: form.
-function convertFromBasicView(text) {
+function convertFromFlavor(text, flavor) {
+	if (flavor === "Pure") return text;
+	if (basicParser) {
+		let parsed = basicParser.parse(text + "\n", { nonterminal: "TODAWN_PROGRAM", alert: function(errorText) {console.log(errorText);} });
+		if (parsed && parsed.indexOf("ERROR") !== 0) return parsed;
+	}
+    return [].join("\n");
+/*
 	let out = [];
 	const lines = text.split("\n");
 	let i = 0;
@@ -252,9 +261,8 @@ function convertFromBasicView(text) {
 			i++;
 			continue;
 		}
-		const trimmed = line.trim();
-		if (trimmed.startsWith("define ")) {
-			const uri  = trimmed.substring(7).trim();
+		if (line.startsWith("define ")) {
+			const uri  = line.substring(7).trim();
 			let   j    = i + 1;
 			let   body = [];
 			if ((lines[j] || "").trim() === "native javascript") {
@@ -273,6 +281,7 @@ function convertFromBasicView(text) {
 		i++;
 	}
 	return out.join("\n");
+*/
 }
 
 function makeEl(tag, attrs, children) {
@@ -333,46 +342,59 @@ function updateFilename(name) {
     }
 }
 
-function saveFile() {
+// Meta statements (documentation, comments) are stripped before the compile
+// check — removeMeta.bnft transforms them away; the full source, metas
+// included, is what gets saved.
+// Note: the BNFT strip is O(n^2) on large sources — skip it entirely when no
+// Meta markers are present (the common case for plain-flow files).
+function compileCheckSource(source) {
+    if (!metaStripper) return source;
+    if (source.indexOf("Meta.") === -1 && source.indexOf("Meta:") === -1) return source;
+    var stripped = metaStripper.parse(source, { alert: function() {} });
+    if (stripped && stripped.indexOf("ERROR") !== 0) return stripped;
+    return source;
+}
+
+function saveFile() { 
     var content = editor.getValue();
+	var dawnSource="";
     var flavor = currentFlavor || document.getElementById("flavorSelect").value;
+    console.log("DEBUG saveFile: flavor=", flavor, "currentFilePath=", currentFilePath, "content length=", content.length);
     if (!currentFilePath) {
         var name = prompt("File name:", "untitled.dawn");
         if (!name) return;
         currentFilePath = "file:///" + name;
         updateFilename(name);
     }
-    if (flavor !== "Pure" && BNFT && basicParser) {
-        try {
-            var toParse = content;
-            if (!toParse.endsWith("\n")) toParse += "\n";
-            // canonical sources (loaded from .dawn files with docs/definitions)
-            // must go back through the structural converter, not the flavor parser
-            var isCanonicalOrConverted = content.indexOf("Meta.documentation:") !== -1
-                || content.indexOf("Native.Javascript:") !== -1
-                || content.indexOf("]>>NewResource:") !== -1
-                || content.indexOf("#doc ") !== -1
-                || content.indexOf("native javascript") !== -1;
-            if (isCanonicalOrConverted)
-            {
-                content = convertFromBasicView(toParse);
-            }
-            else
-            {
-                var dawnSource = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
-                if (dawnSource && dawnSource.indexOf("ERROR") !== 0) content = dawnSource.trimEnd();
-            }
-        } catch (e) {}
-    }
+    if (BNFT && basicParser) {
+        dawnSource = convertFromFlavor(content, flavor);
+		if (!dawnSource && /[^\s]/.test(content)) {
+			console.log("DEBUG: flavor conversion failed, not saving");
+			return;
+		}
+		var codeSource = compileCheckSource(dawnSource);
+		if (/[^\s]/.test(codeSource) && dawnCompiler.parse(codeSource).indexOf("ERROR") === 0) {
+			console.log("DEBUG: dawn source not compiling, not saving");
+			return;
+		}
+    } else {
+        console.log("DEBUG: BNFT/flavorparser not available, not saving");
+		return;
+	}
     var http = new XMLHttpRequest();
     http.open("PUT", "/_file?path=" + encodeURIComponent(currentFilePath), true);
     http.onreadystatechange = function() {
         if (http.readyState == 4) {
-            if (http.status == 200) console.log("Saved:", currentFilePath);
+            console.log("DEBUG: save response status=", http.status, "response=", http.responseText);
+            if (http.status == 200) {
+                console.log("Saved:", currentFilePath);
+                // Reload the saved file to show updated content
+                loadFile(currentFilePath);
+            }
             else console.log("Save failed:", http.status, http.responseText);
         }
     };
-    http.send(content);
+    http.send(dawnSource);
 }
 
 document.getElementById("newBtn").addEventListener("click", newFile);
@@ -380,38 +402,31 @@ document.getElementById("saveBtn").addEventListener("click", saveFile);
 
 document.getElementById("flavorSelect").addEventListener("change", function() {
 	if (!editor || !BNFT || !basicParser) return;
-	var editText = editor.getValue();
-    var newFlavor = document.getElementById("flavorSelect").value;
-	var flavorChanged = (currentFlavor != newFlavor)
-	lastFlavor = currentFlavor;
-    currentFlavor = newFlavor;
 
-	var toParse = editText;
-	if (!toParse.endsWith("\n")) toParse += "\n";
-	
-	var newCode = "";
-	
-	if (currentFlavor === "Pure" && lastLoadedCanonical !== null)
+	// evaluate syntax now, not when the debounce fires — a broken buffer must
+	// never be converted, otherwise the edit would be lost in the switch
+	checkSyntax();
+	if (!syntaxOK) {
+		document.getElementById("flavorSelect").value = currentFlavor; // snap selector back
+		return; // selector stays disabled until checkSyntax sees a good buffer again
+	}
+
+	var editText = editor.getValue();
+	var last = currentFlavor;
+    currentFlavor = document.getElementById("flavorSelect").value;
+
+	var text = editText;
+	if (!text.endsWith("\n")) text += "\n";
+
+	// canonical: convert current content out of its flavor, then into the
+	// newly selected flavor — edits are never replaced by the file on disk
+	var dawnSource = convertFromFlavor(text, last);
+	var newCode = convertToFlavor(dawnSource, currentFlavor);
+	if (dawnSource !== "" && dawnSource.indexOf("ERROR") !== 0 && newCode && newCode.indexOf("ERROR") !== 0)
 	{
-		editor.setValue(lastLoadedCanonical); // the Pure view IS the canonical file as-is
+		editor.setValue(newCode, -1);
 		editor.getSession().getUndoManager().reset();
 	}
-	else
-	if (lastFlavor === "Pure")
-	{
-		newCode = convertToFlavor(toParse, currentFlavor);
-		if (newCode && newCode.indexOf("ERROR") !== 0)
-			editor.setValue(newCode);
-	}
-	else
-	if (lastFlavor === "BasicPretty")
-	{
-		newCode = basicParser.parse(toParse, { nonterminal: "TODAWN_PROGRAM", alert: function() {} });
-		if (newCode.indexOf("ERROR") !== 0)
-			editor.setValue(newCode);
-	}
-    document.getElementById("filename").style.color = "#0f0";
-
     checkSyntax();
 });
 
@@ -421,41 +436,14 @@ function checkSyntax() {
     var content = editor.getValue();
     if (!content.endsWith("\n")) content += "\n";
 	
-	// Meta.documentation lines are comments (docs live in-source); they are not
-	// syntax, and the flow compiler mustn't judge them. Strip them for checking.
-	var checkable = content.split("\n").filter(l => !l.startsWith("Meta.documentation:")).join("\n");
+	let dawnSource = convertFromFlavor(content,currentFlavor);
+	syntaxOK = !/[^\s]/.test(content) // an empty buffer has nothing to break
+        || (dawnSource !== "" && dawnSource.indexOf("ERROR") !== 0 // flavor conversion must succeed
+            && (!/[^\s]/.test(compileCheckSource(dawnSource)) // meta-stripped remainder may be empty (docs only)
+                || dawnCompiler.parse(compileCheckSource(dawnSource)).indexOf("ERROR") !== 0)); // code must compile
 	
-	if (currentFlavor == "Pure")
-	{
-		let result = dawnCompiler.parse(checkable);
-		syntaxOK = result.indexOf("ERROR") !== 0;
-	}
-	else
-	{
-		// "Canonical" sources (docs/definitions — contain Meta.documentation: or
-		// NewResource:/Native.Javascript: markers) are checked by the real dawn
-		// compiler; basic-flavor sources go through the flavor grammar.
-	var isCanonical = content.indexOf("Meta.documentation:") !== -1
-	               || content.indexOf("Native.Javascript:") !== -1
-	               || content.indexOf("]>>NewResource:") !== -1;
-	// the basic VIEW of a canonical source: reassemble into canonical, then check
-	var looksLikeConverted = content.indexOf("#doc ") !== -1 || (content.indexOf("native javascript") !== -1 && content.indexOf("endnative") !== -1);
-	if (isCanonical)
-	{
-		syntaxOK = dawnCompiler.parse(checkable).indexOf("ERROR") !== 0;
-	}
-	else if (looksLikeConverted)
-	{
-		let reconstructed = convertFromBasicView(content).split("\n").filter(l => !l.startsWith("Meta.documentation:")).join("\n");
-		syntaxOK = dawnCompiler.parse(reconstructed).indexOf("ERROR") !== 0;
-	}
-	else
-	{
-		let result =  basicParser.parse(checkable, { nonterminal: currentFlavor == "BasicPretty" ? "TODAWN_PROGRAM" : "TODAWN_PROGRAM_KEYBOARD_COMMANDPROMPT", alert: function() {} });
-		syntaxOK = result.indexOf("ERROR") !== 0;
-	}
-	}
-document.getElementById("flavorSelect").disabled = false; // flavor switching is a view choice, never blocked
+	document.getElementById("flavorSelect").disabled = !syntaxOK; // switching blocked while the buffer is broken
+	document.getElementById("saveBtn").disabled = !syntaxOK;      // saving blocked while the buffer is broken
 	document.getElementById("filename").style.color = syntaxOK ? "#0f0" : "#f44"; // color bar to alert user
 }
 

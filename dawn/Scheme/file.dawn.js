@@ -164,8 +164,8 @@ function FileSinkProcessor(resource) {
     }
     this.in_String_write  = fileInput("write");
     this.in_String_append = fileInput("append");
-    this.in_Blob_write  = fileInput("write");
-    this.in_Blob_append = fileInput("append");
+    this.in_octetstream_write  = fileInput("write");
+    this.in_octetstream_append = fileInput("append");
     this.in_end = function() {
         this.fire_end_parameters();
         if (this.operation && Dawn.isServer()) {

@@ -112,8 +112,8 @@ this.get_output_types = function() {
 
     
     
-    this.out_Blob = null;
-    this.in_Blob_$all = function(input) {
+    this.out_octetstream = null;
+    this.in_octetstream_$all = function(input) {
 		let specs = JSON.parse(new TextDecoder().decode((input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value))));
 		resource.elements = [];
 		this.elements = [];
@@ -154,7 +154,7 @@ function serializeElement(el) {
     if (name === "String")  return { type: "String",  value: el.value };
     if (name === "Number")  return { type: "Number",  value: el.value && el.value.toString ? el.value.toString() : String(el.value) };
     if (name === "Boolean") return { type: "Boolean", value: !!el.value };
-    if (name === "Blob")    return { type: "Blob",    value: castLib.u8ToBase64(el.value || new Uint8Array(0)) };
+    if (name === "octetstream")    return { type: "octetstream",    value: castLib.u8ToBase64(el.value || new Uint8Array(0)) };
     if (name === "List")    return { type: "List",    value: (el.elements || []).map(serializeElement) };
     return { type: "Data",    value: el.value !== undefined ? el.value : null };
 }
@@ -165,7 +165,7 @@ function buildElement(spec) {
         return sub.instanciate_processor();
     }
     let value = spec ? spec.value : null;
-    if (spec && spec.type === "Blob" && typeof value === "string") value = castLib.base64ToU8(value);
+    if (spec && spec.type === "octetstream" && typeof value === "string") value = castLib.base64ToU8(value);
     return castLib.castValue(spec && spec.type, value);
 }
 List.Processor=ListProcessor;

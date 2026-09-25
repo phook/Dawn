@@ -15,7 +15,7 @@ function textProcessor(resource)
 	Resource.Processor.call(this,resource);
 	this.resource = resource;
 	this.out_String = null;
-	this.in_Blob_$all = function(input)
+	this.in_octetstream_$all = function(input)
     {
 		let u8 = input.value instanceof Uint8Array ? input.value : new Uint8Array(input.value);
 		resource.value = new TextDecoder().decode(u8);
