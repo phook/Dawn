@@ -1,0 +1,12 @@
+Meta.documentation:httpHello
+Meta.documentation:
+Meta.documentation:Minimal httpServer handler example - answers every request with a
+Meta.documentation:fixed text/plain greeting.
+Meta.documentation:
+Meta.documentation:@port in_request_headers - request meta, arrives before the body
+Meta.documentation:@port in_request_octetstream - request body fallback port
+Meta.documentation:@see httpServer
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20httpHello%20%E2%80%94%20minimal%20native%20handler%20proving%20the%20httpServer%20scheme%20binding%3A%0A%2F%2F%20receives%20the%20request's%20octetstream%20body%20and%20returns%20the%20response%20String.%0Afunction%20httpHello()%0A%7B%0A%09Resource.call(this%2C%22httpHello%22)%3B%0A%09this.Processor%20%3D%20httpHelloProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20httpHelloProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09this.in_request_headers%20%3D%20function(input)%0A%09%7B%0A%09%09%2F%2F%20meta%20arrives%20before%20the%20body%20%E2%80%94%20handy%20for%20routing%20later%0A%09%7D%3B%0A%09this.in_request_octetstream%20%3D%20function(input)%0A%09%7B%0A%09%09const%20StringRes%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FString%22)%3B%0A%09%09console.log(%22HTTPHELLO%20handler%20fired%22)%3B%0A%09%09let%20s%20%3D%20new%20StringRes()%3B%0A%09%09s.value%20%3D%20%22hello%20from%20dawn%20httpServer%22%3B%0A%09%09return%20s%3B%0A%09%7D%3B%0A%09return%20this%3B%0A%7D%0AhttpHello.Processor%20%3D%20httpHelloProcessor%3B%0Amodule.exports%20%3D%20httpHello%3B]>>NewResource:httpHello

@@ -55,7 +55,7 @@ Dawn.require = function serverRequire(url) {
 };
 
 const args = process.argv.slice(2);
-if (args.length !== 1) {
+if (args.length < 1) {
     console.log("USAGE: node dawn_run.js <filename>");
     process.exit(1);
 }
