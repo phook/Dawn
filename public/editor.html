@@ -3,27 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <title>Editor</title>
+<link rel="stylesheet" href="editor-theme.css">
 <style>
-body { overflow: hidden; font-family: sans-serif; margin: 0; }
-.column { display: flex; flex-direction: column; height: 100vh; }
-.row    { display: flex; flex-direction: row; flex-grow: 1; min-height: 0; }
-.toolbar { display: flex; flex-direction: row; padding: 4px; background: #333; gap: 8px; align-items: center; }
+/* === Layout only — all colors/icons/fonts live in editor-theme.css so a skin
+   is just a replacement theme file === */
+html, body { height: 100%; }
+body { display: flex; flex-direction: column; overflow: hidden; margin: 0; }
+.mainrow { display: flex; flex-direction: row; flex-grow: 1; min-height: 0; }
+.workspace { display: flex; flex-direction: column; flex-grow: 1; min-width: 0; }
+.toolbar { display: flex; flex-direction: row; padding: 4px; gap: 8px; align-items: center; flex: none; }
 .toolbar button, .toolbar select { height: 28px; padding: 0 12px; cursor: pointer; }
-.toolbar span { color: #eee; font-size: 12px; }
-.filename { color: #0f0; font-size: 12px; margin-left: 12px; }
-.project { width: 320px; background: #f5f5f5; overflow: auto; }
-.editor  { flex-grow: 1; background: #fff; position: relative; }
+.tabbar { display: flex; overflow-x: auto; min-height: 26px; flex: none; }
+.tab { padding: 4px 8px 4px 10px; display: flex; align-items: center; gap: 6px; white-space: nowrap; user-select: none; cursor: pointer; }
+.project { width: 320px; overflow: auto; flex: none; }
+.editor  { flex-grow: 1; position: relative; min-height: 0; }
 #editor { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 .caret { display: inline-block; width: 12px; cursor: pointer; user-select: none; margin-left: 4px; }
-.caret.right::before { content: "▸"; color: #666; }
-.caret.down::before  { content: "▾"; color: #666; }
+.caret.right::before { content: "▸"; }
+.caret.down::before  { content: "▾"; }
 #project ul { list-style: none; margin: 0; padding: 0; }
 #project ul.nested { display: none; }
 #project ul.nested.open { display: block; }
 #project li { padding: 1px 4px; white-space: nowrap; }
-#project li.selected { background: #d6e4ff; }
-.treeicon { width: 14px; height: 14px; margin: 0 4px 0 2px; vertical-align: -2px; }
-.treeicon-spacer { display: inline-block; width: 20px; }
+.icon { display: inline-block; width: 14px; height: 14px; margin: 0 4px 0 2px; vertical-align: -2px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+.icon-tree-spacer { display: inline-block; width: 20px; }
 
 /* Comprehensive fix for ACE cursor positioning - Chrome/Windows */
 .ace_editor,
@@ -42,7 +45,6 @@ body { overflow: hidden; font-family: sans-serif; margin: 0; }
 </style>
 </head>
 <body>
-<div class="column">
 <div class="toolbar">
 <select id="flavorSelect">
 <option value="BasicPretty">BASIC: Pretty</option>
@@ -51,16 +53,19 @@ body { overflow: hidden; font-family: sans-serif; margin: 0; }
 </select>
 <button id="newBtn">New</button>
 <button id="saveBtn">Save</button>
-<span id="filename" class="filename">No file open</span>
 </div>
-<div class="row">
+<div class="mainrow">
 <div class="project">
 <div id="project">
 <em>Loading project</em>
 </div>
 </div>
+<div class="workspace">
+<div id="tabbar" class="tabbar"></div>
 <div class="editor">
 <div id=editor class=ace_target>
+</div>
+</div>
 </div>
 </div>
 
@@ -117,10 +122,6 @@ let basicFlavor = null;
 let basicParser = null;
 let metaStripper = null;
 let dawnCompiler = null;
-let currentFilePath = null;
-let currentFlavor = "BasicPretty";
-let lastFlavor = null;
-let syntaxOK = false;
 
 (async () => {
     try {
@@ -214,6 +215,171 @@ if (editElement) {
     } catch (e) { console.log("ACE init error", e); }
 }
 
+// ---------- Tabs ----------
+// Each tab owns its file path, flavor, syntax state and ACE session, so the
+// verification logic (flavor switch, save, color) always works on the active tab.
+var tabbar = document.getElementById("tabbar");
+var tabs = [];
+var activeTab = null;
+var tabSeq = 0;
+var idleSession = editor ? editor.getSession() : null; // shown when no tab is open
+
+function makeTabSession() {
+    var session = ace.createEditSession("", "ace/mode/javascript");
+    session.setOptions({ tabSize: 2, useSoftTabs: true });
+    session.$enableVarChar = true;
+    if (editor.renderer && editor.renderer.$fontMetrics) session.$setFontMetrics(editor.renderer.$fontMetrics);
+    session.on("change", function() {
+        var tab = tabForSession(session);
+        if (tab === activeTab) {
+            clearTimeout(syntaxTimer);
+            syntaxTimer = setTimeout(checkSyntax, 500); // checkSyntax also recomputes dirty
+        }
+    });
+    return session;
+}
+
+function tabForSession(session) {
+    for (var i = 0; i < tabs.length; i++) if (tabs[i].session === session) return tabs[i];
+    return null;
+}
+
+function createTab(path, flavor) {
+    var tab = {
+        id: ++tabSeq,
+        path: path || null,
+        flavor: flavor || document.getElementById("flavorSelect").value || "BasicPretty",
+        syntaxOK: true,
+        dirty: false,
+        session: makeTabSession(),
+        el: null,
+        labelEl: null
+    };
+    tab.el = makeEl("div", { className: "tab" });
+    tab.labelEl = makeEl("span", { className: "tablabel" });
+    var closeEl = makeEl("span", { className: "tabclose", text: "✕", title: "Close tab" });
+    closeEl.addEventListener("click", function(ev) { ev.stopPropagation(); closeTab(tab); });
+    tab.el.appendChild(tab.labelEl);
+    tab.el.appendChild(closeEl);
+    tab.el.addEventListener("click", function() { switchToTab(tab); });
+    tab.el.addEventListener("auxclick", function(ev) { if (ev.button === 1) closeTab(tab); }); // middle-click closes
+    tabs.push(tab);
+    tabbar.appendChild(tab.el);
+    renderTab(tab);
+    return tab;
+}
+
+function tabName(tab) {
+    return tab.path ? tab.path.split("/").pop() : "[unnamed]";
+}
+
+// Dirty = the saveable output (buffer converted from its flavor back to
+// canonical dawn) differs from the loaded file. Flavor switching alone never
+// dirties a tab: pure and basic are just editing methods of the same content.
+function canonEqual(a, b) {
+    return a.replace(/\s+$/, "") === b.replace(/\s+$/, ""); // trailing whitespace is not content
+}
+
+function computeDirty(tab) {
+    var text = tab.session.getValue();
+    if (!tab.path) return /[^\s]/.test(text); // untitled: dirty while it's not empty
+    if (tab.canonical == null) return false;
+    if (!text.endsWith("\n")) text += "\n";
+    var dawnSource = convertFromFlavor(text, tab.flavor);
+    if (dawnSource === "" || dawnSource.indexOf("ERROR") === 0)
+        return !canonEqual(tab.session.getValue(), tab.canonical); // broken buffer: raw fallback
+    return !canonEqual(dawnSource, tab.canonical);
+}
+
+function renderTab(tab) {
+    tab.labelEl.textContent = tabName(tab);
+    tab.el.title = tab.path || "unsaved";
+    tab.el.classList.toggle("active", tab === activeTab);
+    tab.el.classList.toggle("error", !tab.syntaxOK);
+    tab.el.classList.toggle("dirty", tab.dirty);
+}
+
+function renderTabs() {
+    for (var i = 0; i < tabs.length; i++) renderTab(tabs[i]);
+}
+
+// One red tab anywhere suspends flavor switching globally — a broken buffer
+// must never be converted, and keeping flavors frozen until all tabs are green
+// again is the simplest guarantee.
+function anyRedTab() {
+    for (var i = 0; i < tabs.length; i++) if (!tabs[i].syntaxOK) return true;
+    return false;
+}
+
+// Applies the tabs' verification state to the shared UI: flavor selector
+// value/enabled, save button, tree highlight. Colors live on the tab names.
+function applyTabState() {
+    var flavorSelect = document.getElementById("flavorSelect");
+    var saveBtn = document.getElementById("saveBtn");
+    if (!activeTab) {
+        flavorSelect.disabled = true;
+        saveBtn.disabled = true;
+        updateTreeSelection();
+        return;
+    }
+    flavorSelect.value = activeTab.flavor;
+    flavorSelect.disabled = anyRedTab();          // switching suspended while any tab is red
+    saveBtn.disabled = !activeTab.syntaxOK;       // saving suspended for a red tab
+    updateTreeSelection();
+}
+
+function switchToTab(tab) {
+    if (!editor || activeTab === tab) return;
+    clearTimeout(syntaxTimer);
+    activeTab = tab;
+    if (tab) editor.setSession(tab.session);
+    else if (idleSession) editor.setSession(idleSession);
+    applyTabState();
+    renderTabs();
+}
+
+function closeTab(tab) {
+    if (tab.dirty && !confirm("Close '" + tabName(tab) + "' without saving?")) return;
+    var idx = tabs.indexOf(tab);
+    if (idx === -1) return;
+    tabs.splice(idx, 1);
+    tabbar.removeChild(tab.el);
+    if (activeTab === tab) {
+        var next = tabs[idx] || tabs[idx - 1] || null;
+        activeTab = null;
+        switchToTab(next);
+    }
+    applyTabState();
+    renderTabs();
+}
+
+function openPath(path) {
+    if (!path || !editor) return;
+    for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].path === path) { switchToTab(tabs[i]); return; }
+    }
+    var tab = createTab(path);
+    switchToTab(tab);
+    GET(buildFetchUrl(path), function(data) {
+        if (tabs.indexOf(tab) === -1) return; // closed while loading
+        var source = data || "";
+        tab.canonical = source; // pristine file content — the dirty baseline
+        source = convertToFlavor(source, tab.flavor);
+        tab.session.setValue(source, -1);
+        tab.session.getUndoManager().reset();
+        tab.dirty = false;
+        renderTab(tab);
+        if (tab === activeTab) checkSyntax();
+    });
+}
+
+function updateTreeSelection() {
+    document.querySelectorAll("#project li.selected").forEach(x => x.classList.remove("selected"));
+    if (!activeTab || !activeTab.path) return;
+    var li = document.querySelector('#project li[data-path="' + CSS.escape(activeTab.path) + '"]');
+    if (li) li.classList.add("selected");
+}
+
 function buildFetchUrl(url) {
     if (url && url.indexOf("file:///") === 0) return "/file:///" + url.substring(8);l
     if (url && url.indexOf("file:/") === 0) return "/" + url;
@@ -303,43 +469,12 @@ function makeEl(tag, attrs, children) {
 
 function selectFile(path, el) {
     if (!path || !editor) return;
-    document.querySelectorAll("li.selected").forEach(x => x.classList.remove("selected"));
-    if (el) el.classList.add("selected");
-	loadFile(path);
-}
-
-var lastLoadedCanonical = null; // pristine file content for the Pure view
-
-function loadFile(path) {
-    currentFilePath = path;
-    updateFilename(path.split("/").pop());
-    GET(buildFetchUrl(path), function(data) {
-        var source = data || "";
-        lastLoadedCanonical = source;
-        source = convertToFlavor(source, currentFlavor);
-        editor.setValue(source, -1);
-        editor.getSession().getUndoManager().reset();
-        checkSyntax();
-    });
+	openPath(path);
 }
 
 function newFile() {
-    currentFilePath = null;
-    updateFilename();
-    editor.setValue("", -1);
-    editor.getSession().getUndoManager().reset();
-    currentFlavor = document.getElementById("flavorSelect").value;
-    document.getElementById("filename").style.color = "#0f0";
-    document.querySelectorAll("li.selected").forEach(x => x.classList.remove("selected"));
-}
-
-function updateFilename(name) {
-    var el = document.getElementById("filename");
-    if (currentFilePath) {
-        el.textContent = name || currentFilePath.split("/").pop();
-    } else {
-        el.textContent = "[unnamed]";
-    }
+    if (!editor) return;
+    switchToTab(createTab(null, document.getElementById("flavorSelect").value));
 }
 
 // Meta statements (documentation, comments) are stripped before the compile
@@ -355,16 +490,19 @@ function compileCheckSource(source) {
     return source;
 }
 
-function saveFile() { 
-    var content = editor.getValue();
+function saveFile() {
+    if (!activeTab) return;
+    var tab = activeTab;
+    var content = tab.session.getValue();
 	var dawnSource="";
-    var flavor = currentFlavor || document.getElementById("flavorSelect").value;
-    console.log("DEBUG saveFile: flavor=", flavor, "currentFilePath=", currentFilePath, "content length=", content.length);
-    if (!currentFilePath) {
+    var flavor = tab.flavor;
+    console.log("DEBUG saveFile: flavor=", flavor, "path=", tab.path, "content length=", content.length);
+    if (!tab.path) {
         var name = prompt("File name:", "untitled.dawn");
         if (!name) return;
-        currentFilePath = "file:///" + name;
-        updateFilename(name);
+        tab.path = "file:///" + name;
+        renderTab(tab);
+        applyTabState();
     }
     if (BNFT && basicParser) {
         dawnSource = convertFromFlavor(content, flavor);
@@ -382,14 +520,22 @@ function saveFile() {
 		return;
 	}
     var http = new XMLHttpRequest();
-    http.open("PUT", "/_file?path=" + encodeURIComponent(currentFilePath), true);
+    http.open("PUT", "/_file?path=" + encodeURIComponent(tab.path), true);
     http.onreadystatechange = function() {
         if (http.readyState == 4) {
             console.log("DEBUG: save response status=", http.status, "response=", http.responseText);
             if (http.status == 200) {
-                console.log("Saved:", currentFilePath);
+                console.log("Saved:", tab.path);
                 // Reload the saved file to show updated content
-                loadFile(currentFilePath);
+                GET(buildFetchUrl(tab.path), function(data) {
+                    if (tabs.indexOf(tab) === -1) return;
+                    tab.canonical = data || "";
+                    tab.session.setValue(convertToFlavor(tab.canonical, tab.flavor), -1);
+                    tab.session.getUndoManager().reset();
+                    tab.dirty = computeDirty(tab);
+                    renderTab(tab);
+                    if (tab === activeTab) checkSyntax();
+                });
             }
             else console.log("Save failed:", http.status, http.responseText);
         }
@@ -401,57 +547,63 @@ document.getElementById("newBtn").addEventListener("click", newFile);
 document.getElementById("saveBtn").addEventListener("click", saveFile);
 
 document.getElementById("flavorSelect").addEventListener("change", function() {
-	if (!editor || !BNFT || !basicParser) return;
+	if (!editor || !BNFT || !basicParser || !activeTab) return;
+	var tab = activeTab;
+	var newFlavor = this.value; // capture now — checkSyntax/applyTabState re-syncs the select to tab.flavor
+
+	if (anyRedTab()) { // flavor switching is suspended while any tab is red
+		document.getElementById("flavorSelect").value = tab.flavor;
+		return;
+	}
 
 	// evaluate syntax now, not when the debounce fires — a broken buffer must
 	// never be converted, otherwise the edit would be lost in the switch
 	checkSyntax();
-	if (!syntaxOK) {
-		document.getElementById("flavorSelect").value = currentFlavor; // snap selector back
+	if (!tab.syntaxOK) {
+		document.getElementById("flavorSelect").value = tab.flavor; // snap selector back
 		return; // selector stays disabled until checkSyntax sees a good buffer again
 	}
 
-	var editText = editor.getValue();
-	var last = currentFlavor;
-    currentFlavor = document.getElementById("flavorSelect").value;
+	var text = tab.session.getValue();
+	var last = tab.flavor;
+    tab.flavor = newFlavor;
 
-	var text = editText;
 	if (!text.endsWith("\n")) text += "\n";
 
 	// canonical: convert current content out of its flavor, then into the
 	// newly selected flavor — edits are never replaced by the file on disk
 	var dawnSource = convertFromFlavor(text, last);
-	var newCode = convertToFlavor(dawnSource, currentFlavor);
+	var newCode = convertToFlavor(dawnSource, tab.flavor);
 	if (dawnSource !== "" && dawnSource.indexOf("ERROR") !== 0 && newCode && newCode.indexOf("ERROR") !== 0)
 	{
-		editor.setValue(newCode, -1);
-		editor.getSession().getUndoManager().reset();
+		tab.session.setValue(newCode, -1);
+		tab.session.getUndoManager().reset();
 	}
     checkSyntax();
 });
 
 var syntaxTimer = null;
 
+// Verification for the active tab: the buffer must convert from its flavor to
+// canonical dawn and compile. The result is stored on the tab and mirrored
+// into the shared UI (selector/save state) and the tab's name color:
+// red = broken, yellow = unsaved, green = saved.
 function checkSyntax() {
-    var content = editor.getValue();
+    if (!activeTab) { applyTabState(); return; }
+	var tab = activeTab;
+    var content = tab.session.getValue();
     if (!content.endsWith("\n")) content += "\n";
-	
-	let dawnSource = convertFromFlavor(content,currentFlavor);
-	syntaxOK = !/[^\s]/.test(content) // an empty buffer has nothing to break
+
+	let dawnSource = convertFromFlavor(content, tab.flavor);
+	tab.syntaxOK = !/[^\s]/.test(content) // an empty buffer has nothing to break
         || (dawnSource !== "" && dawnSource.indexOf("ERROR") !== 0 // flavor conversion must succeed
             && (!/[^\s]/.test(compileCheckSource(dawnSource)) // meta-stripped remainder may be empty (docs only)
                 || dawnCompiler.parse(compileCheckSource(dawnSource)).indexOf("ERROR") !== 0)); // code must compile
-	
-	document.getElementById("flavorSelect").disabled = !syntaxOK; // switching blocked while the buffer is broken
-	document.getElementById("saveBtn").disabled = !syntaxOK;      // saving blocked while the buffer is broken
-	document.getElementById("filename").style.color = syntaxOK ? "#0f0" : "#f44"; // color bar to alert user
+	tab.dirty = computeDirty(tab); // saveable output vs loaded file — flavor switching alone stays green
+
+	applyTabState(); // flavor switch + save blocked while the buffer is broken; colors updated
+	renderTab(tab);
 }
-
-
-editor.getSession().on("change", function() {
-    clearTimeout(syntaxTimer);
-    syntaxTimer = setTimeout(checkSyntax, 500);
-});
 
 function renderTree(parentEl, tree, level, parentUrl) {
     var ul = makeEl("ul");
@@ -467,7 +619,7 @@ function renderTree(parentEl, tree, level, parentUrl) {
         if (entry && entry.contentType === "text/directory-json") {
             var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
             var caret = makeEl("span", { className: "caret right" });
-            var icon = makeEl("img", { className: "treeicon", src: "images/folder.svg", draggable: "false" });
+            var icon = makeEl("span", { className: "icon icon-folder" });
             var toggleDir = function(ev) {
                 ev.stopPropagation();
                 var nestedUl = row.nextSibling;
@@ -475,12 +627,16 @@ function renderTree(parentEl, tree, level, parentUrl) {
                 var open = nestedUl.classList.toggle("open");
                 caret.classList.toggle("right");
                 caret.classList.toggle("down");
-                if (open && nestedUl.children.length === 0 && childUrl) {
+                if (open && !nestedUl.dataset.loaded && childUrl) {
+                    nestedUl.dataset.loaded = "1"; // also blocks re-fetch races while the GET is in flight
                     GET(buildFetchUrl(childUrl), function(data) {
                         try {
                             var parsed = JSON.parse(data);
                             renderTree(nestedUl, parsed, level + 1, childUrl);
-                        } catch (e) { console.log("parse error", e); }
+                        } catch (e) {
+                            delete nestedUl.dataset.loaded; // allow retry
+                            console.log("parse error", e);
+                        }
                     });
                 }
             };
@@ -495,12 +651,13 @@ function renderTree(parentEl, tree, level, parentUrl) {
         } else {
             var childUrl = parentUrl ? (parentUrl + "/" + name) : "";
             var fileIcon = name.endsWith(".dawn")
-                ? makeEl("img", { className: "treeicon", src: "images/dawnfile.svg", draggable: "false" })
-                : makeEl("span", { className: "treeicon-spacer" });
+                ? makeEl("span", { className: "icon icon-file-dawn" })
+                : makeEl("span", { className: "icon-tree-spacer" });
             row.appendChild(makeEl("span", null, [indent, fileIcon, label]));
-            row.addEventListener("click", function(ev) { 
-                ev.stopPropagation(); 
-                selectFile(childUrl, row); 
+            row.setAttribute("data-path", childUrl);
+            row.addEventListener("click", function(ev) {
+                ev.stopPropagation();
+                selectFile(childUrl, row);
             });
             ul.appendChild(row);
         }
@@ -517,6 +674,9 @@ GET(buildFetchUrl(environment.dawnPath), function(data) {
         project.textContent = "Parse error: " + (e.message || e);
     }
 });
+
+// start with one untitled tab
+if (editor) newFile();
 </script>
 </body>
 </html>

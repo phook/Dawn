@@ -1,2 +1,2 @@
-[NewOutput:out1 [Meta:Assignment>>[inp1 Number:2]>>power:>>out1]>>NewInput:inp1_$all]>>NewResource:Tester
+[NewOutput:out1 [Meta:Assignment>>[[inp1 Number:2]>>power: Number:2]>>add:>>out1]>>NewInput:inp1_$all]>>NewResource:Tester
 
