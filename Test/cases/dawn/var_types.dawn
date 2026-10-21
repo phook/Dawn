@@ -1,0 +1,3 @@
+String:Hello>>var:String:greeting>>Console:
+Number:42>>var:Number:answer>>Console:
+Boolean:true>>var:Boolean:flag>>Console:

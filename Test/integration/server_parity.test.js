@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const http = require('http');
 
 const ROOT = path.join(__dirname, '..', '..');
-const STRICT_PARITY = false; // W6: flip to true for the cutover
+const STRICT_PARITY = true; // W6 cutover: parity gaps are failures
 
 let failures = 0, successes = 0, skipped = 0, gaps = 0;
 function check(name, actual, expected) {
@@ -91,10 +91,9 @@ async function probe(base, entry) {
 async function runMatrix(label, base, tmpSavePath, saveBody) {
   const codeexamples = 'file:///' + path.join(ROOT, 'public', 'codeexamples').replace(/\\/g, '/');
   const matrix = [
-    { name: 'root index', method: 'GET', route: '/' },
+    { name: 'root index', method: 'GET', route: '/', checkCsp: true },
     { name: 'editor page', method: 'GET', route: '/editor.html' },
     { name: 'index page', method: 'GET', route: '/index.html' },
-    { name: 'csp route', method: 'GET', route: '/test-csp', checkCsp: true },
     { name: 'environment.json', method: 'GET', route: '/environment.json' },
     { name: 'dir listing', method: 'GET', route: '/' + codeexamples },
     { name: 'file read', method: 'GET', route: '/' + codeexamples + '/HelloWorld.dawn' },
@@ -157,11 +156,12 @@ let results; // per-server map
       const dawnResults = await runMatrix('dawn', dawnBase, tmpSavePath, saveBody);
       for (const name of Object.keys(jsResults)) gap(name, dawnResults[name], jsResults[name]);
 
-      // current delivered handler (proves the scheme end-to-end)
-      const hello = await request({ method: 'GET', url: dawnBase + '/' });
-      check('dawn:httpHello status', hello.status, 200);
-      check('dawn:httpHello body', hello.body.toString('utf8'), 'hello from dawn httpServer');
-      check('dawn:httpHello content-type', hello.contentType, 'text/plain');
+      // W5 route 1: the Dawn server answers GET /environment.json itself
+      const env = await request({ method: 'GET', url: dawnBase + '/environment.json' });
+      check('dawn:/environment.json status', env.status, 200);
+      check('dawn:/environment.json content-type', env.contentType, 'text/json');
+      const envJson = JSON.parse(env.body.toString('utf8'));
+      check('dawn:/environment.json keys', JSON.stringify(Object.keys(envJson)), JSON.stringify(['dawnPath', 'userPath']));
     } else {
       skip('parity matrix vs dawn server', 'server/main.dawn + dawn/Scheme/httpServer.dawn not built yet (W2+)');
     }

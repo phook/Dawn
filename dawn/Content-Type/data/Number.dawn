@@ -12,7 +12,7 @@ Meta.documentation:
 Meta.documentation:
 Meta.documentation:Blob interface — in_octetstream_$all parses bytes as a num/den
 Meta.documentation:fraction (exact); out_octetstream offers the value in that form. Used by
-Meta.documentation:http:, file: and Scheme/cast when loading content.
+Meta.documentation:http:, file: and Dawn.cast when loading content.
 Meta.documentation:@port in_octetstream_$all — bytes parsed as a num/den fraction
 Meta.documentation:@port out_octetstream — the value as a num/den fraction in bytes
 Meta.documentation:@example

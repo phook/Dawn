@@ -1,0 +1,19 @@
+Meta.documentation:Data.get
+Meta.documentation:
+Meta.documentation:Reads a field out of a Data value, typed.
+Meta.documentation:
+Meta.documentation:The URI is a dotted path: Data.get:headers.host digs .headers.host out of each
+Meta.documentation:incoming value and emits it on the output matching its type (out_String for
+Meta.documentation:strings, out_Number, out_Boolean, out_Data for the rest).
+Meta.documentation:
+Meta.documentation:@port in_Data_$all - each value to dig into
+Meta.documentation:@port in_request_headers_$all - request meta alias (httpServer)
+Meta.documentation:@port out_String - string field values
+Meta.documentation:@port out_Number - number field values
+Meta.documentation:@port out_Boolean - boolean field values
+Meta.documentation:@port out_Data - object/array field values
+Meta.documentation:@see match
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20Data.get%3Aheaders.host%20%E2%80%94%20typed%20field%20read%20with%20dotted%20paths.%0Afunction%20get()%0A%7B%0A%09Resource.call(this%2C%22get%22)%3B%0A%09this.Processor%20%3D%20getProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20getProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String%20%3D%20null%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.out_Boolean%20%3D%20null%3B%0A%09this.out_Data%20%3D%20null%3B%0A%0A%09this.in_instanciate%20%3D%20function(input)%0A%09%7B%0A%09%09let%20newObject%20%3D%20this.get_resource().clone()%3B%0A%09%09const%20tail%20%3D%20(input%20%26%26%20input.value%20%7C%7C%20%22%22).split(%22%3F%22)%5B0%5D.split(%22%23%22)%5B0%5D%3B%0A%09%09newObject.path%20%3D%20decodeURIComponent(tail).split(%22.%22).filter(k%20%3D%3E%20k%20!%3D%3D%20%22%22)%3B%0A%09%09return%20newObject.instanciate_processor()%3B%0A%09%7D%3B%0A%0A%09const%20self%20%3D%20this%3B%0A%09this.dig%20%3D%20function(input)%0A%09%7B%0A%09%09let%20v%20%3D%20input%20%26%26%20input.value%20!%3D%3D%20undefined%20%3F%20input.value%20%3A%20input%3B%0A%09%09if%20(v%20%26%26%20v.get_resource)%20v%20%3D%20v.get_resource().value%3B%0A%09%09for%20(const%20k%20of%20resource.path)%0A%09%09%7B%0A%09%09%09if%20(v%20%3D%3D%20null)%20return%20undefined%3B%0A%09%09%09v%20%3D%20v%5Bk%5D%3B%0A%09%09%7D%0A%09%09switch%20(typeof%20v)%0A%09%09%7B%0A%09%09%09case%20%22string%22%3A%20%20return%20self.out_String%3F.(%7B%20value%3A%20v%20%7D)%3B%0A%09%09%09case%20%22number%22%3A%20%20return%20self.out_Number%3F.(%7B%20value%3A%20v%20%7D)%3B%0A%09%09%09case%20%22boolean%22%3A%20return%20self.out_Boolean%3F.(%7B%20value%3A%20v%20%7D)%3B%0A%09%09%09default%3A%20%20%20%20%20%20%20%20%20if%20(v%20!%3D%3D%20undefined)%20return%20self.out_Data%3F.(%7B%20value%3A%20v%20%7D)%3B%20return%20undefined%3B%0A%09%09%7D%0A%09%7D%3B%0A%09this.in_Data_$all%20%3D%20function(input)%20%7B%20return%20self.dig(input)%3B%20%7D%3B%0A%09this.in_request_headers_%24all%20%3D%20function(input)%20%7B%20return%20self.dig(input)%3B%20%7D%3B%0A%09return%20this%3B%0A%7D%0Aget.Processor%3DgetProcessor%3B%0Amodule.exports%3Dget%3B]>>NewResource:Data.get

@@ -1,5 +1,4 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
-const castLib   = Dawn.require("Scheme/cast");
 
 // Picks one element out of a flowing list by position (0-based).
 // The first Number in the flow is the index; every other element is a
@@ -42,7 +41,7 @@ function getProcessor(resource)
 		let element = this.elements[this.index];
 		if (!element || !this.connectee) return;
 		// late connect (like http:) — the type is known only now
-		let cast = castLib.castValue(element.type, element.value);
+		let cast = Dawn.castValue(element.type, element.value);
 		if (cast)
 		{
 			cast.connect(this.connectee);

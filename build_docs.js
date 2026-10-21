@@ -214,7 +214,17 @@ for (const implPath of walk(DAWN_DIR)) {
             if (p in doc.ports) { console.log(`ERROR: ${uri}: @port ${p} is a universal value port — value read/write ports are never documented (see documentation-standard.md rule 3)`); errors++; }
         }
     }
-    for (const p of Object.keys(doc.ports)) {
+    // template ports (e.g. var's in_<Type>_$all) are created dynamically like
+    // this["in_" + type + "_$all"]; they can't be introspected statically, so
+    // they are validated only by the presence of dynamic port construction
+    const docPortEntries = Object.keys(doc.ports);
+    const templatePorts = docPortEntries.filter(p => p.includes('<'));
+    const concreteDocPorts = docPortEntries.filter(p => !p.includes('<'));
+    const hasDynamicPorts = /this\[\s*"(in|out)_"\s*\+/.test(source);
+    for (const p of templatePorts) {
+        if (!hasDynamicPorts) { console.log(`ERROR: ${uri}: template @port ${p} but implementation has no dynamic port construction`); errors++; }
+    }
+    for (const p of concreteDocPorts) {
         if (!visiblePorts.includes(p)) { console.log(`ERROR: ${uri}: @port ${p} not present in implementation`); errors++; }
     }
     for (const p of visiblePorts) {

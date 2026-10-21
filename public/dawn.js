@@ -9,6 +9,84 @@ let Dawn = {
     {
         return !Dawn.isBrowser();
     },
+    // ── casting library (was Scheme/cast) — shared by the loading schemes ──
+    // cast(contentType, bytes, url): a loaded thing becomes the right resource
+    // for its content — never by the extension or scheme the author guessed
+    // beforehand. Resolution walks the dawn tree, first hit wins:
+    // Content-Type.<type>.<subtype>, Content-Type.<type>, then the built-in
+    // defaults (text/* → data.String, image/svg+xml → data.String,
+    // application/json → data.Data, anything else → application.octetstream).
+    // The found resource is fed the raw bytes through its octetstream
+    // interface; the true content-type is stamped on it (reply paths prefer it).
+    cast : async function(contentType, bytes, url)
+    {
+        contentType = (contentType || "").split(";")[0].trim().toLowerCase();
+        let u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes || []);
+        const root = Dawn.instanciate_processor();
+        let slash = contentType.indexOf("/");
+        let type    = slash === -1 ? "" : contentType.substring(0, slash);
+        let subtype = slash === -1 ? "" : contentType.substring(slash + 1);
+        let candidates = [];
+        if (type && subtype) candidates.push("Content-Type." + type + "." + subtype + ":");
+        if (type)            candidates.push("Content-Type." + type + ":");
+        if (type === "text") candidates.push("Content-Type.data.String:");
+        if (contentType === "image/svg+xml") candidates.push("Content-Type.data.String:");
+        if (contentType === "application/json") candidates.push("Content-Type.data.Data:");
+        candidates.push("Content-Type.application.octetstream:");
+        for (let id of candidates)
+        {
+            let proc = null;
+            try { proc = await root.lookup(id); } catch (e) { proc = null; }
+            if (!proc) continue;
+            let blobInput = proc.in_octetstream_$all || proc.in_octetstream;
+            if (blobInput)
+            {
+                blobInput.call(proc, { value: u8 });
+                proc.get_resource().contentType = contentType; // reply paths prefer the true type
+                return proc;
+            }
+        }
+        return null;
+    },
+    // castValue(type, value): the native-value sibling — wraps an already-typed
+    // JS value (string, BigRational, boolean, object, Uint8Array) in its own
+    // resource, ready for late-connect (connect + in_go). Used by the List
+    // operators, whose element types are known only at execution time — a list
+    // can mix any types, so no static out_<Type> port can be declared.
+    castValue : function(type, value)
+    {
+        let res = null;
+        if (type === "String")  res = new (Dawn.require("Content-Type/data/String"))();
+        if (type === "Number")  res = new (Dawn.require("Content-Type/data/Number"))();
+        if (type === "Boolean") res = new (Dawn.require("Content-Type/data/Boolean"))();
+        if (type === "Data")    res = new (Dawn.require("Content-Type/data/Data"))();
+        if (type === "octetstream")    res = new (Dawn.require("Content-Type/application/octetstream"))();
+        if (!res) return null;
+        res.value = value;
+        let proc = res.instanciate_processor();
+        // populate the output list the way lookup_new does — connect() can only
+        // offer plugs that are listed
+        Object.keys(proc)
+            .filter((output) => output.indexOf("out_") === 0 && output.indexOf("_$explicit") === -1)
+            .forEach((output) => proc.outputList[output] = proc[output]);
+        return proc;
+    },
+    // base64 helpers (Uint8Array ↔ base64), used by octetstream serialization in List
+    u8ToBase64 : function(u8)
+    {
+        if (typeof Buffer !== "undefined") return Buffer.from(u8).toString("base64");
+        let s = "";
+        for (let i = 0; i < u8.length; i++) s += String.fromCharCode(u8[i]);
+        return btoa(s);
+    },
+    base64ToU8 : function(b64)
+    {
+        if (typeof Buffer !== "undefined") return new Uint8Array(Buffer.from(b64, "base64"));
+        let s = atob(b64);
+        let u8 = new Uint8Array(s.length);
+        for (let i = 0; i < u8.length; i++) u8[i] = s.charCodeAt(i);
+        return u8;
+    },
     requireBySource : function(source,context)
     {
         if (source.substr(0,10)==="(function(")
@@ -172,6 +250,7 @@ let Dawn = {
         this.path.push("dawn.");
         this.children["dawn"].path.push("Scheme."); // find schemes
         this.children["dawn"].path.push("Content-Type.data."); // find data types
+        this.children["dawn"].path.push("Content-Type.application."); // find content-types (json:, octetstream:…)
         
         // hardcode - change
 //        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");

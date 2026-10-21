@@ -1,7 +1,7 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
 
 // Binary byte array — the universal transport value. Holds a JavaScript
-// Uint8Array (a server Buffer is one). http:, file: and Scheme/cast produce
+// Uint8Array (a server Buffer is one). http:, file: and Dawn.cast produce
 // octetstreams for binary content; the octetstream interface
 // (in_octetstream_$all / out_octetstream) is how every value resource
 // converts to and from bytes.

@@ -25,32 +25,6 @@ app.use((req, res, next) => {
   );
   next();
 });
-app.get('/test-csp', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>CSP Test</title>
-      <style>
-        body { font-family: sans-serif; background: #f0f0f0; padding: 2em; }
-        #result { color: green; font-weight: bold; }
-      </style>
-    </head>
-    <body>
-      <h1>CSP Eval Test</h1>
-      <div id="result">Running eval...</div>
-      <script>
-        try {
-          const result = eval("2 + 2");
-          document.getElementById("result").textContent = "Eval succeeded: 2 + 2 = " + result;
-        } catch (e) {
-          document.getElementById("result").textContent = "Eval failed: " + e.message;
-        }
-      </script>
-    </body>
-    </html>
-  `);
-});
 
 /*
 const cors = require('cors');

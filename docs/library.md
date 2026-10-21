@@ -64,18 +64,29 @@ Legend: ✅ exists+tested · ⚠️ exists, untested/incomplete · ❌ missing �
 |---|---|
 | `file:` module loader | ✅ (documented) |
 | `file:<path>?write` / `?append` data sink (mutually-exclusive inputs pick the op) | ✅ |
+| `file:` explicit write port (`in_Data_write`, {path, content} record) signals success on **`out_Boolean_success`** — the http layer translates it into 200 "OK" (the success-Boolean pattern: the resource stays protocol-agnostic); failures leave on out_error with a 500 status. Selected in flows as `file:#success` (or `#Boolean_success`) | ✅ |
 | `file:<path>?read` read + content-type cast + late-connect | ✅ |
 | `http:` / `https:` client (bytes → cast via Content-Type tree + blob interface; error channel on failure) | ✅ (integration-tested) |
-| `http:` server | ❌ (Phase 3 keystone) |
+| `httpServer:<port>` HTTP acceptor (per-request `out_begin → out_httpConnection → … → out_end`; request handlers are a list body closed by a `var:` reference) | ✅ (documented) |
+| `httpConnection:` one accepted request **as a resource**: holds the `req`/`res` pair from the acceptor's handle (its own edge, like `file:` holds its path) plus the request meta on `.value`. `in_go` presents the request to the pipe (emits the meta on `out_request_headers`); `in_response_$all` replies to `res`; `in_end` (the end event reaching it through the flow) answers the default (204) after a grace window for async repliers | ✅ |
+| `httpConnection.route:` two modes — **path gate** `<path>?method=GET` (fires `out_go` on match, silent no-match) and **via mount** `<scheme>:<base>` through a var reference (`connection.route:file:public`): the captured request path completes the URI, the resource loads through the dawn tree and streams out on `out_response` (`/` → index.html, `..` → 403, miss → silent 204, GET/HEAD only); tail scheme free — any loadable scheme mounts the same way; host-guarded routes use if sentences in the list (match + Boolean.if; a non-local PUT is answered 403 inside the filewriter) | ✅ (parity-tested) |
+| `var:Type:name` declares a typed name — instantiates the type as a named object in the enclosing scope; `name:` references route each call into the captured value (request-scoped). A **qualified reference** `name:<tail>` (e.g. `connection:file:public`) is a live via-subscription: per capture the pump completes the tail URI with the request path and streams the loaded value into the reply. A **sub-path through the reference** `name.<child>:<tail>` (e.g. `connection.route:test.jpg`) resolves the child and wraps it in a subscription proxy that feeds the resolved instance per capture (`in_<Type>_$all`) — the multi-route dispatch for the IDE server. The capture awaits the downstream chain (Dawn-promise continuation), so async work completes before the request end | ✅ (parity-tested, `var_subscribe` case) |
+| async chains — `http:`/`https:` and `file:` read return Dawn-promises from `in_go` (resolve after fetch/cast/reply); the route gate, via pump and var capture await them; `Resource.execute`/`execute_fn` continue line execution at promise resolve (native promises tolerated); the connection gains value-type reply sinks (`in_String/Number/Boolean/Data/octetstream_$all` all reply to `res`) — a fetched image lands as `octetstream` and serves with its true content-type | ✅ (`test.jpg` route: 200 image/jpeg, byte-exact) |
+| `Dawn.cast` stamps the true content-type on cast values (`.contentType`); `httpConnection` reply prefers it (text/dawn, text/html, images… survive the trip); `file:` read mode gains the mime-types fallback + binary default (unknown extensions → `application/octet-stream`, not text) | ✅ |
+| local `scheme/` dir next to the running file resolves as `scheme.<Name>:` (app schemes, kept out of `dawn/`) | ✅ (dawn_run.js) |
+| `match:` predicate operator (`?field=value&…` AND, `,` OR, dotted paths, `|portless` normalizer) | ✅ (doc-tested) |
+| `json:` named record resource (Content-Type `application/json`) — bind override: offered `out_<Type>_<field>` becomes a field writer; record seals at `in_end` and streams `out_response`; `.`-into-resource field reads (`json:name.field`) — the nesting pattern for future `.xlsm`/`.zip`-style resources | ✅ (parity-tested) |
+| `Data.get:<dotted.path>` typed field read | ✅ |
+| IDE server routes live in `server/main.dawn` as pure Dawn flows (`GET /environment.json` + the `public` static mount done, both parity-verified; `httpServer:3000#\|httpConnection` dispatches through the var's **qualified-reference broadcast** — `httpConnection.route:environment.json` gate for the API route, `connection.route:file:public>>connection:` via-mount for static files; host guard deferred to a dedicated element) | 🚧 (Phase 3, W5) |
 | `socket:` / websocket | ❌ (needed to port `hubserver.js`) |
-| `mime:` | ❌ (casting rules currently live in `Scheme/cast`) |
+| `mime:` | ❌ (casting rules currently live in `Dawn.cast`) |
 | `Console:` | ✅ |
 
 ## Content-type casting (late connect)
 
 Schemes that load external content (`http:`, `https:`, `file:?read`) cannot know
 the content's type before loading it. The rule per design: **cast after load,
-then connect**. Loading produces **bytes** (a `Uint8Array`); `Scheme/cast`
+then connect**. Loading produces **bytes** (a `Uint8Array`); `Dawn.cast`
 resolves the resource to instantiate **through the dawn tree** — first hit wins:
 
 1. `Content-Type.<type>.<subtype>` — a specialized mimetype resource dropped

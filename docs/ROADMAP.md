@@ -88,7 +88,7 @@ Goal: a reasonable battery-included library so real programs are writable.
      picks the operation (mutually exclusive); loader role intact (diversion gated
      on the `?write`/`?append` selection only)
    - [x] `file:` data read: `file:<path>?read` — casts by content-type, late-connects
-   - [x] content-type casting: `dawn/Scheme/cast.dawn.js` — text/*→String, json→Data,
+   - [x] content-type casting: `dawn/Dawn.cast.dawn.js` — text/*→String, json→Data,
      `application/octet-stream`→`octetstream` resource (the universal binary
      fallback, `Content-Type/application/octetstream`), `image/*`→image family
      resource bridging to octetstream bytes. Values late-connect to the flow with
@@ -149,6 +149,11 @@ at genuine edges (socket syscalls).
 
 Order:
 
+0. **Storage decree (2026-10-08):** `.dawn` files are ALWAYS stored in pure
+   canonical Dawn. A flavor is only seen when an editor lets a human view or
+   edit the file — never in the stored artifact. The flavored server handler
+   form (`httpServer: >>` + var/if block) is deferred with a target sketch;
+   see `docs/phase3-plan.md` "Deferred".
 1. `dawn_run.js` first (smallest; proves self-hosting — the meta resource
    `dawn.dawn.js` already runs Dawn-in-Dawn).
 2. `dawn_console.js` routes one at a time with the JS server live as reference:

@@ -16,9 +16,9 @@ function ifProcessor(resource)
 	this.in_Boolean_$all = function(input)
     {
 	  if (input.value)
-		this.out_go_then?.();
+		return this.out_go_then?.();
 	  else
-		this.out_go_else?.();
+		return this.out_go_else?.();
     }
 }
 _if.Processor=ifProcessor;

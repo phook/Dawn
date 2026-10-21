@@ -1,5 +1,4 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
-const castLib   = Dawn.require("Scheme/cast");
 
 // Keeps the elements of a flowing list for which a referenced resource
 // answers true. The predicate is referenced by URI: ?|using=Boolean.not or
@@ -57,7 +56,7 @@ function filterProcessor(resource)
 		{
 			if (!testElement(target, this.elements[i]) || !this.connectee) continue;
 			// late connect (like http:) — the type is known only now
-			let cast = castLib.castValue(this.elements[i].type, this.elements[i].value);
+			let cast = Dawn.castValue(this.elements[i].type, this.elements[i].value);
 			if (cast)
 			{
 				cast.connect(this.connectee);

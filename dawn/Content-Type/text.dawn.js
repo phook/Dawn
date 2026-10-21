@@ -1,7 +1,7 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
 
 // Content-Type/text — family main for text/*: strings from bytes (UTF-8).
-// Found in the dawn tree by Scheme/cast when a mimetype resolves to this
+// Found in the dawn tree by Dawn.cast when a mimetype resolves to this
 // family; subtype files (Content-Type/text/html etc.) can override.
 function text()
 {

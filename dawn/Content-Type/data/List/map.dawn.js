@@ -1,5 +1,4 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
-const castLib   = Dawn.require("Scheme/cast");
 
 // Routes every element of a flowing list through a referenced resource and
 // emits what that resource emits, per element. A list can mix any types, so
@@ -60,7 +59,7 @@ function mapProcessor(resource)
 			let emitted = runElementThrough(target, this.elements[i]);
 			if (!emitted || !this.connectee) continue;
 			// late connect (like http:) — the type is known only now
-			let cast = castLib.castValue(emitted.type, emitted.value);
+			let cast = Dawn.castValue(emitted.type, emitted.value);
 			if (cast)
 			{
 				cast.connect(this.connectee);

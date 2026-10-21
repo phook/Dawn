@@ -10,7 +10,7 @@ Meta.documentation:
 Meta.documentation:
 Meta.documentation:octetstream interface — in_octetstream_$all parses bytes as true/false
 Meta.documentation:text; out_octetstream offers the value in that form. Used by http:,
-Meta.documentation:file: and Scheme/cast when loading content.
+Meta.documentation:file: and Dawn.cast when loading content.
 Meta.documentation:@port in_octetstream_$all — bytes parsed as true/false text
 Meta.documentation:@port out_octetstream — the value as true/false bytes
 Meta.documentation:@example

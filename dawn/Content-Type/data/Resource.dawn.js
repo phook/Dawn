@@ -122,7 +122,8 @@ function ResourceProcessor(resource) {
     this.endParameters = {};
  
     this.lookup = async function(identifier) {
-        return await this.lookup_new("*."+identifier,true);
+        const r = await this.lookup_new("*."+identifier,true);
+        return r;
       }
     this.lookup_new = async function(identifier, searchToRoot) {
         if (typeof(searchToRoot)=="undefined")
@@ -417,7 +418,6 @@ this.connect = function(resource_to_connect_to) {
 
     for (let output in this.outputList) {
         let input_connected = resource_to_connect_to.offer_connection(output.substr(4))
-
         if (input_connected) {
             this[output] = input_connected;
         }
@@ -481,24 +481,30 @@ this.execute_next_function = function() {
 
 // NEW CONCEPT FOR LINES - CONTAINS FLOWS - CALLS _in_go, promise is return if async, if promise is returned - it sets execution to continue at resolve
 this.execute = function(array_of_lines) {
+    const self = this;
     while (array_of_lines.length) {
         let flowForThisLine = array_of_lines.shift();
         let result = flowForThisLine.in_go();
         if (result) {
-            return result.promise().then(function() {
-                this.execute(array_of_lines);
+            // Dawn-promise continuation, or a plain native promise
+            const continuation = result.promise ? result.promise() : result;
+            return continuation.then(function() {
+                return self.execute(array_of_lines);
             });
         }
     }
 }
 
 this.execute_fn = function(array_of_lines) {
+    const self = this;
     while (array_of_lines.length) {
         let flowForThisLine = array_of_lines.shift();
         let result = flowForThisLine();
         if (result) {
-            result.promise().then(function() {
-                return this.execute(array_of_lines);
+            // Dawn-promise continuation, or a plain native promise
+            const continuation = result.promise ? result.promise() : result;
+            continuation.then(function() {
+                return self.execute(array_of_lines);
             });
         }
     }

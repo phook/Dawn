@@ -1,0 +1,2 @@
+String:Hello>>var:String:greeting>>Console:
+greeting:>>String.lower:>>Console:

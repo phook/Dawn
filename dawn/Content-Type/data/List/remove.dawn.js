@@ -1,5 +1,4 @@
 const Resource  = Dawn.require("Content-Type/data/Resource");
-const castLib   = Dawn.require("Scheme/cast");
 
 // Removes one element from a flowing list by position (0-based);
 // every other element passes through with its own type, in order.
@@ -43,7 +42,7 @@ function removeProcessor(resource)
 		{
 			if (Number(i) === this.index || !this.connectee) continue;
 			// late connect (like http:) — the type is known only now
-			let cast = castLib.castValue(this.elements[i].type, this.elements[i].value);
+			let cast = Dawn.castValue(this.elements[i].type, this.elements[i].value);
 			if (cast)
 			{
 				cast.connect(this.connectee);

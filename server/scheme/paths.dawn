@@ -1,0 +1,12 @@
+Meta.documentation:paths
+Meta.documentation:
+Meta.documentation:TEMPORARY (W5): emits the runtime paths as Strings, for building
+Meta.documentation:/environment.json in pure Dawn. The pattern may change - there is no
+Meta.documentation:solution for non-localhost path representation yet.
+Meta.documentation:
+Meta.documentation:@port out_String_dawnPath - file:/// url of the dawn/ directory
+Meta.documentation:@port out_String_userPath - file:/// url of the user home directory
+Meta.documentation:@kind operator
+Meta.documentation:@status temporary
+
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20os%20%3D%20require(%22node%3Aos%22)%3B%0Aconst%20path%20%3D%20require(%22node%3Apath%22)%3B%0A%0A%2F%2F%20paths%3A%20%E2%80%94%20TEMPORARY%20native%20stopgap%3A%20dawnPath%2FuserPath%20sources%20(the%20identical%0A%2F%2F%20strings%20dawn_console.js%20serves)%2C%20until%20a%20proper%20paths%20design%20lands.%0A%2F%2F%20in_go%20fires%20dawnPath%20then%20userPath%20and%20returns%20the%20LAST%20emit's%20result%2C%0A%2F%2F%20so%20a%20reply%20chain%20(%3E%3E%20json%3Aenvironment)%20threads%20the%20final%20record%20out.%0Afunction%20paths()%0A%7B%0A%09Resource.call(this%2C%22paths%22)%3B%0A%09this.Processor%20%3D%20pathsProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20pathsProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String_dawnPath%20%3D%20null%3B%0A%09this.out_String_userPath%20%3D%20null%3B%0A%0A%09this.in_instanciate%20%3D%20function(input)%0A%09%7B%0A%09%09let%20newObject%20%3D%20this.get_resource().clone()%3B%0A%09%09return%20newObject.instanciate_processor()%3B%0A%09%7D%3B%0A%0A%09this.in_go%20%3D%20function()%0A%09%7B%0A%09%09const%20repoRoot%20%3D%20path.resolve(__dirname%2C%20%22..%22%2C%20%22..%22)%3B%0A%09%09const%20dawnPath%20%3D%20(%22file%3A%2F%2F%2F%22%20%2B%20path.join(repoRoot%2C%20%22dawn%22)).replaceAll(%22%5C%5C%22%2C%20%22%2F%22)%3B%0A%09%09const%20userPath%20%3D%20%22file%3A%2F%2F%2F%22%20%2B%20os.homedir().replaceAll(%22%5C%5C%22%2C%20%22%2F%22)%3B%0A%09%09this.out_String_dawnPath%3F.(%7B%20value%3A%20dawnPath%20%7D)%3B%0A%09%09this.out_String_userPath%3F.(%7B%20value%3A%20userPath%20%7D)%3B%0A%09%7D%3B%0A%09return%20this%3B%0A%7D%0Apaths.Processor%3DpathsProcessor%3B%0Amodule.exports%3Dpaths%3B]>>NewResource:paths

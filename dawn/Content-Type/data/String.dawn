@@ -11,7 +11,7 @@ Meta.documentation:
 Meta.documentation:
 Meta.documentation:Blob interface — in_octetstream_$all parses bytes as UTF-8 text into
 Meta.documentation:the value; out_octetstream offers the value's UTF-8 bytes. Used by http:,
-Meta.documentation:file: and Scheme/cast when loading content.
+Meta.documentation:file: and Dawn.cast when loading content.
 Meta.documentation:@port in_octetstream_$all — bytes parsed as UTF-8 text
 Meta.documentation:@port out_octetstream — the value as UTF-8 bytes
 Meta.documentation:@example

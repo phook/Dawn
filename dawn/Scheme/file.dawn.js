@@ -1,5 +1,4 @@
 const Resource = Dawn.require("Content-Type/data/Resource");
-const castLib  = Dawn.require("Scheme/cast");
 
 if (Dawn.isServer()) {
     const fs = Dawn.require('fs');
@@ -113,19 +112,30 @@ function FileReadProcessor(resource) {
         ".txt":"text/plain", ".md":"text/markdown", ".dawn":"text/dawn", ".html":"text/html",
         ".xml":"text/xml", ".json":"application/json",
         ".png":"image/png", ".jpg":"image/jpeg", ".jpeg":"image/jpeg", ".gif":"image/gif",
-        ".webp":"image/webp", ".svg":"image/svg+xml"
+        ".webp":"image/webp", ".svg":"image/svg+xml",
+        ".js":"text/javascript", ".css":"text/css", ".ico":"image/x-icon",
+        ".woff":"font/woff", ".woff2":"font/woff2"
     };
     this.in_go = function() {
         const self = this;
         const ext = (resource.url.match(/\.[a-z0-9]+$/i) || [""])[0].toLowerCase();
-        const extType = EXT_TO_TYPE[ext] || "text/plain";
+        let extType = EXT_TO_TYPE[ext];
+        if (!extType && Dawn.isServer()) {
+            try { extType = Dawn.require("mime-types").lookup(ext) || undefined; } catch (e) { extType = undefined; }
+        }
+        if (!extType) extType = "application/octet-stream";
         if (Dawn.isServer()) {
             try {
                 const _fs = Dawn.require('fs');
                 const bytes = _fs.readFileSync(resource.url);
-                castLib.cast(extType, bytes, resource.url).then(cast => {
+                // Dawn-promise continuation: resolves after cast + reply
+                const p = new Dawn.Promise();
+                p.promise(); // install resolve/reject before the async work
+                Dawn.cast(extType, bytes, resource.url).then(cast => {
                     if (cast && self.connectee) { cast.connect(self.connectee); cast.in_begin?.(); cast.in_go?.(); cast.in_end?.(); }
+                    p.resolve();
                 });
+                return p;
             } catch (e) {
                 this?.out_error?.({ value: "file: read failed: " + e.message });
             }
@@ -137,7 +147,7 @@ function FileReadProcessor(resource) {
               if (!r.ok) { self?.out_error?.({ value: "file: read failed (" + r.status + ")" }); return; }
               const contentType = r.headers.get("content-type") || extType;
               const bytes = new Uint8Array(await r.arrayBuffer());
-              let cast = await castLib.cast(contentType, bytes, resource.url);
+              let cast = await Dawn.cast(contentType, bytes, resource.url);
               if (cast && self.connectee) { cast.connect(self.connectee); cast.in_begin?.(); cast.in_go?.(); cast.in_end?.(); }
           })
           .catch(e => self?.out_error?.({ value: "file: read failed: " + e.message }));
@@ -275,6 +285,179 @@ function FileResourceProcessor(resource) {
       
       return this;
     }
+
+    // ── explicit operation ports: reads, listings and writes as values ──
+    // The HTTP file routes are thin adapters; the filesystem semantics live
+    // here so dawn usage stays simple. Paths arrive as Strings (bare paths
+    // or file:/// URIs — this resource parses its own scheme); results leave
+    // as typed values with the reference content-types stamped; errors leave
+    // on out_error carrying an optional HTTP status for the reply.
+    this.out_Data        = null;
+    this.out_octetstream = null;
+    this.out_String      = null;
+    this.out_error       = null;
+    // error plumbing: rejections from upstream hops flow through to the sink
+    this.in_error = function(input)
+    {
+        return this.out_error?.(input);
+    };
+
+    function normalizeFilePath(p)
+    {
+        p = String(p || "");
+        const q = p.indexOf("?");
+        if (q !== -1) p = p.slice(0, q);
+        if (p.indexOf("/") === 0) p = p.slice(1); // request-path form: /file:///C:/…
+        if (p.indexOf("file:///") === 0) p = p.slice("file:///".length);
+        else if (p.indexOf("file:/") === 0) p = p.slice("file:/".length);
+        return p;
+    }
+
+    async function referenceMimeFor(mime, createReadStream, abs, extension)
+    {
+        if (extension === ".dawn") return "text/dawn";
+        if (abs.endsWith(".dawn.js")) return "application/dawn";
+        const defaultmimetype = await mime(extension);
+        const mimeresult = (await mime(createReadStream(abs), defaultmimetype));
+        if (mimeresult) return mimeresult.mime;
+        return "file/" + extension.substring(1);
+    }
+
+    // the reference server's directory listing, verbatim (byte parity)
+    async function referenceReadDir(_fs, _path, mime, createReadStream, dirpath, hidden)
+    {
+        let jsdir = {};
+        let fdat = { contentType: "", size: 0, time: 0 };
+        let files = _fs.readdirSync(dirpath);
+        for (let fileno in files)
+        {
+            let file = files[fileno];
+            let filepath = _path.resolve(dirpath, file);
+            if (!/^\./.test(file) || hidden)
+                try {
+                    if (file.endsWith(".dawn")) // a .dawn file: documentation source AND executable loader entry
+                    {
+                        jsdir[file] = Object.assign({},fdat);
+                        jsdir[file].contentType = "text/dawn";
+                        file = file.replace(".dawn","");
+                        if (typeof(jsdir[file]) == "undefined") // don't clobber a directory of the same name
+                        {
+                            jsdir[file] = Object.assign({},fdat);
+                            jsdir[file].contentType = "application/dawn";
+                        }
+                    }
+                    else
+                    if (file.endsWith(".dawn.js")) // artifacts of .dawn sources — never shown in listings
+                    {
+                    }
+                    else
+                    {
+                        var stat = _fs.statSync(filepath);
+                        if (stat && stat.isDirectory()) { // directories always win the name (a module/doc with the same name coexists)
+                            jsdir[file] = Object.assign({},fdat);
+                            jsdir[file].contentType = "text/directory-json";
+                            jsdir[file].size     = stat.size;
+                            jsdir[file].time     = stat.mtimeMs;
+                        }
+                        else
+                        {
+                            jsdir[file] = Object.assign({},fdat);
+                            let extension = _path.extname(filepath);
+                            if (extension === "") // a file with no extension needs "." to be distinguised from dawn objects
+                                file +=".";
+                            let ftcontentType="text/uil";
+                            if (extension !== ".uil")
+                            {
+                                ftcontentType = (await mime(createReadStream(filepath), extension)).mime;
+                                if (!ftcontentType)
+                                    ftcontentType = "binary/" + extension.replace(".","");
+                            }
+                            jsdir[file].contentType = ftcontentType;
+                            jsdir[file].size     = stat.size;
+                            jsdir[file].time     = stat.mtimeMs;
+                        }
+                    }
+                } catch (e) {}
+        }
+        return jsdir;
+    }
+
+    this.in_String_read = async function(input)
+    {
+        if (!Dawn.isServer()) return;
+        const raw = (input && input.get_resource) ? input.get_resource().value : ((input && input.value !== undefined) ? input.value : input);
+        let hidden = null;
+        const q = String(raw || "").indexOf("?");
+        if (q !== -1) hidden = new URLSearchParams(String(raw).slice(q + 1)).get("hidden");
+        const filepath = normalizeFilePath(raw);
+        if (!filepath) return;
+        const emit = (port, value, contentType) =>
+        {
+            const res = new (Dawn.require(port === "octetstream" ? "Content-Type/application/octetstream" : "Content-Type/data/Data"))();
+            res.value = value;
+            if (contentType) res.contentType = contentType;
+            return this["out_" + port]?.(res.instanciate_processor());
+        };
+        try
+        {
+            const _fs = require("fs");
+            const _path = require("path");
+            const mime = require("mime-kind");
+            const { createReadStream } = require("fs");
+            const abs = _path.resolve(filepath);
+            // a "directory" that only exists as a compiled module: empty listing
+            if (_path.extname(filepath) === "" && !_fs.existsSync(abs) && _fs.existsSync(abs + ".dawn.js"))
+            {
+                emit("Data", {}, "text/directory-json");
+                return;
+            }
+            const stats = _fs.statSync(abs);
+            if (stats && stats.isDirectory())
+            {
+                emit("Data", await referenceReadDir(_fs, _path, mime, createReadStream, abs, hidden), "text/directory-json");
+                return;
+            }
+            if (stats && stats.isFile())
+            {
+                const mimetype = await referenceMimeFor(mime, createReadStream, abs, _path.extname(abs));
+                emit("octetstream", new Uint8Array(_fs.readFileSync(abs)), mimetype);
+                return;
+            }
+            this.out_error?.({ value: { errno: 0, code: "UNKNOWN", syscall: "stat", path: abs } });
+        }
+        catch (exception)
+        {
+            this.out_error?.({ value: exception });
+        }
+    };
+
+    this.in_Data_write = async function(input)
+    {
+        if (!Dawn.isServer()) return;
+        const rec = (input && input.get_resource) ? input.get_resource().value : ((input && input.value !== undefined) ? input.value : input);
+        if (!rec || !rec.path) return;
+        try
+        {
+            const _fs = require("fs");
+            const _path = require("path");
+            const abs = _path.resolve(normalizeFilePath(rec.path));
+            const bytes = rec.content ? (rec.content instanceof Uint8Array ? rec.content : new Uint8Array(rec.content)) : new Uint8Array(0);
+            _fs.writeFileSync(abs, Buffer.from(bytes));
+            const s = new (Dawn.require("Content-Type/data/String"))();
+            s.value = "OK";
+            this.out_String?.(s.instanciate_processor());
+            // editing a .dawn source inside the repo - regenerate its .dawn.js artifact
+            if (abs.endsWith(".dawn") && abs.startsWith(_path.resolve("dawn")))
+            {
+                try { require("child_process").execFileSync("node", ["build_sources.js"]); } catch (e) {}
+            }
+        }
+        catch (e)
+        {
+            this.out_error?.({ value: e.message, status: 500 });
+        }
+    };
 }
 FileResource.Processor = FileResourceProcessor;
 module.exports = FileResource;
+if (Dawn.isServer()) { module.exports.read_dir = read_dir; } // directory-json listing for the fileserver

@@ -64,12 +64,11 @@ function runCase(source) {
   };
   await Dawn.initialize('./dawn');
   const root = Dawn.instanciate_processor();
-  const castLib = Dawn.require('Scheme/cast');
-
+  
   // String (unicode) — UTF-8 round-trip through the octetstream interface + text seed
   const text = 'héllo ✓';
   const sProc = await root.lookup('String:' + encodeURIComponent(text));
-  const sCast = await castLib.cast('text/plain', sProc.toBlob(), null);
+  const sCast = await Dawn.cast('text/plain', sProc.toBlob(), null);
   check('string unicode round-trip', sCast.get_resource().value, text);
   check('text seed output plug listed', ('out_String' in sCast.outputList), true);
 
@@ -81,17 +80,17 @@ function runCase(source) {
   check('number fraction round-trip', nBack.get_resource().value.toString(), '1/3');
 
   // Data — JSON round-trip through the application/json seed
-  const dProc = castLib.castValue('Data', { a: [1, 2], b: 'x' });
-  const dCast = await castLib.cast('application/json', dProc.toBlob(), null);
+  const dProc = Dawn.castValue('Data', { a: [1, 2], b: 'x' });
+  const dCast = await Dawn.cast('application/json', dProc.toBlob(), null);
   check('data json round-trip', JSON.stringify(dCast.get_resource().value), JSON.stringify({ a: [1, 2], b: 'x' }));
   check('json seed output plug listed', ('out_Data' in dCast.outputList), true);
 
   // Blob — octet-stream falls through to data.Application, identity
-  const bCast = await castLib.cast('application/octet-stream', new Uint8Array([1, 2, 3]), null);
+  const bCast = await Dawn.cast('application/octet-stream', new Uint8Array([1, 2, 3]), null);
   check('octetstream default cast length', bCast.get_resource().value.length, 3);
 
   // image/png — Content-Type/image seed produces an octetstream
-  const iCast = await castLib.cast('image/png', new Uint8Array([9, 9]), null);
+  const iCast = await Dawn.cast('image/png', new Uint8Array([9, 9]), null);
   check('image seed octetstream length', iCast.get_resource().value.length, 2);
   check('image seed output plug listed', ('out_octetstream' in iCast.outputList), true);
 

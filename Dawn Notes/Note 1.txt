@@ -25,6 +25,15 @@ a = summation [1..10] (x) {
 }
 
 
+Number.Constants.Pi,E,osv.
+
+if ⌊π⌋=⌈𝑒⌉?
+ say "beautiful equation"
+
+keyboard version:
+ if floor Constant.PI = ceiling Constant.e?
+
+
 Meta:Parenthesis -> Meta is remarkish - it just passes binds through, but can be used to modify syntax (can be filtered out in syntax step - hm)
 
 if a=2?

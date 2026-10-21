@@ -1,1 +1,1 @@
-httpServer:0>>httpHello:
+httpServer:3000#|httpConnection>>[var:httpConnection:connection>>connection:h>>match:?headers.host=localhost,127.0.0.1,::1,::ffff:127.0.0.1>>Boolean.if:>>[connection:>>httpConnection.route:environment.json>>scheme.paths:>>json:>>connection: connection:>>match:?method=GET>>Boolean.if:>>connection:>>httpConnection.path:>>file:>>connection: connection:>>match:?method=GET>>Boolean.if:>>connection:>>httpConnection.path:public>>file:>>connection: connection:>>match:?method=PUT>>Boolean.if:>>connection:>>httpConnection.upload:>>file:#success>>connection:]]

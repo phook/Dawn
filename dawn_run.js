@@ -65,6 +65,17 @@ Dawn.print = console.log;
 async function main() {
     await Dawn.initialize("./dawn");
 
+    // Local scheme dir: a `scheme/` folder next to the running file is added to
+    // the lookup tree, so its resources resolve as `scheme.<Name>:` (app-level
+    // schemes stay out of the dawn/ standard library).
+    const localSchemeDir = __nodePath.join(__nodePath.dirname(__nodePath.resolve(args[0])), 'scheme');
+    if (__nodeFs.existsSync(localSchemeDir)) {
+        const FileScheme = Dawn.require("Scheme/file");
+        const schemeFile = new FileScheme("scheme", localSchemeDir.replace(/\\/g, '/'));
+        const schemeResource = (await schemeFile.instanciate_processor().in_instanciate()).get_resource();
+        Dawn.instanciate_processor().add(schemeResource);
+    }
+
     const source = Dawn.resourceAsString(args[0]);
     const jsSource = (new DawnCompiler).parse(source);
 

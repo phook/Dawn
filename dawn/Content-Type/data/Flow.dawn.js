@@ -40,25 +40,41 @@ function FlowProcessor(resource) {
                   resource.elements.at(-1)?.connect(child);
               } else {
                   child = child.instanciate_processor();
-                  
-                  // attach this for start functions 
+
+                  // attach this for start functions
                   if (child.in_begin)
                     child.in_begin = child.in_begin.bind(child);
                   if (child.in_go)
                     child.in_go = child.in_go.bind(child);
                   if (child.in_end)
                     child.in_end = child.in_end.bind(child);
-                  
+
                   // should be removed from input list
-        
+
               }
-                
+
               // Flow stores processors
               resource.elements.push(child);
               child.set_owner(resource);
-            
-		      this.output
-			}
+              // var declarations instantiate the type as a named object and
+              // introduce it as a URI in the script's scope: the local scope
+              // (this flow) for same-flow references, plus the topmost owner
+              // (the program root) so later statements/flows can find it too
+              let childResource = child.get_resource && child.get_resource();
+              if (childResource && childResource.varName && !child.isVarReference)
+              {
+                  await child.introduceVar();
+                  let introduced = childResource.introduced || childResource;
+                  resource.children[childResource.varName] = introduced;
+                  introduced.varElement = child;
+                  let scope = resource;
+                  while (scope.owner && scope.owner.children) scope = scope.owner; // topmost named-child scope
+                  if (scope !== resource)
+                      scope.children[childResource.varName] = introduced;
+              }
+
+              this.output
+            }
             else
             {
               resource.elements.push(null);
@@ -69,7 +85,7 @@ function FlowProcessor(resource) {
 
     }
     // javascript wrapper version for dawn defined function
-    
+
     this.previousLookup = this.lookup_new;
     this.lookup_new = async function(identifier, searchToRoot) {
         let result;
@@ -87,27 +103,27 @@ function FlowProcessor(resource) {
               return result;
           }
         }
-        /*
-        for (element in resource.elements) {
-            result = await resource.elements[element]?.default_processor().lookup_new(ref.value, false);
-            if (result)
-                return result;
-        }
-        */
         if (!result)
             if (searchToRoot && resource.owner)
                 result = await resource.owner.default_processor().lookup(identifier, searchToRoot);
 
         if (!result)
             result = this.previousLookup(identifier,searchToRoot);
-
-        if (!result)
-        {
-           // indicate error ? output_error is not bound
-        } 
-
-          
         return result;
+    }
+    this.previousOffer = this.offer_connection;
+    this.offer_connection = function(match) {
+        let own = this.previousOffer(match);
+        if (own)
+            return own;
+        for (let ix in resource.elements) {
+            let el = resource.elements[ix];
+            if (el && el.offer_connection) {
+                let bound = el.offer_connection(match);
+                if (bound)
+                    return bound;
+            }
+        }
     }
 	this.get_output_types = function() {
         let previousElement = resource.elements.at(-1);
@@ -115,19 +131,30 @@ function FlowProcessor(resource) {
 			return previousElement.get_output_types();
 		return new Set();
 	}
-	
+
     this.in_instanciate = function(input) {
         let newObject = Object.assign({}, this); // Clone
         newObject.elements = []; // Instanciate and empty list
         return newObject.instanciate_processor();
     }
 
+    this.in_begin = function() {
+        const head = resource.elements.at(0);
+        if (head) head.in_begin?.();
+        this.out_begin?.();
+    }
+    this.in_end = function() {
+        const head = resource.elements.at(0);
+        if (head) head.in_end?.();
+        this.out_end?.();
+    }
     this.in_go = function() {
-        if (resource.elements.length > 0) {
+        const head = resource.elements.at(0);
+        if (head) {
             this.program = [
-                resource.elements.at(0).in_begin,
-                resource.elements.at(0).in_go,
-                resource.elements.at(0).in_end
+                head.in_begin,
+                head.in_go,
+                head.in_end
             ];
             this.execute_fn(this.program);
         }

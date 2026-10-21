@@ -1,0 +1,23 @@
+Meta.documentation:httpConnection.upload
+Meta.documentation:
+Meta.documentation:The PUT /_file write request as a {path, content} Data record for
+Meta.documentation:file:'s in_Data_write. The localhost guard lives here (not as an if
+Meta.documentation:sentence) because a non-local PUT must be ANSWERED 403, not silenced -
+Meta.documentation:rejections leave on out_error carrying their HTTP status (the connection
+Meta.documentation:replies them on the wire):
+Meta.documentation:
+Meta.documentation:  non-local host   - 403 text/plain "Local requests only"
+Meta.documentation:  missing ?path=   - 400 text/plain "Missing path query parameter"
+Meta.documentation:  otherwise        - the {path, content} record (content = the request
+Meta.documentation:                     body bytes) for file:'s write
+Meta.documentation:
+Meta.documentation:A request that is not PUT /_file stays silent (falls through to the
+Meta.documentation:catch-all 204).
+Meta.documentation:
+Meta.documentation:@port in_httpConnection_$all - an accepted httpConnection (meta on .value, body bytes on .body)
+Meta.documentation:@port out_Data - the {path, content} write record
+Meta.documentation:@see httpConnection
+Meta.documentation:@see file
+Meta.documentation:@kind operator
+Meta.documentation:@status experimental
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20upload()%0A%7B%0A%09Resource.call(this%2C%22upload%22)%3B%0A%09this.Processor%20%3D%20uploadProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20uploadProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Data%20%20%3D%20null%3B%0A%09this.out_error%20%3D%20null%3B%0A%0A%09this.in_instanciate%20%3D%20function(input)%0A%09%7B%0A%09%09let%20newObject%20%3D%20this.get_resource().clone()%3B%0A%09%09return%20newObject.instanciate_processor()%3B%0A%09%7D%3B%0A%0A%09this.in_httpConnection_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09const%20conRes%20%3D%20(input%20%26%26%20input.get_resource)%20%3F%20input.get_resource()%20%3A%20input%3B%0A%09%09const%20meta%20%3D%20conRes%20%26%26%20conRes.value%3B%0A%09%09if%20(!meta)%20return%3B%0A%09%09const%20url%20%3D%20String(meta.url%20%7C%7C%20%22%22)%3B%0A%09%09if%20(String(meta.method%20%7C%7C%20%22%22).toUpperCase()%20!%3D%3D%20%22PUT%22)%20return%3B%0A%09%09if%20(url.split(%22%3F%22)%5B0%5D%20!%3D%3D%20%22%2F_file%22)%20return%3B%0A%09%09if%20(!Dawn.isServer())%20return%3B%0A%0A%09%09const%20reject%20%3D%20(status%2C%20message)%20%3D%3E%20this.out_error%3F.(%7B%20value%3A%20message%2C%20status%3A%20status%20%7D)%3B%0A%0A%09%09%2F%2F%20localhost%20only%20(isLocalRequest%20parity%3A%20host%20header%2C%20portless)%0A%09%09const%20host%20%3D%20String((meta.headers%20%26%26%20meta.headers.host)%20%7C%7C%20%22%22)%3B%0A%09%09const%20hostname%20%3D%20host.replace(%2F%5B%5B%5C%5D%5D%2Fg%2C%20%22%22).replace(%2F%3A%5Cd%2B%24%2F%2C%20%22%22)%3B%0A%09%09if%20(%5B%22localhost%22%2C%22127.0.0.1%22%2C%22%3A%3A1%22%2C%22%3A%3Affff%3A127.0.0.1%22%5D.indexOf(hostname)%20%3D%3D%3D%20-1)%0A%09%09%7B%0A%09%09%09reject(403%2C%20%22Local%20requests%20only%22)%3B%0A%09%09%09return%3B%0A%09%09%7D%0A%09%09const%20query%20%3D%20url.split(%22%3F%22)%5B1%5D%20%7C%7C%20%22%22%3B%0A%09%09const%20filePath%20%3D%20new%20URLSearchParams(query).get(%22path%22)%3B%0A%09%09if%20(!filePath)%0A%09%09%7B%0A%09%09%09reject(400%2C%20%22Missing%20path%20query%20parameter%22)%3B%0A%09%09%09return%3B%0A%09%09%7D%0A%09%09const%20d%20%3D%20new%20(Dawn.require(%22Content-Type%2Fdata%2FData%22))()%3B%0A%09%09d.value%20%3D%20%7B%20path%3A%20filePath%2C%20content%3A%20conRes.body%20%7D%3B%0A%09%09return%20this.out_Data%3F.(d.instanciate_processor())%3B%0A%09%7D%3B%0A%09return%20this%3B%0A%7D%0Aupload.Processor%20%3D%20uploadProcessor%3B%0Amodule.exports%20%3D%20upload%3B]>>NewResource:httpConnection.upload

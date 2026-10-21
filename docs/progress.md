@@ -12,15 +12,31 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 | Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  21  |   0  |
 | Basic flavor pretty-print (`dawn → basic`, incl. prompt)     |  21  |   0  |
 | Documentation `@example` execution                           |  48  |   0  |
-| Integration (`Test/integration/`)                            |   2  |   0  |
-| **Total**                                                    | **141** | **0** |
+| Integration (Test/integration/)                            |   5  |   0  |
+| **Total**                                                    | **168** | **0** |
+
+## What changed 2026-10-16 (server replacement, W5+W6)
+
+**All routes localhost-gated via the guard-list** (env, /file:/// read, static
+public, PUT — one if sentence gates the list; non-local requests fall
+through to 204; a login mechanism may replace the guard-if later). The
+List gained universal self-type ports (in_List_/out_List — rule 3:
+implicit for value resources).
+
+**The Dawn server fully replaces dawn_console.js HTTP surface — strict byte parity.**
+ode dawn_run.js server/main.dawn serves the IDE routes: environment.json,
+static public (byte-exact), /file:/// read+listing, PUT /_file (with the
+build_sources trigger), CSP headers, catch-all 204. Parity matrix 20/20 with
+STRICT_PARITY=true; suite 160/0. New: httpConnection.fileserver/filewriter,
+host-guard if sentences (match+Boolean.if, go_then replay + lifecycle
+pass-through in the var reference), Dawn.cast moved onto the runtime.
 
 ## What changed 2026-09-22 (blob→octetstream + editor/flavor pipeline)
 
 **Blob is gone; binary = `application/octetstream`.** The old universal
 `Content-Type/data/Blob` resource was deleted and replaced by a resource named
 `octetstream` living at `dawn/Content-Type/application/octetstream.dawn` —
-the true `application/octet-stream` fallback in `Scheme/cast`. The binary
+the true `application/octet-stream` fallback in `Dawn.cast`. The binary
 transport ports on every value resource (`String`, `Number`, `Boolean`,
 `Data`, `List`, `text`, `image`, `json`, `Console`, `file:`) are now
 `in_octetstream_$all` / `out_octetstream`; Console prints `octetstream(N bytes)`.
