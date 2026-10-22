@@ -138,7 +138,7 @@ let results; // per-server map
 
   // JS reference server (dawn_console.js listens on PORT || 5000).
   const jsPort = 20000 + (process.pid % 20000);
-  const js = await startServer('node', ['dawn_console.js'], { PORT: String(jsPort) });
+  const js = await startServer('node', [path.join(ROOT, 'Dump', 'dawn_console.js')], { PORT: String(jsPort) });
   let dawn = null;
   try {
     const jsBase = `http://127.0.0.1:${jsPort}`;
@@ -150,7 +150,7 @@ let results; // per-server map
     const dawnEntry = path.join(ROOT, 'server', 'main.dawn');
     const dawnScheme = path.join(ROOT, 'dawn', 'Scheme', 'httpServer.dawn');
     if (fs.existsSync(dawnEntry) && fs.existsSync(dawnScheme)) {
-      dawn = await startServer('node', ['dawn_run.js', 'server/main.dawn'], {});
+      dawn = await startServer('node', [path.join(ROOT, 'dawn.js'), 'server/main.dawn'], {});
       const dawnBase = await readyFromStdout(dawn);
       results = {};
       const dawnResults = await runMatrix('dawn', dawnBase, tmpSavePath, saveBody);

@@ -63,7 +63,7 @@ for (const file of dawnFiles) {
 
     let actual;
     try {
-        actual = execSync(`node dawn_run.js "${dawnPath}"`, {
+        actual = execSync(`node dawn.js "${dawnPath}"`, {
             cwd: rootDir,
             timeout: 10000,
             encoding: 'utf8'
@@ -180,7 +180,7 @@ for (const docPath of walkDocFiles(path.join(rootDir, 'dawn'))) {
         fs.writeFileSync(tmp, ex.code);
         let actual;
         try {
-            actual = execSync(`node dawn_run.js "${tmp}"`, { cwd: rootDir, timeout: 10000, encoding: 'utf8' }).trimEnd();
+            actual = execSync(`node dawn.js "${tmp}"`, { cwd: rootDir, timeout: 10000, encoding: 'utf8' }).trimEnd();
         } catch (err) {
             actual = (err.stdout || '').trimEnd();
             if (err.stderr) actual += (actual ? '\n' : '') + err.stderr.trimEnd();

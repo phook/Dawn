@@ -29,6 +29,29 @@ directive: the server work itself decides what language support must exist).
 | W5 | IDE routes in Dawn, one at a time, each verified by W1: GET /environment.json, GET /file:///… (dir listing + file mime), PUT /_file (localhost-guarded, triggers build_sources via exec:), static mounts public BNFT dawn uil, CSP header middleware, catch-all 204. | ✅ done 2026-10-16 (rev 2 — file ops absorbed into file:): the fileserver/filewriter sub-resources were dissolved — the fs semantics (reference listing, reference mime, the {} case, writes + the build_sources trigger) live on **file:s explicit operation ports** (in_String_read/in_Data_write/out_Data/out_octetstream/out_Boolean_success; errors on out_error with optional HTTP status), reached through two thin hops (httpConnection.path: for GET /file:///, httpConnection.upload: for PUT /_file — the hops carry the http-shaped bits: the /file:/// prefix gate, the host 403, the ?path= parse). The PUT chain selects the write acknowledgement via a **named output** (file:#success — out_Boolean_success; the http layer translates the Boolean into 200 "OK", so the file resource stays protocol-agnostic — a likely standard pattern for success signals). The connection gained **in_error** (strings reply text/plain, objects reply application/json — the reference file-route error behavior). main.dawn uses the **guard-list** (2026-10-16, restored — it is the intended shape): ONE localhost-if gates a LIST containing ALL connection flows (env, /file:/// read, static public, PUT — everything localhost-gated now, 2026-10-16; a login mechanism may replace the guard-if later). The static mount serves through httpConnection.path:public (the base-mode path adapter: base+path join, / → index.html, traversal → 403, missing → silent 204 fall-through) into file:s in_String_read. The list machinery: go/go_then starts the list (in_go on a COPY), go_else absorbed, element lifecycle unwired in List.connect, Flow lifecycle heads null-guarded. test.jpg removed from main.dawn (it was the scheme-routing prop). All routes parity-verified, STRICT parity on: env (host-guarded if sentence), static public (via-subscription), /file:///… (httpConnection.fileserver — reference read_dir verbatim, {} special case, 404 error-json bodies), PUT /_file (httpConnection.filewriter — body from the connection .body bytes, 403/400/200/500, build_sources trigger), CSP headers on every reply, catch-all 204. Multi-route dispatch = the var qualified-reference broadcast (if sentences: match+Boolean.if, go_then replay, lifecycle pass-through). Test-csp dropped from both servers; cors was already commented out in the reference. |
 | W6 | Cutover: parity diff empty; suite green; docs/library.md rows; ROADMAP checkboxes flipped. | ✅ done 2026-10-16 — parity matrix 20/20 with STRICT_PARITY=true; suite 160/0; dawn_console.js stays as the parity harness reference (and editor_tabs dependency) until the default-port flip; the Dawn serving path has zero Express references. |
 
+## Cutover (2026-10-22)
+
+- `dawn.js` (repo root) is the single Node entry point — runs any `.dawn`
+  program; `npm run dawn` → `node dawn.js server/main.dawn` (port 3000).
+- Retired to `Dump/`: `dawn_console.js` (paths patched so it still runs there
+  as the parity harness's JS reference), `dawn_run.js`, `hubserver.js`,
+  `checkForLocalHost.js`.
+- `hubserver.js` was **dropped, not ported**: it is started by dawn_console.js
+  but no page has connected to it since the old `index_old.html` days
+  (`hubclient.js` has zero references in any current HTML/JS/test). Its
+  remote-eval role is superseded by the planned `server:`/`browser:`
+  cross-boundary call schemes (see ROADMAP Phase 4).
+- editor_tabs drives the real Dawn server now (fixed port 3000; the test
+  frees the port first — that includes a running dev server).
+- **Concurrency fix** (the named risk materialized): a browser page fetches
+  assets in parallel, and the guard-list's `var:httpConnection:connection`
+  capture is shared program state — overlapping requests overwrote the
+  capture, crossing reply bodies and stranding requests on the 204 default.
+  `httpConnection` now exposes a completion promise (resolved on every
+  answered site) and `httpServer.handle` awaits it, hard-capped at 10 s:
+  one request's flow runs at a time. Verified with parallel-fetch probes;
+  suite 168/0.
+
 ## W2 findings (land the learnings)
 
 - **Programs cannot yet wire locally-defined resources.** `NewResource:hello`

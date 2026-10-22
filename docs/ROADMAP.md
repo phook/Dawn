@@ -141,7 +141,7 @@ that item is off the list, not deferred.
 Exit criteria (unchanged): 100% round-trip on the full corpus; any Phase-1
 library feature writable in basic flavor without touching URI form.
 
-### Phase 3 — The server, in Dawn — 🚧 IN PROGRESS (see `docs/phase3-plan.md`)
+### Phase 3 — The server, in Dawn — ✅ DONE (cutover 2026-10-22)
 
 Goal: `dawn_console.js`, `hubserver.js`, `dawn_run.js` reimplemented as `.dawn`
 sources, readable in basic flavor via `define` blocks, `native javascript` only
@@ -159,15 +159,32 @@ Order:
 2. `dawn_console.js` routes one at a time with the JS server live as reference:
    `/file:///` read + directory-JSON, `PUT /_file`, static mounts, `/environment.json`.
    Needs the Phase 1 `http:` server scheme and a `mime:` resource.
-3. `hubserver.js` (needs a `socket:`/websocket scheme).
-4. Basic-flavor "meta" wrappers so the server reads like prose.
+3. ~~`hubserver.js` (needs a `socket:`/websocket scheme)~~ — **DROPPED, not
+   ported**: the hub is unused by any page (its client, `hubclient.js`, has
+   zero references since the old `index_old.html` days; the IDE works purely
+   over HTTP). Its remote-eval *role* — calling code across the client/server
+   boundary — is superseded by the planned `server:`/`browser:` schemes (Phase 4).
+4. ~~Basic-flavor "meta" wrappers~~ — deferred until the Phase 2 `define` gap
+   closes (programs cannot yet wire locally-defined resources; see
+   phase3-plan W2 findings).
+
+Cutover (2026-10-22): `dawn.js` is the Node entry point;
+`npm run dawn` → `node dawn.js server/main.dawn` (port 3000). The JS stack
+(`dawn_console.js`, `dawn_run.js`, `hubserver.js`, `checkForLocalHost.js`)
+retired to `Dump/` (dawn_console remains runnable there as the parity
+reference). The first concurrent load (browser parallel asset fetching)
+exposed the named risk: the guard-list's connection capture is shared state,
+so replies crossed between overlapping requests — fixed by serializing each
+request's flow (connection completion signal awaited by handle, 10 s cap).
+Suite 168/0 with editor_tabs now driving the Dawn server itself.
 
 Bootstrap strategy: run both servers side-by-side on different ports; an
 acceptance script hammers both and diffs responses. Flip the default only at
 parity; retire the JS versions to `Dump/`.
 
-Exit criteria: `node dawn_run.js server/main.dawn` serves the current web IDE
-with byte-identical behavior; zero Express references in the serving path.
+Exit criteria met: `node dawn.js server/main.dawn` serves the current web IDE
+(editor verified end-to-end by editor_tabs); zero Express references in the
+serving path.
 
 ### Phase 4 — UIL × Dawn integration
 
@@ -178,14 +195,21 @@ component is a Dawn resource with `in_*`/`out_*` ports (button: `out_go` on
 click, `in_String` sets label). A UIL page becomes a Dawn flow whose nodes
 happen to render — preserving "everything is a resource".
 
-1. Bridge model + two-way binding prototype (prove on `public/banana_melee/`).
-2. Component library in UIL templates replacing `public/templates/`:
+1. **Cross-boundary call schemes** (supersedes the retired hub's remote eval):
+   a `server:` scheme so a browser can execute Dawn code ON THE SERVER, and a
+   server-side `browser:` scheme for the reverse (the server calls into a
+   connected browser client). Together they make calling functions across the
+   client/server boundary as ordinary as any other resource binding — the
+   retired `hubserver.js`/`hubclient.js` (now in `Dump/`) were a JS-only
+   sketch of this idea, never wired into any current page.
+2. Bridge model + two-way binding prototype (prove on `public/banana_melee/`).
+3. Component library in UIL templates replacing `public/templates/`:
    button, text-field, list, tabs, framed, app-bar-top, project-inspector.
-3. The two big wrapper components: ACE editor (absorbing the `≔` monkey-patches
+4. The two big wrapper components: ACE editor (absorbing the `≔` monkey-patches
    from `editor.html`) and terminal/prompt (wrapping the `index.html`
    `TODAWN_COMMANDPROMT` loop).
-4. `{script flavor=basic}` blocks executing through `Dawn.execute`.
-5. Browser-side component test harness.
+5. `{script flavor=basic}` blocks executing through `Dawn.execute`.
+6. Browser-side component test harness.
 
 Exit criteria: banana_melee rewritten as UIL+Dawn flows (no hand-wired JS events);
 components individually testable.

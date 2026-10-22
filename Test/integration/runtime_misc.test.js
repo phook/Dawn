@@ -17,7 +17,7 @@ function runCase(source, args) {
   return new Promise((resolve) => {
     const tmp = path.join(os.tmpdir(), `dawn_misc_${Date.now()}_${Math.floor(Math.random()*1e6)}.dawn`);
     fs.writeFileSync(tmp, source);
-    const p = spawn('node', [path.join(ROOT, 'dawn_run.js'), tmp].concat(args || []), { cwd: ROOT });
+    const p = spawn('node', [path.join(ROOT, 'dawn.js'), tmp].concat(args || []), { cwd: ROOT });
     let buf = '';
     p.stdout.on('data', d => buf += d);
     p.stderr.on('data', d => buf += d);

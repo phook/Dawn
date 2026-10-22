@@ -36,6 +36,18 @@ html, body {
 	margin-left:-3px;
 }
 
+/* the raw echo of a command's output container nests two block divs, which
+   stacks two line boxes (double the terminal line height) — inline the
+   output div so the line is exactly one text line, and hide it entirely
+   until the print lands in it */
+.terminal div[class^="output"] {
+	display: inline;
+}
+
+.terminal div[class^="output"]:empty {
+	display: none;
+}
+
 terminal, .cmd .cmd-prompt {
   padding-left 20px;
   -webkit-user-select: none; /* Safari */

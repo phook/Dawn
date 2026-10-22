@@ -25,7 +25,7 @@
     "uglify-js": "^3.14.2"
   },
   "scripts": {
-    "dawn": "node dawn_console.js",
+    "dawn": "node dawn.js server/main.dawn",
     "test": "node Test/runner.js",
     "test:update": "node Test/runner.js --update"
   },

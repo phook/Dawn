@@ -32,8 +32,8 @@ app.use(cors());
 */
 //app.use(compression());
 
-let Dawn = require("./public/dawn.js");
-let DawnCompiler = require("./dawn/DawnCompiler.dawn.js");
+let Dawn = require("../public/dawn.js");
+let DawnCompiler = require("../dawn/DawnCompiler.dawn.js");
 
 var globalEval = (function(eval) { return function(code) { return eval(code) } })(eval);
 
@@ -167,7 +167,7 @@ app.head("*",async function (request, result, next) {
 
 let environment = 
 {
-  "dawnPath" : ("file:///"+__dirname+"/dawn").replaceAll("\\","/"),
+  "dawnPath" : ("file:///"+path.join(__dirname,"..")+"/dawn").replaceAll("\\","/"),
   "userPath" : "file:///"+os.homedir().replaceAll("\\","/")
 }
 
@@ -316,8 +316,8 @@ app.put("/_file", async (request, result) => {
                 console.log("DEBUG: file written successfully");
                 result.status(200).send("OK");
                 // editing a .dawn source inside the repo → regenerate its .dawn.js artifact
-                if (filePath.endsWith(".dawn") && filePath.startsWith(path.join(__dirname, "dawn"))) {
-                    try { require("child_process").execFileSync("node", [path.join(__dirname, "build_sources.js")]); } catch (e) {}
+                if (filePath.endsWith(".dawn") && filePath.startsWith(path.join(__dirname, "..", "dawn"))) {
+                    try { require("child_process").execFileSync("node", [path.join(__dirname, "..", "build_sources.js")]); } catch (e) {}
                 }
             } catch (e) {
                 console.log("DEBUG: save error:", e.message);

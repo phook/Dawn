@@ -1,6 +1,9 @@
 // Integration test: editor.html tabbed editing — tabs, per-tab verification,
 // flavor switching, dirty/save/color logic, and single-fetch folder expansion.
-// Drives the real page in headless Chrome against a spawned dawn_console.js.
+// Drives the real page in headless Chrome against the Dawn server
+// (`node dawn.js server/main.dawn`, fixed port 3000 per httpServer:3000 in
+// main.dawn). Any listener on 3000 is killed first — that includes a running
+// dev server (`npm run dawn`).
 //
 // Skips (exit 0) when Chrome or puppeteer-core is unavailable: this is a
 // browser-dependent test in an otherwise browser-free harness.
@@ -10,7 +13,7 @@ const path = require('path');
 const http = require('http');
 
 const ROOT = path.join(__dirname, '..', '..');
-const PORT = 21000 + (process.pid % 20000);
+const PORT = 3000; // fixed: httpServer:3000 in server/main.dawn
 const BASE = `http://127.0.0.1:${PORT}`;
 
 let failures = 0, successes = 0, skipped = 0;
@@ -60,7 +63,15 @@ function waitFor(url, timeoutMs = 15000) {
         process.exit(0);
     }
 
-    const server = spawn('node', ['dawn_console.js'], { cwd: ROOT, env: { ...process.env, PORT: String(PORT) }, stdio: ['ignore', 'pipe', 'pipe'] });
+    // free the fixed port (a running dev server or a stale test server)
+    try {
+        const { execSync } = require('child_process');
+        const conn = execSync('powershell -NoProfile -Command "(Get-NetTCPConnection -LocalPort ' + PORT + ' -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1).OwningProcess"', { encoding: 'utf8' }).trim();
+        const pid = parseInt(conn);
+        if (pid) { try { process.kill(pid); console.log('editor_tabs: killed pre-existing listener on ' + PORT + ' (pid ' + pid + ')'); } catch (e) {} }
+    } catch (e) {}
+
+    const server = spawn('node', ['dawn.js', 'server/main.dawn'], { cwd: ROOT, stdio: ['ignore', 'pipe', 'pipe'] });
     let browser = null;
     try {
         await waitFor(BASE + '/environment.json');

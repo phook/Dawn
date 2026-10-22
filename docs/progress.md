@@ -8,12 +8,32 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 
 | Suite                                                       | Pass | Fail |
 |-------------------------------------------------------------|-----:|-----:|
-| Dawn execution (`dawn_run.js` against `.dawn`)               |  49  |   0  |
+| Dawn execution (`dawn.js` against `.dawn`)                   |  49  |   0  |
 | Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  21  |   0  |
 | Basic flavor pretty-print (`dawn → basic`, incl. prompt)     |  21  |   0  |
 | Documentation `@example` execution                           |  48  |   0  |
 | Integration (Test/integration/)                            |   5  |   0  |
 | **Total**                                                    | **168** | **0** |
+
+## What changed 2026-10-22 (Phase 3 cutover)
+
+**The Dawn server is the default.** `npm run dawn` now runs
+`node dawn.js server/main.dawn` (port 3000). The JS reference stack —
+`dawn_console.js`, `dawn_run.js`, `hubserver.js`, `checkForLocalHost.js` —
+is retired to `Dump/` (dawn_console stays runnable there as the parity
+harness's reference). `dawn.js` is the single Node entry point (runs any
+`.dawn` program; the server is just its first client). editor_tabs drives the
+real Dawn server now.
+
+**First real concurrency fix.** A browser page loads its assets in parallel,
+and the guard-list's `var:httpConnection:connection` capture is shared program
+state: an overlapping request's connection overwrote the capture, so replies
+crossed wires (one request's body landed on another's response; the loser
+timed out to 204). `httpConnection` now carries a completion signal
+(`resource.done`, resolved on every answered site) and `httpServer.handle`
+awaits it — one request's flow at a time, hard-capped at 10 s so a wedged
+handler cannot stall the server. This was the roadmap's named risk
+("first genuinely concurrent resource") materializing, exactly as forecast.
 
 ## What changed 2026-10-16 (server replacement, W5+W6)
 
