@@ -28,6 +28,7 @@ let Dawn = {
         let subtype = slash === -1 ? "" : contentType.substring(slash + 1);
         let candidates = [];
         if (type && subtype) candidates.push("Content-Type." + type + "." + subtype + ":");
+        if (type && subtype && subtype.indexOf("+") !== -1) candidates.push("Content-Type." + type + "." + subtype.split("+")[0] + ":"); // image/svg+xml → image.svg
         if (type)            candidates.push("Content-Type." + type + ":");
         if (type === "text") candidates.push("Content-Type.data.String:");
         if (contentType === "image/svg+xml") candidates.push("Content-Type.data.String:");
@@ -251,6 +252,7 @@ let Dawn = {
         this.children["dawn"].path.push("Scheme."); // find schemes
         this.children["dawn"].path.push("Content-Type.data."); // find data types
         this.children["dawn"].path.push("Content-Type.application."); // find content-types (json:, octetstream:…)
+        this.children["dawn"].path.push("Content-Type.image."); // find image subtypes (Content-Type.image.png:…)
         
         // hardcode - change
 //        this.compiler = Dawn.require("file:///C:/Users/109600/Projects/Dawn/DawnCompiler.dawn.js");

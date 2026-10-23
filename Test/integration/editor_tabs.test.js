@@ -120,12 +120,28 @@ function waitFor(url, timeoutMs = 15000) {
         await sleep(500);
         check('reopening same file does not duplicate the tab', (await tabState()).count, 2);
 
+        // ── 3b. a file with mid-file blank lines (doc/native separator) opens clean:
+        // blank lines are formatting, not content — the flavor round-trip drops
+        // them and that must not read as an unsaved change
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'Console.dawn').click());
+        await sleep(1500);
+        s = await tabState();
+        check('blank-line file opens clean (not dirty)', [s.active.dirty, s.active.syntaxOK], [false, true]);
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'Clock.dawn').click());
+        await sleep(300);
+        await ev(() => { // close the Console tab so downstream tab counts stay unchanged
+            const tab = [...document.querySelectorAll('#tabbar .tab')].find(t => t.querySelector('.tablabel').textContent === 'Console.dawn');
+            tab.querySelector('.tabclose').click();
+        });
+        await sleep(300);
+
         // ── 4. flavor switch keeps the same canonical content (stays green) ──
         const before = await ev(() => activeTab.session.getValue());
         await page.select('#flavorSelect', 'Pure');
         await sleep(800);
         s = await tabState();
         check('switch to Pure applied', [s.selectValue, s.active.flavor], ['Pure', 'Pure']);
+        check('pill dropdown mirrors the flavor', await ev(() => document.querySelector('#flavorDropdown .dropdown-option.show').textContent), 'DAWN:Pure');
         const pureText = await ev(() => activeTab.session.getValue());
         check('Pure shows canonical content', pureText.startsWith('Meta.documentation:Clock'), true);
         check('flavor switch does not dirty the tab', s.active.dirty, false);

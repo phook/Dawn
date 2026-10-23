@@ -20,10 +20,19 @@
     --toolbar-fg:           #eeeeee;
     --toolbar-btn-bg:       #f5f5f5;
     --toolbar-btn-fg:       #111111;
-    --toolbar-btn-border:   1px solid #444444;
+    --toolbar-btn-border:   2px solid hsla(0, 0%, 67%, .99);
     --toolbar-btn-disabled-bg:   #555555;
     --toolbar-btn-disabled-fg:   #999999;
-    --toolbar-btn-disabled-border: 1px solid #444444;
+    --toolbar-btn-disabled-border: 2px solid #444444;
+
+    /* --- flavor switcher (console pill dropdown) --- */
+    --pill-bg:              #000000;
+    --pill-fg:              hsla(0, 0%, 67%, .99);
+    --pill-border:          2px solid hsla(0, 0%, 67%, .99);
+    --pill-hover-bg:        #222222;
+    --pill-font:            monospace;
+    --pill-font-size:       13px;
+    --pill-disabled-opacity: 0.5;
 
     /* --- tab bar --- */
     --tabbar-bg:            #252526;
@@ -44,6 +53,7 @@
     /* --- project tree --- */
     --tree-bg:              #f5f5f5;
     --tree-fg:              #222222;
+    --tree-border:          2px solid hsla(0, 0%, 67%, .99);
     --tree-selected-bg:     #d6e4ff;
     --tree-selected-fg:     inherit;
     --tree-hover-bg:        rgba(0, 0, 0, 0.06);
@@ -86,6 +96,28 @@ body {
     cursor:     default;
 }
 
+/* --- flavor switcher (console pill dropdown; geometry lives in editor.html) --- */
+.dropdown {
+    border-radius: 25px;
+    display: inline-block;
+    border: var(--pill-border);
+    box-shadow: 0 0 2px 0px white inset, 0 0 1px 0px white;
+    cursor: pointer;
+    background-color: var(--pill-bg);
+    color: var(--pill-fg);
+    font-family: var(--pill-font);
+    font-size: var(--pill-font-size);
+    overflow: hidden;
+    user-select: none;
+}
+.dropdown-option { z-index: 5; user-select: none; }
+.dropdown-option.show { color: var(--pill-fg); opacity: 1; }
+.dropdown-option.hide { color: transparent; opacity: 0; z-index: 3; }
+.dropdown-option:hover { background-color: var(--pill-hover-bg); }
+.dropdown.disabled { opacity: var(--pill-disabled-opacity); }
+.ontop { z-index: 10; }
+.ontop img { filter: invert(100%); }
+
 /* --- tab bar --- */
 .tabbar { background: var(--tabbar-bg); }
 .tab {
@@ -111,6 +143,7 @@ body {
 .project {
     background: var(--tree-bg);
     color:      var(--tree-fg);
+    border:     var(--tree-border);
 }
 #project li { font-size: var(--font-ui-size); }
 #project li:hover    { background: var(--tree-hover-bg); }

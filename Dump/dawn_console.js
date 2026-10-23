@@ -89,9 +89,12 @@ async function read_dir(dirpath, hidden) {
                     let ftcontentType="text/uil";
                     if (extension !== ".uil")
                     {
-                      ftcontentType = (await mime(createReadStream(filepath), extension)).mime;
-                      if (!ftcontentType)
-                        ftcontentType = "binary/" + extension.replace(".","");
+                      // extension-first (same rule as the response headers):
+                      // svg stays image/svg+xml even with an <?xml prolog
+                      const sniffed = await mime(createReadStream(filepath), extension);
+                      ftcontentType = require('mime-types').lookup(extension)
+                          || (sniffed && sniffed.mime)
+                          || "binary/" + extension.replace(".","");
                     }
                     jsdir[file].contentType = ftcontentType;
                     jsdir[file].size     = stat.size;
@@ -144,15 +147,18 @@ app.head("*",async function (request, result, next) {
             mimetype = "text/dawn";
         else
         {
-          let defaultmimetype = await mime(extension);
-          let mimeresult = (await mime(createReadStream(filepath), defaultmimetype))
-
-          if (mimeresult)
-            mimetype = mimeresult.mime;
+          // extension-first: a known extension answers directly (svg stays
+          // image/svg+xml even with an <?xml prolog); sniff only the gaps
+          let extType = require('mime-types').lookup(extension);
+          if (extType)
+            mimetype = extType;
           else
-            mimetype = "file/" + extension.substring(1);
+          {
+            let mimeresult = (await mime(createReadStream(filepath), extension))
+            mimetype = mimeresult ? mimeresult.mime : "file/" + extension.substring(1);
+          }
         }
-        result.status(200).setHeader("Content-Type",mimetype).send();      
+        result.status(200).setHeader("Content-Type",mimetype).send();
       }
     }
     catch (exception)
@@ -209,13 +215,16 @@ app.get("*",async function (request, result, next) {
             mimetype = "application/dawn";
         else
         {
-          let defaultmimetype = await mime(extension);
-          let mimeresult = (await mime(createReadStream(filepath), defaultmimetype))
-
-          if (mimeresult)
-            mimetype = mimeresult.mime;
+          // extension-first: a known extension answers directly (svg stays
+          // image/svg+xml even with an <?xml prolog); sniff only the gaps
+          let extType = require('mime-types').lookup(extension);
+          if (extType)
+            mimetype = extType;
           else
-            mimetype = "file/" + extension.substring(1);
+          {
+            let mimeresult = (await mime(createReadStream(filepath), extension))
+            mimetype = mimeresult ? mimeresult.mime : "file/" + extension.substring(1);
+          }
         }
         try {
           result.status(200).setHeader("Content-Type",mimetype).sendFile(filepath);      

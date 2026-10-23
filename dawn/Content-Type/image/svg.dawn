@@ -1,0 +1,21 @@
+Meta.documentation:Content-Type.image.svg
+Meta.documentation:
+Meta.documentation:The image/svg+xml subtype. Bytes in through the octetstream interface
+Meta.documentation:(the family's shared streaming contract — a future streaming
+Meta.documentation:transport lands here once for every subtype), bytes out on
+Meta.documentation:out_octetstream; out_svg emits the svg resource itself so the
+Meta.documentation:mime travels with the value. go fires the most specific
+Meta.documentation:connected output.
+Meta.documentation:
+Meta.documentation:out_String offers the markup as a String (svg is text on
+Meta.documentation:the wire, but the stored value stays bytes-uniform).
+Meta.documentation:
+Meta.documentation:@port in_octetstream_$all — the image bytes
+Meta.documentation:@port out_octetstream — the bytes, fired on in_go
+Meta.documentation:@port out_svg — this resource, self-typed, fired on in_go
+Meta.documentation:@port out_String — the markup as a String, fired on in_go
+Meta.documentation:
+Meta.documentation:@kind value
+Meta.documentation:@status experimental
+
+[Native.Javascript:const%20Resource%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0A%2F%2F%20Content-Type%2Fimage%2Fsvg%20%E2%80%94%20%20Carries%20its%20identity%20with%20the%20value%3A%20the%0A%2F%2F%20family's%20shared%20streaming%20contract%20is%20bytes%20in%20through%20the%20octetstream%0A%2F%2F%20interface%2C%20bytes%20out%20on%20out_octetstream%2C%20and%20the%20markup%20is%20reachable%20as%20a%20String%3B%0A%2F%2F%20out_svg%20emits%20this%20resource%20itself%20so%20the%20mime%20travels%20with%20the%20value.%0Afunction%20svg()%0A%7B%0A%09Resource.call(this%2C%22svg%22)%3B%0A%09this.Processor%20%3D%20svgProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20svgProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%0A%09this.resource%20%3D%20resource%3B%0A%09resource.contentType%20%3D%20%22image%2Fsvg%2Bxml%22%3B%0A%09this.out_octetstream%20%3D%20null%3B%0A%09this.out_svg%20%3D%20null%3B%0A%09this.out_String%20%3D%20null%3B%0A%09this.in_octetstream_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09resource.value%20%3D%20input.value%20instanceof%20Uint8Array%20%3F%20input.value%20%3A%20new%20Uint8Array(input.value)%3B%0A%20%20%20%20%7D%0A%09%2F%2F%20go%20fires%20the%20most%20specific%20connected%20output%3A%20the%20self-typed%20svg%0A%09%2F%2F%20resource%2C%20else%20the%20markup%20decoded%20as%20a%20String%2C%20else%20the%20raw%20bytes%0A%09this.in_go%20%3D%20function()%0A%20%20%20%20%7B%0A%09%09if%20(this.out_svg)%20return%20this.out_svg(resource)%3B%0A%09%09if%20(this.out_String)%0A%09%09%7B%0A%09%09%09const%20s%20%3D%20new%20(Dawn.require(%22Content-Type%2Fdata%2FString%22))()%3B%0A%09%09%09s.value%20%3D%20new%20TextDecoder().decode(resource.value%20instanceof%20Uint8Array%20%3F%20resource.value%20%3A%20new%20Uint8Array(0))%3B%0A%09%09%09return%20this.out_String(s.instanciate_processor())%3B%0A%09%09%7D%0A%09%09return%20this.out_octetstream%3F.(resource)%3B%0A%20%20%20%20%7D%0A%09this.in_instanciate%20%3D%20function(input)%0A%09%7B%0A%09%09let%20newObject%20%3D%20this.get_resource().clone()%3B%0A%09%09newObject.value%20%3D%20new%20Uint8Array(0)%3B%0A%09%09newObject.contentType%20%3D%20%22image%2Fsvg%2Bxml%22%3B%0A%09%09return%20newObject.instanciate_processor()%3B%0A%09%7D%0A%09return%20this%3B%0A%7D%0Asvg.Processor%3DsvgProcessor%3B%0Amodule.exports%3Dsvg%3B%0A]>>NewResource:image.svg

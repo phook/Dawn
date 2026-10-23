@@ -1,9 +1,10 @@
 Meta.documentation:Content-Type.image
 Meta.documentation:Meta.documentation:
-Meta.documentation:Content-Type family main for image/*: the raw bytes as a Blob,
-Meta.documentation:until a typed Image resource lands here. Subtypes (Content-Type/
-Meta.documentation:image/png, …) can override by dropping a resource in the image/
-Meta.documentation:folder.
+Meta.documentation:Content-Type family main for image/*: the raw bytes as a Blob.
+Meta.documentation:Typed subtypes live in the image/ folder (png, jpeg, gif, webp,
+Meta.documentation:svg — each carries its own typed output, e.g. out_png) and win
+Meta.documentation:over this family main in Dawn.cast; new image/* types can be
+Meta.documentation:added by dropping a resource in the image/ folder.
 Meta.documentation:
 Meta.documentation:@port in_octetstream_$all — the image bytes
 Meta.documentation:@port out_octetstream — the bytes, fired on in_go

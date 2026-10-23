@@ -97,6 +97,7 @@ async function runMatrix(label, base, tmpSavePath, saveBody) {
     { name: 'environment.json', method: 'GET', route: '/environment.json' },
     { name: 'dir listing', method: 'GET', route: '/' + codeexamples },
     { name: 'file read', method: 'GET', route: '/' + codeexamples + '/HelloWorld.dawn' },
+    { name: 'svg asset', method: 'GET', route: '/images/dawnfile.svg' },
     { name: 'file missing', method: 'GET', route: '/' + codeexamples + '/no-such-file.dawn' },
     { name: 'unknown route catchall', method: 'GET', route: '/__never_matched__' },
   ];
@@ -115,6 +116,7 @@ async function runMatrix(label, base, tmpSavePath, saveBody) {
       if (entry.name === 'file missing') check('js:missing file 404', probeResult.status, 404);
       if (entry.name === 'dir listing') check('js:dir json content-type', probeResult.contentType, 'text/directory-json');
       if (entry.name === 'file read') check('js:dawn file content-type', probeResult.contentType, 'text/dawn');
+      if (entry.name === 'svg asset') check('js:svg asset content-type', probeResult.contentType, 'image/svg+xml');
     }
   }
   // PUT round-trip: body is echoed to disk by the server, we verify via FS.
@@ -155,6 +157,7 @@ let results; // per-server map
       results = {};
       const dawnResults = await runMatrix('dawn', dawnBase, tmpSavePath, saveBody);
       for (const name of Object.keys(jsResults)) gap(name, dawnResults[name], jsResults[name]);
+      check('dawn:svg asset content-type', dawnResults['svg asset'] && dawnResults['svg asset'].contentType, 'image/svg+xml');
 
       // W5 route 1: the Dawn server answers GET /environment.json itself
       const env = await request({ method: 'GET', url: dawnBase + '/environment.json' });
