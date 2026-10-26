@@ -15,6 +15,23 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 | Integration (Test/integration/)                            |   5  |   0  |
 | **Total**                                                    | **168** | **0** |
 
+## What changed 2026-10-23 (port-name grammar: type chains + mandatory names)
+
+**Ports are now `in|out_<type...>_<name>_<marker?>`.** The tokens before the last are
+the type chain, general to specific; the name is mandatory ("default" is the
+reserved anonymous name); markers ride as suffixes. Connection matching is the
+subtype rule — an input connects when its chain is a prefix of the offered chain,
+most specific wins — so the image family binds through one input
+(`in_image_write`) instead of per-subtype ports, and a png-specific input
+correctly rejects a gif. Explicit ?input/#output selection matches the name
+token exactly (legacy substring kept as bridge); unnamed legacy ports read as
+name "default". The image subtypes dropped their duplicated octetstream output;
+file: gained the family write input (in_image_write); httpConnection replies
+derive the mime from the arriving typed input; Console/mime accept typed images
+through their family inputs. A universal-byte-sink rule was tried and REVERTED:
+it mis-bound plain value emits into [octetstream] inputs and killed repeat
+flows (times/multi_output). Suite 160/0.
+
 ## What changed 2026-10-22 (Phase 3 cutover)
 
 **The Dawn server is the default.** `npm run dawn` now runs

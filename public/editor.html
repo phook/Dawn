@@ -273,11 +273,20 @@ function tabForSession(session) {
     return null;
 }
 
+// binary image files are opaque in the editor: no flavor conversion, no dirty
+// tracking, no saving — the text pane shows a placeholder instead. (Their
+// bytes are not UTF-8; running them through the flavor machinery produced
+// lossy mojibake tabs flagged error+dirty.)
+function isBinaryPath(path) {
+    return /\.(png|jpe?g|gif|webp|svg|ico|bmp|avif)$/i.test(path || "");
+}
+
 function createTab(path, flavor) {
     var tab = {
         id: ++tabSeq,
         path: path || null,
         flavor: flavor || document.getElementById("flavorSelect").value || "BasicPretty",
+        binary: isBinaryPath(path || ""),
         syntaxOK: true,
         dirty: false,
         session: makeTabSession(),
@@ -308,12 +317,22 @@ function tabName(tab) {
 // Blank lines and trailing whitespace are formatting, not content: dawn is
 // line-oriented and native payloads are percent-encoded, so a literal blank
 // line between statements carries no meaning and must not dirty a tab.
+// Payloads compare by their DECODED javascript: the define/native block form
+// cannot carry a payload's trailing newline (the block re-encodes without it),
+// so that loss is formatting noise too — every encoded payload ends up
+// without its final %0A and must not dirty the tab.
 function canonEqual(a, b) {
-    const norm = (s) => s.split("\n").filter(l => l.trim() !== "").join("\n").replace(/\s+$/, "");
+    const decodePayloads = (s) => s.replace(
+        /(\[?\s*Native\.Javascript:)([^\]]*)(\]?\s*>>\s*NewResource\S*)/g,
+        (m, head, enc, tail) => {
+            try { return head + decodeURIComponent(enc).replace(/\s+$/, "") + tail; } catch (e) { return m; }
+        });
+    const norm = (s) => decodePayloads(s).split("\n").filter(l => l.trim() !== "").join("\n").replace(/\s+$/, "");
     return norm(a) === norm(b);
 }
 
 function computeDirty(tab) {
+    if (tab.binary) return false; // binary files are opaque — never dirty
     var text = tab.session.getValue();
     if (!tab.path) return /[^\s]/.test(text); // untitled: dirty while it's not empty
     if (tab.canonical == null) return false;
@@ -358,7 +377,7 @@ function applyTabState() {
     }
     flavorSelect.value = activeTab.flavor;
     flavorSelect.disabled = anyRedTab();          // switching suspended while any tab is red
-    saveBtn.disabled = !activeTab.syntaxOK;       // saving suspended for a red tab
+    saveBtn.disabled = !activeTab.syntaxOK || activeTab.binary; // binary files are not saveable as text
     updateTreeSelection();
     syncDropdown();
 }
@@ -398,6 +417,16 @@ function openPath(path) {
     GET(buildFetchUrl(path), function(data) {
         if (tabs.indexOf(tab) === -1) return; // closed while loading
         var source = data || "";
+        if (tab.binary) {
+            // opaque: show a placeholder, never convert/flag/save the bytes
+            tab.canonical = source;
+            tab.session.setValue("[binary image — not shown as text]", -1);
+            tab.session.getUndoManager().reset();
+            tab.dirty = false;
+            renderTab(tab);
+            if (tab === activeTab) checkSyntax();
+            return;
+        }
         tab.canonical = source; // pristine file content — the dirty baseline
         source = convertToFlavor(source, tab.flavor);
         tab.session.setValue(source, -1);
@@ -526,7 +555,7 @@ function compileCheckSource(source) {
 }
 
 function saveFile() {
-    if (!activeTab) return;
+    if (!activeTab || activeTab.binary) return; // binary files are opaque — never written from the text pane
     var tab = activeTab;
     var content = tab.session.getValue();
 	var dawnSource="";
@@ -584,6 +613,7 @@ document.getElementById("saveBtn").addEventListener("click", saveFile);
 document.getElementById("flavorSelect").addEventListener("change", function() {
 	if (!editor || !BNFT || !basicParser || !activeTab) return;
 	var tab = activeTab;
+	if (tab.binary) { tab.flavor = this.value; checkSyntax(); return; } // opaque: switch the label only
 	var newFlavor = this.value; // capture now — checkSyntax/applyTabState re-syncs the select to tab.flavor
 
 	if (anyRedTab()) { // flavor switching is suspended while any tab is red
@@ -694,6 +724,13 @@ var syntaxTimer = null;
 function checkSyntax() {
     if (!activeTab) { applyTabState(); return; }
 	var tab = activeTab;
+    if (tab.binary) { // opaque: nothing to verify, nothing to save
+        tab.syntaxOK = true;
+        tab.dirty = false;
+        applyTabState();
+        renderTab(tab);
+        return;
+    }
     var content = tab.session.getValue();
     if (!content.endsWith("\n")) content += "\n";
 

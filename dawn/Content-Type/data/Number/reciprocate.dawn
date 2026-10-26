@@ -4,8 +4,8 @@ Meta.documentation:Turns each Number into its reciprocal (1/x).
 Meta.documentation:
 Meta.documentation:Streaming operator: each input Number x is emitted as 1/x, exactly.
 Meta.documentation:
-Meta.documentation:@port in_Number_$all — each Number
-Meta.documentation:@port out_Number — its reciprocal
+Meta.documentation:@port in_Number_default_$all — each Number
+Meta.documentation:@port out_Number_default — its reciprocal
 Meta.documentation:
 Meta.documentation:@example
 Meta.documentation:Number:4>>Number.reciprocate:>>Console:
@@ -17,4 +17,4 @@ Meta.documentation:@kind operator
 Meta.documentation:@status stable
 Meta.documentation:
 
-[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20reciprocate()%0A%7B%0A%09Resource.call(this%2C%22reciprocate%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%09this.Processor%3DreciprocateProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20reciprocateProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09this.out_Number%3F.(%7Bvalue%3Ainput.value.reciprocate()%7D)%3B%20%09%09%0A%09%7D%0A%7D%0Areciprocate.Processor%3DreciprocateProcessor%3B%0Amodule.exports%3Dreciprocate%3B]>>NewResource:Number.reciprocate
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20reciprocate()%0A%7B%0A%09Resource.call(this%2C%22reciprocate%22)%3B%20%2F%2F%20REMOVE%20NAMING%20-%20BUT%20LEAVE%20FOR%20DEBUG%20FOR%20NOW%0A%09this.Processor%3DreciprocateProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20reciprocateProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number_default%20%3D%20null%3B%0A%09this.in_Number_default_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%0A%09%09this.out_Number_default%3F.(%7Bvalue%3Ainput.value.reciprocate()%7D)%3B%20%09%09%0A%09%7D%0A%7D%0Areciprocate.Processor%3DreciprocateProcessor%3B%0Amodule.exports%3Dreciprocate%3B]>>NewResource:Number.reciprocate

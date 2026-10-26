@@ -4,8 +4,8 @@ Meta.documentation:Rounds each Number to the nearest integer.
 Meta.documentation:
 Meta.documentation:Streaming operator: half rounds up (round(3.5) is 4).
 Meta.documentation:
-Meta.documentation:@port in_Number_$all — each Number
-Meta.documentation:@port out_Number — the rounded result
+Meta.documentation:@port in_Number_default_$all — each Number
+Meta.documentation:@port out_Number_default — the rounded result
 Meta.documentation:
 Meta.documentation:@example
 Meta.documentation:Number:3.5>>Number.round:>>Console:
@@ -17,4 +17,4 @@ Meta.documentation:@kind operator
 Meta.documentation:@status stable
 Meta.documentation:
 
-[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0Afunction%20round()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22round%22)%3B%0A%09this.Processor%3DroundProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20roundProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number%20%3D%20null%3B%0A%09this.in_Number_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09return%20this%3F.out_Number%3F.(%7Bvalue%3Ainput.value.round()%7D)%3B%0A%20%20%20%20%7D%0A%7D%0Around.Processor%3DroundProcessor%3B%0Amodule.exports%3Dround%3B]>>NewResource:Number.round
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0Aconst%20Number%20%20%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FNumber%22)%3B%0A%0Afunction%20round()%0A%7B%0A%20%20this.Number%20%3D%20new%20Number()%3B%0A%09Resource.call(this%2C%22round%22)%3B%0A%09this.Processor%3DroundProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20roundProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_Number_default%20%3D%20null%3B%0A%09this.in_Number_default_%24all%20%3D%20function(input)%0A%09%7B%0A%09%09return%20this%3F.out_Number_default%3F.(%7Bvalue%3Ainput.value.round()%7D)%3B%0A%20%20%20%20%7D%0A%7D%0Around.Processor%3DroundProcessor%3B%0Amodule.exports%3Dround%3B]>>NewResource:Number.round

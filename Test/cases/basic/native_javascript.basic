@@ -9,8 +9,8 @@ function Doubler() {
 
 function DoublerProcessor(resource) {
  Resource.Processor.call(this,resource);
- this.in_Number_$all = function(input) {
- this.out_Number(input.value.multiply(2));
+ this.in_Number_default_$all = function(input) {
+ this.out_Number_default(input.value.multiply(2));
  };
 }
 Doubler.Processor = DoublerProcessor;

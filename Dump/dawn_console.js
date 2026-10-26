@@ -19,6 +19,7 @@ function isLocalRequest(request) {
 
 
 app.use((req, res, next) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.setHeader(
     'Content-Security-Policy',
     "default-src * 'unsafe-eval' 'unsafe-inline' data: blob:; script-src * 'unsafe-eval' 'unsafe-inline'; style-src * 'unsafe-inline'; img-src * data: blob:; font-src * data: blob:;"

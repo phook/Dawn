@@ -20,7 +20,7 @@ Meta.documentation:image/svg+xml → data.String (markup text, late fallback), a
 Meta.documentation:data.Data, anything else → application.octetstream.
 Meta.documentation:
 Meta.documentation:The found resource is fed the raw bytes through its octetstream interface
-Meta.documentation:(in_octetstream_$all) - every value resource parses its own bytes - and
+Meta.documentation:(in_octetstream_default_$all) - every value resource parses its own bytes - and
 Meta.documentation:the true content-type is stamped on it, so reply paths prefer it. After
 Meta.documentation:casting, the value late-connects to the next resource in the flow
 Meta.documentation:so bindings reflect the true type.

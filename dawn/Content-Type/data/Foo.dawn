@@ -13,14 +13,14 @@ function BooleanProcessor(resource)
 {
     Resource.Processor.call(this,resource); 
 	this.resource = resource;
-	this.out_Boolean = null;
-    this.in_Boolean = function(input)
+	this.out_Boolean_default = null;
+    this.in_Boolean_default = function(input)
     {   
       resource.value = input.value;
     }
     this.in_go = function()
     {
-        return this?.out_Boolean(resource);
+        return this?.out_Boolean_default(resource);
     }
     this.in_instanciate = function(input)
     {   

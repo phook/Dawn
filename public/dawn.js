@@ -39,7 +39,7 @@ let Dawn = {
             let proc = null;
             try { proc = await root.lookup(id); } catch (e) { proc = null; }
             if (!proc) continue;
-            let blobInput = proc.in_octetstream_$all || proc.in_octetstream;
+            let blobInput = proc.in_octetstream_default_$all || proc.in_octetstream_$all || proc.in_octetstream;
             if (blobInput)
             {
                 blobInput.call(proc, { value: u8 });

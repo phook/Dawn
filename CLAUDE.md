@@ -199,8 +199,7 @@ Use `node Test/runner.js --update` to refresh snapshots.
 - **File naming**: `.dawn` = source, `.dawn.js` = compiled resource, `.bnft` = grammar
 - **Processor naming**: Resource class `Foo` has processor `FooProcessor`
 - **Input/output markers**: Always prefix with `in_` or `out_`
-- **Type markers**: After `in_` or `out_` the type comes i.e. `out_Boolean` 
-- **Input/Output names**: After `in_` or `out_` and the type an optional name comes i.e. `out_go_else`
+- **Port-name grammar**: `in|out_<type...>_<name>_<marker?>` — the tokens before the last are the TYPE CHAIN, general → specific (an image subtype is `out_image_gif_default`, chain `[image, gif]`; a plain value type is `in_String_write`, chain `[String]`). The **name is the last non-marker token and is mandatory** — `default` is the reserved anonymous name; markers (`_$all`, `_$explicit`, `_$group`) stay as suffixes after the name. Connection matching is type-only (subtype rule): an input connects when its chain is a **prefix of the offered chain** — `in_image_write` accepts any image subtype, `in_image_png_write` rejects a gif; when several inputs match, the longest (most specific) chain wins. Names exist for explicit `?input`/`#output` selection (matched exactly as the name token). Typed values reach raw-byte sinks through their family inputs (`in_image_write`), not through `[octetstream]` inputs. Lifecycle ports (`in_begin`, `in_end`, `in_error`, `in_go`) are exempt from the grammar; begin/end/error stay multi-bindable.
 - **Resource naming**: Resources that carries a value ("Boolean","String") starts with capital letter, Resources that compute starts with lowercase
 - **Async-first**: All I/O is promise-based; operations may not complete synchronously
 - **Error handling**: Minimal; errors propagate via `in_error` or `out_error` handlers, no throws/exceptions unless user 'catches' the `out_error`

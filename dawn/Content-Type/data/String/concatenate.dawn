@@ -5,8 +5,8 @@ Meta.documentation:
 Meta.documentation:Accumulates every String received between begin and end and emits the
 Meta.documentation:concatenation — the standard way to turn a List of Strings into one String.
 Meta.documentation:
-Meta.documentation:@port in_String_$all — next piece of text to append
-Meta.documentation:@port out_String — the glued String, emitted at end of input
+Meta.documentation:@port in_String_default_$all — next piece of text to append
+Meta.documentation:@port out_String_default — the glued String, emitted at end of input
 Meta.documentation:
 Meta.documentation:@example
 Meta.documentation:[String:Hello String:%20 String:World]>>String.concatenate:>>Console:
@@ -18,4 +18,4 @@ Meta.documentation:@kind operator
 Meta.documentation:@status stable
 Meta.documentation:
 
-[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20concatenate()%0A%7B%0A%09Resource.call(this%2C%22concatenate%22)%3B%0A%09this.Processor%3DconcatenateProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20concatenateProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.tempString%20%3D%20%22%22%3B%20%0A%20%20%20%20%7D%0A%09this.in_String_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20this.tempString%20%2B%3D%20input.value%3B%0A%20%20%20%20%7D%0A%09this.in_end%20%3D%20function()%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20return%20this%3F.out_String%3F.(%7Bvalue%3Athis.tempString%7D)%3B%20%0A%20%20%20%20%7D%0A%7D%0Aconcatenate.Processor%3DconcatenateProcessor%3B%0Amodule.exports%3Dconcatenate%3B]>>NewResource:String.concatenate
+[Native.Javascript:const%20Resource%20%20%3D%20Dawn.require(%22Content-Type%2Fdata%2FResource%22)%3B%0A%0Afunction%20concatenate()%0A%7B%0A%09Resource.call(this%2C%22concatenate%22)%3B%0A%09this.Processor%3DconcatenateProcessor%3B%0A%09return%20this%3B%0A%7D%0A%0Afunction%20concatenateProcessor(resource)%0A%7B%0A%09Resource.Processor.call(this%2Cresource)%3B%20%0A%09this.resource%20%3D%20resource%3B%0A%09this.out_String_default%20%3D%20null%3B%0A%09this.in_begin%20%3D%20function()%0A%09%7B%0A%09%09this.tempString%20%3D%20%22%22%3B%20%0A%20%20%20%20%7D%0A%09this.in_String_default_%24all%20%3D%20function(input)%0A%20%20%20%20%7B%20%20%20%0A%20%20%20%20%20%20this.tempString%20%2B%3D%20input.value%3B%0A%20%20%20%20%7D%0A%09this.in_end%20%3D%20function()%0A%20%20%20%20%7B%0A%20%20%20%20%20%20%20%20return%20this%3F.out_String_default%3F.(%7Bvalue%3Athis.tempString%7D)%3B%20%0A%20%20%20%20%7D%0A%7D%0Aconcatenate.Processor%3DconcatenateProcessor%3B%0Amodule.exports%3Dconcatenate%3B]>>NewResource:String.concatenate

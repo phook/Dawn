@@ -127,6 +127,26 @@ function waitFor(url, timeoutMs = 15000) {
         await sleep(1500);
         s = await tabState();
         check('blank-line file opens clean (not dirty)', [s.active.dirty, s.active.syntaxOK], [false, true]);
+
+        // ── 3b'. a file whose native payload ENDS with a newline opens clean:
+        // the define/native block re-encodes the payload without its trailing
+        // newline, and canonEqual compares payloads decoded with that loss
+        // treated as formatting (the image subtype sources hit this)
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'Content-Type').click()); // expand
+        await sleep(1000);
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'image').click()); // expand
+        await sleep(1000);
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'gif.dawn').click());
+        await sleep(1500);
+        s = await tabState();
+        check('trailing-newline payload opens clean (not dirty)', [s.active.dirty, s.active.syntaxOK], [false, true]);
+        await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'Clock.dawn').click());
+        await sleep(300);
+        await ev(() => { // close the gif tab so downstream tab counts stay unchanged
+            const tab = [...document.querySelectorAll('#tabbar .tab')].find(t => t.querySelector('.tablabel').textContent === 'gif.dawn');
+            tab.querySelector('.tabclose').click();
+        });
+        await sleep(300);
         await ev(() => [...document.querySelectorAll('#project li')].find(x => x.textContent.trim() === 'Clock.dawn').click());
         await sleep(300);
         await ev(() => { // close the Console tab so downstream tab counts stay unchanged
@@ -134,6 +154,24 @@ function waitFor(url, timeoutMs = 15000) {
             tab.querySelector('.tabclose').click();
         });
         await sleep(300);
+
+        // ── 3c. binary image files open opaque (green): no flavor machinery on
+        // their bytes — they open clean, the pane shows a placeholder, and
+        // saving is blocked (writing the lossy text would corrupt the file)
+        const imgPath = 'file:///' + ROOT.replace(/\\/g, '/') + '/public/images/favicon.png';
+        await ev(p => openPath(p), imgPath);
+        await sleep(1200);
+        s = await tabState();
+        check('binary image opens clean (not dirty, not red)', [s.active.dirty, s.active.syntaxOK, s.saveDisabled], [false, true, true]);
+        check('binary image pane shows the placeholder', await ev(() => activeTab.session.getValue()), '[binary image — not shown as text]');
+        await page.select('#flavorSelect', 'Pure');
+        await sleep(600);
+        s = await tabState();
+        check('flavor switch on a binary tab stays clean', [s.active.dirty, s.active.syntaxOK, s.selectValue], [false, true, 'Pure']);
+        await page.select('#flavorSelect', 'BasicPretty');
+        await sleep(600);
+        await ev(() => document.querySelector('#tabbar .tab:last-child .tabclose').click());
+        await sleep(400);
 
         // ── 4. flavor switch keeps the same canonical content (stays green) ──
         const before = await ev(() => activeTab.session.getValue());

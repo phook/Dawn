@@ -70,29 +70,29 @@ function runCase(source) {
   const sProc = await root.lookup('String:' + encodeURIComponent(text));
   const sCast = await Dawn.cast('text/plain', sProc.toBlob(), null);
   check('string unicode round-trip', sCast.get_resource().value, text);
-  check('text seed output plug listed', ('out_String' in sCast.outputList), true);
+  check('text seed output plug listed', ('out_String_default' in sCast.outputList), true);
 
   // Number (1/3) — exact fraction round-trip through the octetstream interface
   const nProc = await root.lookup('Number:1/3');
   const nBytes = nProc.toBlob();
   const nBack = await root.lookup('Number:0');
-  nBack.in_octetstream_$all({ value: nBytes });
+  nBack.in_octetstream_default_$all({ value: nBytes });
   check('number fraction round-trip', nBack.get_resource().value.toString(), '1/3');
 
   // Data — JSON round-trip through the application/json seed
   const dProc = Dawn.castValue('Data', { a: [1, 2], b: 'x' });
   const dCast = await Dawn.cast('application/json', dProc.toBlob(), null);
   check('data json round-trip', JSON.stringify(dCast.get_resource().value), JSON.stringify({ a: [1, 2], b: 'x' }));
-  check('json seed output plug listed', ('out_Data' in dCast.outputList), true);
+  check('json seed output plug listed', ('out_Data_default' in dCast.outputList), true);
 
   // Blob — octet-stream falls through to data.Application, identity
   const bCast = await Dawn.cast('application/octet-stream', new Uint8Array([1, 2, 3]), null);
   check('octetstream default cast length', bCast.get_resource().value.length, 3);
 
-  // image/png — Content-Type/image seed produces an octetstream
-  const iCast = await Dawn.cast('image/png', new Uint8Array([9, 9]), null);
-  check('image seed octetstream length', iCast.get_resource().value.length, 2);
-  check('image seed output plug listed', ('out_octetstream' in iCast.outputList), true);
+  // image/* without a seeded subtype resolves the family main (raw bytes blob)
+  const iCast = await Dawn.cast('image/bmp', new Uint8Array([9, 9]), null);
+  check('image family octetstream length', iCast.get_resource().value.length, 2);
+  check('image family output plug listed', ('out_octetstream_default' in iCast.outputList), true);
 
   // ── image subtype wave: typed Content-Type/image/* resources ──
   // png cast resolves the png SUBTYPE from the tree (not the family main)
@@ -100,13 +100,13 @@ function runCase(source) {
   check('png cast resolves the png subtype', pngCast.get_resource().name, 'png');
   check('png cast bytes intact', Buffer.from(pngCast.get_resource().value).toString('hex'), '0909');
   check('png cast content-type stamped', pngCast.get_resource().contentType, 'image/png');
-  check('png typed output listed', ('out_png' in pngCast.outputList), true);
+  check('png typed output listed', ('out_image_png_default' in pngCast.outputList), true);
 
   // svg subtype — bytes uniform, markup reachable as a String on go
   const svgCast = await Dawn.cast('image/svg+xml', new Uint8Array(Buffer.from('<svg xmlns="x"></svg>')), null);
   check('svg cast resolves the svg subtype', svgCast.get_resource().name, 'svg');
   let svgText = null;
-  svgCast.out_String = (v) => { svgText = v.get_resource().value; };
+  svgCast.out_String_default = (v) => { svgText = v.get_resource().value; };
   await svgCast.in_go?.();
   check('svg out_String decodes the markup', svgText, '<svg xmlns="x"></svg>');
 
@@ -121,15 +121,15 @@ function runCase(source) {
   readProc.connectee = captureSink;
   await readProc.in_go();
   await new Promise((r) => setTimeout(r, 400));
-  check('file read casts to the typed png resource', captured.png_value && captured.png_value.get_resource ? captured.png_value.get_resource().name : null, 'png');
-  check('file read png bytes intact', captured.png_value ? Buffer.compare(Buffer.from(captured.png_value.get_resource().value), fs.readFileSync(faviconAbs)) : -1, 0);
+  check('file read casts to the typed png resource', captured.image_png_default_value && captured.image_png_default_value.get_resource ? captured.image_png_default_value.get_resource().name : null, 'png');
+  check('file read png bytes intact', captured.image_png_default_value ? Buffer.compare(Buffer.from(captured.image_png_default_value.get_resource().value), fs.readFileSync(faviconAbs)) : -1, 0);
 
   // writing a file through the image's own input (typed sink write round-trip)
   const tmpPng = path.join(os.tmpdir(), `dawn_typed_${Date.now()}.png`).replace(/\\/g, '/');
   const sinkProc = await root.lookup('file:' + tmpPng + '?write');
   const pngRes = await root.lookup('Content-Type.image.png:');
-  pngRes.in_octetstream_$all({ value: new Uint8Array(fs.readFileSync(faviconAbs)) });
-  sinkProc.in_png_write(pngRes);
+  pngRes.in_octetstream_default_$all({ value: new Uint8Array(fs.readFileSync(faviconAbs)) });
+  sinkProc.in_image_write(pngRes);
   sinkProc.in_end();
   check('typed write bytes on disk', Buffer.compare(fs.readFileSync(tmpPng), fs.readFileSync(faviconAbs)), 0);
   fs.unlinkSync(tmpPng);
@@ -143,21 +143,64 @@ function runCase(source) {
   };
   const connProc = new (Dawn.require('Scheme/httpConnection'))().instanciate_processor();
   connProc.resource.res = stub;
-  connProc.in_png_$all({ value: new Uint8Array([1, 2, 3]) });
-  check('connection in_png_$all replies image/png', stubHeaders['content-type'], 'image/png');
+  connProc.in_image_png_default_$all({ value: new Uint8Array([1, 2, 3]) });
+  check('connection in_image_png_default_$all replies image/png', stubHeaders['content-type'], 'image/png');
   check('connection png body bytes', stub.body.toString('hex'), '010203');
   const stub2Headers = {};
   const connProc2 = new (Dawn.require('Scheme/httpConnection'))().instanciate_processor();
   connProc2.resource.res = { headers: {}, statusCode: 0, setHeader(k, v) { stub2Headers[k.toLowerCase()] = v; }, end(b) { this.body = b; } };
-  connProc2.in_svg_$all({ value: new Uint8Array(Buffer.from('<svg/>')) });
-  check('connection in_svg_$all replies image/svg+xml', stub2Headers['content-type'], 'image/svg+xml');
+  connProc2.in_image_svg_default_$all({ value: new Uint8Array(Buffer.from('<svg/>')) });
+  check('connection in_image_svg_default_$all replies image/svg+xml', stub2Headers['content-type'], 'image/svg+xml');
+
+  // ── port-name grammar: subtype rule, specificity, universal sink, markers ──
+  const ResourceCtor = Dawn.require('Content-Type/data/Resource');
+  const targetWith = (inputs) => {
+    const t = new ResourceCtor().instanciate_processor();
+    for (const name of Object.keys(inputs)) t[name] = inputs[name];
+    return t;
+  };
+  // family input accepts a subtype offer (the inheritance case)
+  const famTarget = targetWith({ in_image_write: function() {} });
+  check('family input accepts a gif offer', typeof famTarget.offer_connection('image_gif_default'), 'function');
+  // specificity: the png-specific input wins over the family input
+  let hit = null;
+  const bothTarget = targetWith({
+    in_image_write: function() { hit = 'family'; },
+    in_image_png_write: function() { hit = 'png-specific'; }
+  });
+  bothTarget.offer_connection('image_png_default')();
+  check('most specific input chain wins', hit, 'png-specific');
+  // cross-subtype rejection: a png-specific input rejects a gif offer
+  const pngOnly = targetWith({ in_image_png_write: function() {} });
+  check('png-specific input rejects a gif offer', pngOnly.offer_connection('image_gif_default'), undefined);
+  // raw-byte offers match chain-equal octetstream inputs; typed values do NOT
+  // reach [octetstream] inputs — they go through the family inputs instead
+  hit = null;
+  const sinkTarget = targetWith({
+    in_octetstream_write: function() { hit = 'bytes'; },
+    in_Data_write: function() { hit = 'data'; }
+  });
+  sinkTarget.offer_connection('Data')();
+  check('specific Data input beats the octetstream input', hit, 'data');
+  sinkTarget.offer_connection('octetstream')();
+  check('octetstream input accepts a raw byte offer', hit, 'bytes');
+  const byteOnly = targetWith({ in_octetstream_write: function() {} });
+  check('octetstream input does not accept a typed image offer', byteOnly.offer_connection('image_gif_default'), undefined);
+  // _$all ports stay multi-bindable
+  const allTarget = targetWith({ 'in_response_default_$all': function() {} });
+  check('_$all port binds', typeof allTarget.offer_connection('response_default'), 'function');
+  check('_$all port stays bindable', typeof allTarget.offer_connection('response_default'), 'function');
+  // lifecycle ports keep the simple rules and stay multi-bindable
+  const lifeTarget = targetWith({ in_end: function() {} });
+  check('lifecycle in_end binds by simple name', typeof lifeTarget.offer_connection('end'), 'function');
+  check('lifecycle in_end stays multi-bindable', typeof lifeTarget.offer_connection('end'), 'function');
 
   // List — typed-JSON round-trip with mixed elements (incl. exact Number fraction)
   const list = await root.lookup('List:');
   await list.add('String:hello', 'Number:1/3', 'Boolean:true');
   const listBytes = list.toBlob();
   const listBack = await root.lookup('List:');
-  listBack.in_octetstream_$all({ value: listBytes });
+  listBack.in_octetstream_default_$all({ value: listBytes });
   const els = listBack.get_resource().elements.map(e => e.name + ':' + (e.value && e.value.toString ? e.value.toString() : e.value));
   check('list typed-json round-trip', els.join(','), 'String:hello,Number:1/3,Boolean:true');
 
