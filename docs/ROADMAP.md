@@ -128,7 +128,20 @@ Done so far:
       semantics needed and none planned)
 
 Still open (see docs/progress.md "Known remaining gaps"):
-- [ ] Mixed arithmetic chains (`1 + 2 - 3`)
+- [x] Mixed arithmetic chains (`1 + 2 - 3`, `2 * 3 / 4`) — DONE 2026-10-26.
+      The first tail's operator picks the wrap (`>>add:`/`>>subtract:`,
+      `>>multiply:`/`>>divide:`); opposite-operator tails lower to
+      `term>>negate:` / `term>>reciprocate:` chain elements, so mixed
+      chains stay FLAT lists (value-exact left-fold; FD prints them flat
+      again: `1 + 2 - 3`, `2×3÷4`). Required fixing the List runtime first:
+      lists double-fired their Flow elements' lifecycle (begin/end relay +
+      the flow's own self-run program), making every nested flow
+      (`[[1 2]>>add: 3]>>subtract:`, nested `power:`, TheQuestion) compute
+      wrong or not at all. BNFT constraints learned: no `#` comments outside
+      `#include`, no `{...}` echoes in templates, no unguarded mutual
+      left-recursion (the grammar builder dies), and a partial sibling
+      success blocks later alternatives — hence the first-tail-op rule
+      design.
 - [ ] Comparisons in TD syntax (FD side exists)
 - [ ] Loops (`for`/`while`) and function-definition statements beyond
       resource `define`; resource override statements

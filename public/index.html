@@ -15,7 +15,14 @@ html, body {
 
 .terminal, .cmd, .terminal .terminal-output div div, .cmd .prompt {
    --size: 2;
-  height: 100%;
+}
+
+/* reversing only the terminal root puts the control line (last DOM child)
+   on top and the scrollback below it — applying flex to any inner selector
+   scrambles the prompt line and every echoed line */
+#terminal {
+  display: flex;
+  flex-direction: column-reverse;
 }
 
 .closed {
@@ -37,14 +44,22 @@ html, body {
 }
 
 /* the raw echo of a command's output container nests two block divs, which
-   stacks two line boxes (double the terminal line height) — inline the
-   output div so the line is exactly one text line, and hide it entirely
-   until the print lands in it */
+   stacks two line boxes (double the terminal line height) — inline-block
+   keeps the line at exactly one text line AND lets jQuery's slideUp/slideDown
+   animate (plain inline ignores height, so the collapse would be a no-op
+   that just pops), and hide it entirely until the print lands in it */
 .terminal div[class^="output"] {
-	display: inline;
+	display: inline-block;
 }
 
 .terminal div[class^="output"]:empty {
+	display: none;
+}
+
+/* when an output is toggled closed the line wrapper (jquery.terminal's
+   .raw line div) keeps a full line box of height even though the output
+   div inside is display:none — collapse the whole line */
+.terminal-output > div.output-closed {
 	display: none;
 }
 
@@ -188,12 +203,15 @@ function fileToString(file)
 
 function returnPrintFunction(index)
 {
-let myIndex=index;
-return function(text)
-{
-  var elm = document.getElementsByClassName("output" + myIndex)[0];
-  elm.innerHTML += text;
-}
+	let myIndex=index;
+	return function(text)
+	{
+	  var elm = document.getElementById("output" + myIndex);
+	  if (!elm)
+		elm = document.getElementsByClassName("output" + myIndex)[0];
+	  if (elm)
+		elm.innerHTML += text;
+	}
 }
 
 function flavor()
@@ -209,6 +227,40 @@ function flavor()
 	else
 		flavor="TODAWN_COMMANDPROMT";
 	return flavor;
+}
+
+// a loaded file is kept as dawn source and flavored for display on demand,
+// so switching the flavor re-flors the loaded code
+function flavorSource(dawnSource)
+{
+	var currentFlavor = flavor();
+	if (currentFlavor == "TODAWN_COMMANDPROMT")
+		return dawnSource;
+	// for basic flavors: first try per-line with console-sink stripping
+	// (this handles files like HelloWorld that have >>Console: sinks)
+	var perLine = dawnSource.split('\n').map(function(line)
+	{
+		line = line.trim();
+		if (line == "")
+			return "";
+		var stripped = line.replace(/>>Console:\s*$/, "").trim();
+		if (stripped == "")
+			return line;
+		var lineFlavored = (basic_parser.parse(stripped, {nonterminal:currentFlavor, alert:console.log}) || 'ERROR').trim();
+		// if flavoring succeeds, use flavored; otherwise use sink-stripped version
+		return lineFlavored.indexOf("ERROR") !== 0 ? lineFlavored : stripped;
+	}).filter(function(line) { return line != ""; }).join('\n');
+	// if per-line produced a visible change (stripped sinks or flavored), use it
+	if (perLine !== dawnSource)
+		return perLine;
+	// otherwise try whole-file program parse (needs trailing newline)
+	var programText = dawnSource.endsWith('\n') ? dawnSource : dawnSource + '\n';
+	var programFlavor = currentFlavor.replace("COMMANDPROMT", "PROGRAM");
+	var program = (basic_parser.parse(programText, {nonterminal:programFlavor, alert:console.log}) || 'ERROR').trim();
+	if (program.indexOf("ERROR") !== 0 && program !== dawnSource)
+		return program;
+	// fall back to original
+	return dawnSource;
 }
 
 const escapeRe = function(str) {
@@ -247,6 +299,13 @@ let terminal = $('#terminal').terminal($.noop, {
 		echoCommand: false,
 		inputStyle: "textarea", // touch-capable machines otherwise get the mobile
 		                      // contenteditable path, where click-to-focus is broken
+		keydown(e) {
+			// returning non-undefined short-circuits the terminal's own key
+			// handling, which is what runs the ctrl+R interactive reverse
+			// history search we don't want
+			if ((e.ctrlKey || e.metaKey) && /^[rR]$/.test(e.key ?? ""))
+				return false;
+		},
 		onBeforeCommand(command) {
 			const prompt = this.get_prompt();
 			let dawnSource = basic_parser.parse(command,{nonterminal:"TODAWN_COMMANDPROMT",alert:console.log});
@@ -272,6 +331,47 @@ let terminal = $('#terminal').terminal($.noop, {
 
 
 
+/* one delegated handler instead of per-element bindings: jquery.terminal
+   re-renders the lines on window resize and on terminal.refresh() (flavor
+   switch), which destroys direct click bindings — a delegated handler
+   survives any re-render */
+$(document).on('click', 'span[class*="toggle"]', function()
+{
+  var m = /toggle(\d+)/.exec(this.className);
+  if (!m)
+    return;
+  $(this).toggleClass("open");
+  // support both embed (id-based) and normal console (class-based) outputs
+  var out = document.getElementById("output" + m[1]);
+  if (!out)
+    out = document.getElementsByClassName("output" + m[1])[0];
+  if (!out)
+    return;
+  var line = out.closest(".terminal-output > div") || out.parentElement;
+  if ($(this).hasClass("open"))
+  {
+    out.style.display = "inline-block";
+    out.style.height = "";
+    if (line)
+      line.classList.remove("output-closed");
+    out.style.height = out.scrollHeight + "px";
+    setTimeout(function() { out.style.height = ""; }, 300);
+  }
+  else
+  {
+    out.style.height = out.scrollHeight + "px";
+    setTimeout(function() {
+      out.style.height = "0px";
+      setTimeout(function() {
+        out.style.display = "none";
+        var line = out.closest(".terminal-output > div") || out.parentElement;
+        if (line)
+          line.classList.add("output-closed");
+      }, 300);
+    }, 10);
+  }
+});
+
 function attachToggleFunction(index, dont)
 {
   if (!dont)
@@ -281,14 +381,6 @@ function attachToggleFunction(index, dont)
     if (index>0)
       document.getElementsByClassName("toggle"+(index-1))[0].firstChild.style="margin-top:-5px";
   }
-  $(".toggle"+index).click((event) => 
-  {
-     $(".toggle"+index).toggleClass("open");
-     if ($(".toggle"+index).hasClass("open"))
-        $(".output"+index).slideDown(300);
-     else
-        $(".output"+index).slideUp(300);
-  });
 }
 
 
@@ -301,6 +393,7 @@ function attachToggleFunction(index, dont)
 		if (currentFlavor != newFlavor)
 		{
 			terminal.refresh();
+			refreshEmbeddedCommand();
 		}
 		if (dropdown.classList.contains('closed'))
 		{
@@ -359,9 +452,12 @@ document.body.onload= () =>
 {
 	attachToggleFunction(index);
 
+	// ?flavor= selects the console flavor up front (dawn / keyboard / basic)
+	applyFlavorParameter();
+
 	if (parameters.input)
 	{
-		terminal.typing('insert', 1, parameters.input , function() {  });
+		terminal.typing('insert', 0, parameters.input , function() {  });
 		terminal.freeze(true);
 		var runButton = document.getElementsByClassName('action')[0];
 		runButton.style="display:inline-block";
@@ -369,11 +465,134 @@ document.body.onload= () =>
             event.stopPropagation();
 			terminal.freeze(false);
 			terminal.set_command("");
-			terminal.typing('enter', 1, parameters.input , function() {  });
+			terminal.typing('enter', 0, parameters.input , function() {  });
 			terminal.freeze(true);
 	    });
     }
+	if (parameters.inputFile)
+	{
+		// load the file and prepare it for running: a .dawn file keeps its
+		// dawn form as the run source but is flavored to the console's
+		// current syntax for the command line; a .basic file is converted
+		// to dawn
+		var fileText = "";
+		try
+		{
+			fileText = Dawn.resourceAsString(parameters.inputFile).trim();
+		}
+		catch (e)
+		{
+			terminal.echo("ERROR: cannot load " + parameters.inputFile);
+		}
+		var runSource = "";
+		if (fileText != "")
+		{
+			if (/\.basic$/i.test(parameters.inputFile))
+			{
+				runSource = (basic_parser.parse(fileText, {nonterminal:"TODAWN_COMMANDPROMT", alert:console.log}) || 'ERROR').trim();
+				if (runSource.indexOf("ERROR") === 0)
+					runSource = (basic_parser.parse(fileText, {nonterminal:"TODAWN_PROGRAM", alert:console.log}) || 'ERROR').trim();
+				if (runSource.indexOf("ERROR") === 0)
+				{
+					terminal.echo("ERROR: cannot parse " + parameters.inputFile);
+					runSource = "";
+				}
+			}
+			else
+				runSource = fileText;
+		}
+		if (runSource != "")
+		{
+			embedState = {source: runSource, prepared: flavorSource(runSource), outputIndex: index};
+			// replace any RUN wiring from the input branch so the two embed
+			// parameters can never double-execute
+			var runButton = document.getElementsByClassName('action')[0];
+			var freshButton = runButton.cloneNode(true);
+			runButton.parentNode.replaceChild(freshButton, runButton);
+			runButton = freshButton;
+			runButton.style="display:inline-block";
+			terminal.typing('insert', 0, embedState.prepared.replace(/\s*\n\s*/g, ' ') , function() {  });
+			terminal.freeze(true);
+			runButton.addEventListener('click', function(event) {
+				event.stopPropagation();
+				runEmbedded();
+			});
+		}
+    }
 }
+
+// the loaded file: its dawn source, the flavored command line and the
+// output line it writes to
+var embedState = null;
+
+function applyFlavorParameter()
+{
+	if (!parameters.flavor)
+		return;
+	var wanted = String(parameters.flavor).toLowerCase();
+	var chosen = null;
+	options.forEach(option =>
+	{
+		var text = option.innerHTML.toLowerCase();
+		if (wanted.indexOf("dawn") != -1 && text.indexOf("dawn") != -1)
+			chosen = option;
+		else if (wanted.indexOf("keyboard") != -1 && text.indexOf("keyboard") != -1)
+			chosen = option;
+		else if (wanted.indexOf("basic") != -1 && text.indexOf("basic") != -1 && text.indexOf("keyboard") == -1)
+			chosen = option;
+	});
+	if (!chosen)
+		return;
+	selectedElement = chosen;
+	options.forEach(option =>
+	{
+		option.classList?.remove('show');
+		option.classList?.add('hide');
+	});
+	chosen.classList?.remove('hide');
+	chosen.classList?.add('show');
+}
+
+// re-flavor the loaded file when the console flavor changes
+function refreshEmbeddedCommand()
+{
+	if (!embedState)
+		return;
+	embedState.prepared = flavorSource(embedState.source);
+	terminal.set_command(embedState.prepared.replace(/\s*\n\s*/g, ' '));
+}
+
+// first press: create the output line after the control line and run.
+		// later presses: clear the output line and run again.
+		// the control line keeps the program text, so the prompt is never
+		// copied and flavor changes keep affecting the control line
+		function runEmbedded()
+		{
+			if (!embedState)
+				return;
+			var out = document.getElementById("output" + embedState.outputIndex);
+			if (!out)
+			{
+				// create output div and place it AFTER the control line (.cmd)
+				out = document.createElement("div");
+				out.id = "output" + embedState.outputIndex;
+				out.className = "output" + embedState.outputIndex;
+				out.style.display = "inline-block";
+				var cmd = document.querySelector(".cmd");
+				if (cmd && cmd.parentNode)
+					cmd.parentNode.insertBefore(out, cmd.nextSibling);
+			}
+			else
+				out.innerHTML = "";
+			var line = out.closest(".terminal-output > div") || out.parentElement;
+			if (line)
+				line.classList.remove("output-closed");
+			out.style.display = "inline-block";
+			out.style.height = "";
+			// the triangle in the control line toggles this output
+			attachToggleFunction(embedState.outputIndex);
+			Dawn.execute(embedState.source, environment.userPath, returnPrintFunction(embedState.outputIndex));
+		}
 
 
 </script>
