@@ -125,12 +125,6 @@ Dawn Demo Console
           Basic Pretty
         </span>
       </li>
-      <li class="mdc-list-item" aria-selected="false" data-value="basic_keyboard" role="option">
-        <span class="mdc-list-item__ripple"></span>
-        <span class="mdc-list-item__text">
-          Basic Keyboard
-        </span>
-      </li>
       -->
     </ul>
   </div>
@@ -227,7 +221,6 @@ flavor_list      = document.getElementById('flavors');
 var flavors = {};
 var exampleSource = "";
 var Dawn = require('./Dawn.js');
-var BNFT = require('./BNFT/BNFT.js');
 function initialize()
 {
     console.time("init");
@@ -259,15 +252,21 @@ function initialize()
             if (parameters.flavors[oldi] !="")
             {
               source= GET(parameters.flavors[oldi],"");
+              // compiled flavor artifacts are keyed by URL: same grammar for
+              // several flavor names shares one parser instance
               var BNFTparser = null;
-              if (entry in flavor_parser)
-                BNFTparser = flavor_parser[entry]
+              if (parameters.flavors[oldi] in flavor_parser)
+                BNFTparser = flavor_parser[parameters.flavors[oldi]];
               else
               {
-                BNFTparser = new BNFT(source,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",useCache:true});
-                flavor_parser[entry] = BNFTparser;
+                try { BNFTparser = new (require(parameters.flavors[oldi] + ".js"))(); } // self-contained compiled flavor
+                catch(err) { BNFTparser = null; } // missing artifact: flavor unavailable → passthrough
+                flavor_parser[parameters.flavors[oldi]] = BNFTparser;
               }
-              parser = function(code) {return BNFTparser.parse(code,{alert:console.log,fileToString: Dawn.resourceAsString,path:"/dawn/Flavors/",nonterminal:"FROM_DAWN_TO_PRETTY"});};
+              var flavor_Parser = flavor_parser[parameters.flavors[oldi]];
+              parser = flavor_Parser
+                ? function(code) { var out = flavor_Parser.parse(code, {alert:console.log}); return (out && out.indexOf("ERROR") !== 0) ? out : code; }
+                : function(code) {return code;};
             }
             else
                 parser = function(code) {return code;};

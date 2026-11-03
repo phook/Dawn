@@ -1,19 +1,16 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const BNFT = require('../BNFT/BNFT.js');
+const { loadFlavorClass } = require('../dawn/BNFTLoader.js');
 
 const UPDATE = process.argv.includes('--update');
 const rootDir = path.join(__dirname, '..');
 const dawnCasesDir = path.join(__dirname, 'cases', 'dawn');
 const basicCasesDir = path.join(__dirname, 'cases', 'basic');
 
-const grammarSource = fs.readFileSync(path.join(rootDir, 'dawn/Flavors/basic.bnft'), 'utf8');
-const parser = new BNFT(grammarSource, {
-    alert: () => {},
-    fileToString: url => fs.readFileSync(path.join(rootDir, url), 'utf8'),
-    path: 'dawn/Flavors/'
-});
+// compiled basic flavor — self-contained builder parses the same basic grammar
+// (stale .bnft.js artifacts are JIT-recompiled by the loader)
+const parser = new (loadFlavorClass('basic'))();
 
 function runBnft(source, nonterminal) {
     return parser.parse(source, { nonterminal, alert: () => {} }) || 'ERROR';
@@ -126,6 +123,18 @@ for (const file of basicFiles) {
     } else {
         check(`basic/${name}  (dawn→basic)`, result, path.join(basicCasesDir, name + '.basic'), true);
     }
+}
+
+// ── Compiled flavor parity (artifact vs interpreter) ────────────────────────
+// BNFT_to_JS builds parsers by serializing the interpreter's expression tree;
+// parity across grammar/parse/error semantics is asserted by BNFT/test/parity_dawn.js
+console.log('\n── BNFT compiled flavor parity ──');
+try {
+    execSync('node BNFT/test/parity_dawn.js', { cwd: rootDir, timeout: 120000, stdio: ['ignore', 'inherit', 'inherit'] });
+    passed++;
+} catch (err) {
+    console.log('FAIL:    BNFT compiled flavor parity');
+    failed++;
 }
 
 // ── Documentation examples ─────────────────────────────────────────────────

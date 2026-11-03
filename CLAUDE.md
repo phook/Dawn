@@ -97,7 +97,11 @@ Installs: Express, Socket.io, @xterm/xterm, big-rational for arbitrary precision
 - `/codeexamples` - Sample programs demonstrating language features
 
 **Grammar Parser** (`/BNFT`):
-- `BNFT.js` - BNFT parser (Backus-Naur Form Transform); used by the Dawn compiler
+- `BNFT.js` - BNFT interpreter (Backus-Naur Form Transform), the canonical parser engine
+- `BNFT_to_JS.js` + `BNFT_runtime.js` - grammar compiler: builds `.bnft.js` parser artifacts
+  (the interpreter walks the expression tree and serializes it into a self-contained artifact)
+- `dawn/BNFTLoader.js` - JIT loader for flavor artifacts: compiles `dawn/Flavors/*.bnft` to
+  `.bnft.js` when missing or stale (mtime parity, same convention as `build_sources.js`)
 - `*.BNFT` - Example grammars: `Brainfuck.BNFT`, `Turtle.BNFT`, `BNFT_to_JS.BNFT`
 - See `/BNFT/README.md` for BNFT grammar documentation
 
@@ -109,7 +113,8 @@ Installs: Express, Socket.io, @xterm/xterm, big-rational for arbitrary precision
 ### Compilation Pipeline
 
 1. **Tokenizer** (DawnCompiler): Converts source into tokens, handles significant whitespace
-2. **Parser** (BNFT-based): Matches tokens to grammar rules in `Flavors/basic.bnft`
+2. **Parser** (compiled BNFT flavor): The `.bnft.js` artifact of `Flavors/basic.bnft` (self-contained
+   parser, JIT-compiled from the grammar by `dawn/BNFTLoader.js`) matches tokens to grammar rules
 3. **Code Generation**: Produces JavaScript with async/await and Promise chains
 4. **Execution**: Node.js evaluates the compiled code in a processor context
 
@@ -196,7 +201,11 @@ Use `node Test/runner.js --update` to refresh snapshots.
 
 ### Important Conventions
 
-- **File naming**: `.dawn` = source, `.dawn.js` = compiled resource, `.bnft` = grammar
+Full port/URI grammar and run-time resource construction (`Resource.NewResource:`): see `docs/js-compiler.md`.
+
+- **Resource options are Dawn inputs, never tail parameters**: assign via `NewInput:String:name?|all=true` (URI param assign, `|` marks an assigned input) or wire via `[Boolean:true]>>NewInput:String:name?all` (`?name` selects the input by name). `in_instanciate` parses only `Type:name` from the tail — do NOT add flag/`&`-parameter parsing there; config input functions carry the `_$explicit` suffix so the automatic input list can never shadow the typed capture slot.
+
+- **File naming**: `.dawn` = source, `.dawn.js` = compiled resource, `.bnft` = grammar, `.bnft.js` = compiled parser artifact
 - **Processor naming**: Resource class `Foo` has processor `FooProcessor`
 - **Input/output markers**: Always prefix with `in_` or `out_`
 - **Port-name grammar**: `in|out_<type...>_<name>_<marker?>` — the tokens before the last are the TYPE CHAIN, general → specific (an image subtype is `out_image_gif_default`, chain `[image, gif]`; a plain value type is `in_String_write`, chain `[String]`). The **name is the last non-marker token and is mandatory** — `default` is the reserved anonymous name; markers (`_$all`, `_$explicit`, `_$group`) stay as suffixes after the name. Connection matching is type-only (subtype rule): an input connects when its chain is a **prefix of the offered chain** — `in_image_write` accepts any image subtype, `in_image_png_write` rejects a gif; when several inputs match, the longest (most specific) chain wins. Names exist for explicit `?input`/`#output` selection (matched exactly as the name token). Typed values reach raw-byte sinks through their family inputs (`in_image_write`), not through `[octetstream]` inputs. Lifecycle ports (`in_begin`, `in_end`, `in_error`, `in_go`) are exempt from the grammar; begin/end/error stay multi-bindable.

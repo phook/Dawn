@@ -1,0 +1,11 @@
+[[ [ Number:1>>NewInput:Number:num ] ]]>>NewResource:Tester
+
+[Number:5]>>Tester:>>Console:
+
+[[ [ String:Hi>>NewInput:String:inp?|all=true ] ]]>>NewResource:Wrapper
+
+[String:Yo]>>Wrapper:>>Console:
+
+[[ [ [Boolean:true]>>NewInput:String:inp3?all ] ]]>>NewResource:Wrapper3
+
+[String:Yo3]>>Wrapper3:>>Console:

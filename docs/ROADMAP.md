@@ -114,6 +114,12 @@ Exit criteria met 2026-09-03: every resource has a passing case in Test/cases/da
 Goal: basic flavor is *the* way humans write Dawn; canonical URI form is the assembly.
 
 Done so far:
+- [x] Compiled flavor grammars: `BNFT_to_JS.js` serializes the interpreter's
+      expression tree into self-contained `.bnft.js` parser artifacts,
+      JIT-loaded by `dawn/BNFTLoader.js` (mtime-staleness like `.dawn.js`,
+      `build_flavors.js` bulk-build, save-trigger in the file scheme).
+      Byte-exact parity vs the interpreter over the whole round-trip corpus
+      (`BNFT/test/parity_dawn.js`: 0 diffs, 66 cases). DONE 2026-11-02.
 - [x] Round-trip corpus stable: 21 basic→dawn + 21 dawn→basic cases pinned by snapshot
 - [x] Native blocks in define bodies: indentation, nested braces, `%`-leading and
       empty payloads all survive the round trip
@@ -126,6 +132,26 @@ Done so far:
 - [x] `Meta:Assignment` clarified — canonical hint for flavors only
       (`Meta:Assignment>>expr>>x` pretty-prints as `x ≔ expr`; no runtime
       semantics needed and none planned)
+- [x] Run-time resource construction (`Resource.NewResource:`) — DONE 2026-10-29.
+      `[[ [declarer chains >> Resource.NewInput:<Type>:<name>] ]]>>Resource.NewResource:<Name>`
+      builds a resource from port definitions while the program runs: each
+      port element registers on the constructed resource (in_<Type>_<name> /
+      out_<Type>_<name>), declarer-time values are captured and replayed on
+      go, and `<Name>:` resolves the constructed instance in the enclosing
+      scope. Port flags ride as Dawn inputs — never tail parameters:
+      `NewInput:String:name?|all=true&|explicit=true&|group=g&|name=n`
+      (the leading `|` marks an assigned input) or a wired
+      `[Boolean:true]>>NewInput:String:name?all`; the runtime fires the
+      port's `in_<Type>_<flag>_$explicit` input function and the
+      registration refreshes its marker key. `in_instanciate` parses only
+      `Type:name` — no flag parsing. The declared names stay
+      clean; the `_$`-marker mangling of the runtime port keys happens
+      inside the port resources. Lives at
+      `dawn/Content-Type/data/Resource/`; the short URIs
+      `NewInput:`/`NewOutput:`/`NewResource:` resolve through the lookup
+      search path (dotted `Resource.` forms work natively). Groups
+      (`?|group=<g>`) are stored only in v1 — see the
+      pin-socket item below.
 
 Still open (see docs/progress.md "Known remaining gaps"):
 - [x] Mixed arithmetic chains (`1 + 2 - 3`, `2 * 3 / 4`) — DONE 2026-10-26.
@@ -145,6 +171,16 @@ Still open (see docs/progress.md "Known remaining gaps"):
 - [ ] Comparisons in TD syntax (FD side exists)
 - [ ] Loops (`for`/`while`) and function-definition statements beyond
       resource `define`; resource override statements
+- [ ] Port groups / pin sockets: `?|group=<n>` is stored on port definitions
+      in v1 but has no semantics yet. Proposal: a group is a pin socket —
+      connecting one pin of a socket removes the others from the offer (the
+      old `_$group` marker rule), letting one wired channel serve several
+      interchangeable pins (mux/selector patterns).
+- [ ] NewResource emission dedup: a declarer-time capture currently forwards
+      once when its channel is already wired and again on the `in_go` replay
+      (probe shows `Hi` twice). Pick one emission point — likely suppress the
+      live forward during declaration and let the replay be the single
+      source of truth.
 - [ ] Regenerate `docs/basic-flavor-syntax.md` to match the final grammar
 
 Non-goals recorded 2026-09-22: bare expressions in bodies are rejected *by

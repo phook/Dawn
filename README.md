@@ -54,7 +54,7 @@ Not a lot of resources have been added as of yet, since the list is big of whish
 - run in browser
 - numbers
 - commands (if, loops)
-- alternative flavor syntaxes (currently a basic flavor exists)
+- alternative flavor syntaxes (currently a basic flavor exists; grammars in `dawn/Flavors/*.bnft` are JIT-compiled to self-contained `.bnft.js` parser artifacts by `dawn/BNFTLoader.js`, mirroring how `.dawn` sources build their `.dawn.js` artifacts)
 
 Design Observations
 -------------------

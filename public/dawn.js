@@ -251,6 +251,7 @@ let Dawn = {
         this.path.push("dawn.");
         this.children["dawn"].path.push("Scheme."); // find schemes
         this.children["dawn"].path.push("Content-Type.data."); // find data types
+        this.children["dawn"].path.push("Content-Type.data.Resource."); // find resource-construction resources (NewInput:, NewOutput:, NewResource:)
         this.children["dawn"].path.push("Content-Type.application."); // find content-types (json:, octetstream:…)
         this.children["dawn"].path.push("Content-Type.image."); // find image subtypes (Content-Type.image.png:…)
         

@@ -8,12 +8,91 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 
 | Suite                                                       | Pass | Fail |
 |-------------------------------------------------------------|-----:|-----:|
-| Dawn execution (`dawn.js` against `.dawn`)                   |  49  |   0  |
-| Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  21  |   0  |
-| Basic flavor pretty-print (`dawn → basic`, incl. prompt)     |  21  |   0  |
-| Documentation `@example` execution                           |  48  |   0  |
+| Dawn execution (`dawn.js` against `.dawn`)                   |  64  |   0  |
+| BNFT compiled flavor parity (66 internal cases, one gate)     |   1  |   0  |
+| Basic flavor parse (`basic → dawn`, incl. `prompt_*` lanes)  |  26  |   0  |
+| Basic flavor pretty-print (`dawn → basic`, incl. prompt)     |  26  |   0  |
+| Documentation `@example` execution                           |  52  |   0  |
 | Integration (Test/integration/)                            |   5  |   0  |
-| **Total**                                                    | **168** | **0** |
+| **Total**                                                    | **174** | **0** |
+
+## What changed 2026-11-02 (BNFT flavors are compiled, interpreter dethroned)
+
+**Flavor grammars are now compiled ahead of use, like Dawn resources.** The
+BNFT meta-grammar approach is retired: `BNFT/BNFT_to_JS.js` instantiates the
+BNFT interpreter on the grammar text, walks the built expression tree
+(Literal, Range, OptionalExpression(s), Or, And, Identifier) and serializes it
+into a self-contained parser artifact (`<name>.bnft.js` = `BNFT_runtime.js`
+engine + the grammar's tree). `dawn/BNFTLoader.js` JIT-compiles when missing
+or stale (source/artifact mtime parity, `.dawn.js` conventions: stamped
+mtime, hidden attribute, `build_flavors.js` bulk-build, listings hide
+artifacts, saving a `.bnft` in `dawn/` regenerates like `.dawn` does).
+Artifact-vs-interpreter parity is asserted byte-for-byte (grammar,
+significant-whitespace state, fold behavior, `ERROR:` payloads incl. caret
+positions) by `BNFT/test/parity_dawn.js` — 0 diffs over 66 cases: the full
+basic↔dawn round-trip corpus both ways (incl. `prompt_*`), six error-string
+comparisons, and a toy grammar covering single-quote literals, ranges
+(including reversed bounds), optionals, repeats, groups, `#decodeuri`
+transforms and entry selection. All consumers (console `index.html`, editor
+`editor.html`, `Test/runner.js`, `embed_demo.html`) now run the compiled
+basic flavor; `removeMeta.bnft` also ships as an artifact for the editor's
+save path. The Basic Keyboard flavor is gone (UI and its
+`FROMDAWN_KEYBOARD_COMMANDPROMT` grammar rule). `npm test`: 174 passed,
+0 failed (new gate: BNFT compiled flavor parity).
+
+Measured (working tree, Windows; reuse with `node BNFT/test/bench_flavor.js`):
+constructing the basic-flavor parser is **2–4× faster** with the artifact
+(~20–40 ms interpreted → ~5–25 ms compiled, init only). The pretty-print
+conversion itself gains little **by design** — the artifact runs the same
+engine — but the engine got a real fix the same day: `Result.add` used to walk
+the whole accumulated chain on every append (O(n²) link hops; on
+`dawn/Content-Type/data/Resource.dawn`, a pathological 40 KB single-line
+URL-encoded native block, chains grow to tens of thousands of nodes). A tail
+pointer makes the append O(1) — identical chain structure, byte-identical
+output (22,904 bytes, 0/66 parity, 174/0 npm test). The Resource.dawn
+round-trip `FROMDAWN_PROGRAM` show dropped from **~12.6 s to ~0.18–0.22 s
+end-to-end** (~60–70×; warm parses ~100×: 10–23 s → ~114 ms), a typical small
+source (HelloWorld.dawn) 31 ms → 23 ms. An attempt to also collapse the
+`OptionalExpression` try-then-reparse double parse was **reverted**: the
+second parse is load-bearing (outputs drifted, snapshots failed); revisit only
+with a precise account of which state the reparse observes. Engine changes are
+applied verbatim to BOTH `BNFT/BNFT.js` and `BNFT/BNFT_runtime.js` (parity
+lockstep); since the runtime is inlined into every artifact, rebuild with
+`node build_flavors.js --force` after touching it (the `.bnft`-mtime
+staleness check cannot see runtime edits).
+
+## What changed 2026-10-29 (run-time resource construction: NewResource)
+
+**Resources can now be built while a program runs.** Three resources live at
+`dawn/Content-Type/data/Resource/`: `Resource.NewResource:` constructs a
+resource from port definitions declared as var-flavor list elements
+(`[[ [chains>>Resource.NewInput:<Type>:<name>] ]]>>Resource.NewResource:<Name>`),
+`Resource.NewInput:` / `Resource.NewOutput:` declare typed ports that
+register on the constructed resource when they connect
+(`in_<Type>_<name>` / `out_<Type>_<name>`, deduped by name). Declarer-time
+values are captured on the port and forwarded through the constructed
+resource's matching out channel; `<Name>:` dereferences to a per-use clone
+(reference semantics like `var:`); `in_go` replays retained captures. Typed
+ports install a typed capture slot (`in_<Type>_default_$all`) because a
+chainless `in_default_$all` can never match a typed offer under the
+port-name grammar. Short URIs (`NewInput:` etc.) resolve via a new lookup
+search-path entry (`Content-Type.data.Resource.`); dotted forms work
+natively. Port flags ride as Dawn inputs — never tail parameters: the URI
+parameter assign (`NewInput:String:name?|all=true&|explicit=true&|group=g&|name=n`
+— the leading `|` marks an assigned input) or a wired value selecting the
+input by name (`[Boolean:true]>>NewInput:String:name?all`); the runtime
+fires the port's `in_<Type>_<flag>_$explicit` input function and the
+registration refreshes its marker key. `in_instanciate` parses only
+`Type:name` from the tail — no flag parsing; the declared name stays clean
+and the `_$`-marker mangling of the runtime port keys happens inside the
+port resources. The June stubs at `data/Resource/*.js`
+(dead code referencing a nonexistent `dawn/Resource.js`) were removed.
+Docs: `docs/js-compiler.md`
+(port/URI conventions); ROADMAP records the pin-socket proposal (groups are
+storage-only in v1) and the capture-emission dedup item. `build_docs.js`
+reports 21 pre-existing port-introspection errors on other resources
+(verified present without this work — its universal-value-port set predates
+the `<Type>_default` naming).
 
 ## What changed 2026-10-23 (port-name grammar: type chains + mandatory names)
 

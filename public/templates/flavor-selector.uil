@@ -44,12 +44,6 @@
                       Basic Pretty
                     </span>
                   </li>
-                  <li class="mdc-list-item" aria-selected="false" data-value="basic_keyboard" role="option">
-                    <span class="mdc-list-item__ripple"></span>
-                    <span class="mdc-list-item__text">
-                      Basic Keyboard
-                    </span>
-                  </li>
             </ul>
           </div>
         </div>
@@ -68,9 +62,6 @@
             {
             },
             "Basic Pretty" : 
-            {
-            },
-            "Basic Pretty Keyboard" : 
             {
             }
         },
