@@ -16,6 +16,17 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 | Integration (Test/integration/)                            |   5  |   0  |
 | **Total**                                                    | **174** | **0** |
 
+## What changed 2026-11-03 (landing page; the terminal console moved)
+
+`public/index.html` is now a landing page with three vertical divisions —
+tutorial (`chapter-1.html`), console (`dawn_console.html`) and IDE
+(`editor.html`) — and the old terminal-console `index.html` was renamed to
+`public/dawn_console.html` (no page referenced it by name; both servers reach
+the console page by filename and the landing page as the `/` default document,
+so nothing in the route matrices changed except the parity probe, which now
+hits `/dawn_console.html` explicitly). The landing page is dependency-free
+HTML/CSS matching the console's black/monospace aesthetic.
+
 ## What changed 2026-11-02 (BNFT flavors are compiled, interpreter dethroned)
 
 **Flavor grammars are now compiled ahead of use, like Dawn resources.** The
@@ -33,8 +44,8 @@ positions) by `BNFT/test/parity_dawn.js` — 0 diffs over 66 cases: the full
 basic↔dawn round-trip corpus both ways (incl. `prompt_*`), six error-string
 comparisons, and a toy grammar covering single-quote literals, ranges
 (including reversed bounds), optionals, repeats, groups, `#decodeuri`
-transforms and entry selection. All consumers (console `index.html`, editor
-`editor.html`, `Test/runner.js`, `embed_demo.html`) now run the compiled
+transforms and entry selection. All consumers (console `dawn_console.html`,
+editor `editor.html`, `Test/runner.js`, `embed_demo.html`) now run the compiled
 basic flavor; `removeMeta.bnft` also ships as an artifact for the editor's
 save path. The Basic Keyboard flavor is gone (UI and its
 `FROMDAWN_KEYBOARD_COMMANDPROMT` grammar rule). `npm test`: 174 passed,

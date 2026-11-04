@@ -15,7 +15,8 @@ directive: the server work itself decides what language support must exist).
     header/status inputs.
 - Server programs live in **`server/`** (exit criterion:
   `node dawn_run.js server/main.dawn`).
-- Console page (`public/index.html`) uses no sockets — **hubserver/socket:
+- Console page (`public/dawn_console.html`, the old `index.html`) uses no
+  sockets — **hubserver/socket:
   deferred** until something actually needs it.
 
 ## Work items

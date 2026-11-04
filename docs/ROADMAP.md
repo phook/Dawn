@@ -255,7 +255,7 @@ happen to render — preserving "everything is a resource".
 3. Component library in UIL templates replacing `public/templates/`:
    button, text-field, list, tabs, framed, app-bar-top, project-inspector.
 4. The two big wrapper components: ACE editor (absorbing the `≔` monkey-patches
-   from `editor.html`) and terminal/prompt (wrapping the `index.html`
+   from `editor.html`) and terminal/prompt (wrapping the `dawn_console.html`
    `TODAWN_COMMANDPROMT` loop).
 5. `{script flavor=basic}` blocks executing through `Dawn.execute`.
 6. Browser-side component test harness.
@@ -265,7 +265,7 @@ components individually testable.
 
 ### Phase 5 — All web pages as UIL + Dawn
 
-1. `index.html` (terminal/prompt) → UIL page via the Phase 4 terminal component.
+1. `dawn_console.html` (terminal/prompt) → UIL page via the Phase 4 terminal component.
 2. `editor.html` → UIL page via the editor component.
 3. Retire `dawn_ide.html` and the `- Copy.uil` duplicates — one canonical IDE page.
 4. The Phase 3 Dawn server compiles+serves these UIL pages.
