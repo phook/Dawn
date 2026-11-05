@@ -26,6 +26,10 @@ const FORCE = process.argv.includes('--force');
 
 const ROOT = __dirname;
 const DAWN_DIR = path.join(ROOT, 'dawn');
+// App-level sources live outside dawn/ (e.g. server/scheme/*.dawn) and their
+// .dawn.js artifacts are just as gitignored — build them too or a fresh deploy
+// crashes resolving app scheme resources.
+const SOURCE_DIRS = [DAWN_DIR, path.join(ROOT, 'server')];
 
 function* walk(dir) {
     for (const ent of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -55,7 +59,8 @@ function blockToLines(lines, out) { return lines; }
 
 let written = 0, fresh = 0, errors = 0;
 
-for (const srcPath of walk(DAWN_DIR)) {
+for (const SOURCE_DIR of SOURCE_DIRS)
+for (const srcPath of walk(SOURCE_DIR)) {
     const source = fs.readFileSync(srcPath, 'utf8');
     if (!/Native\.Javascript:/.test(source)) continue;
 
@@ -88,4 +93,4 @@ for (const srcPath of walk(DAWN_DIR)) {
     written++;
 }
 
-console.log(`${written} built, ${fresh} fresh, from dawn/ sources`);
+console.log(`${written} built, ${fresh} fresh, from dawn/ + server/ sources`);

@@ -93,6 +93,7 @@ async function runMatrix(label, base, tmpSavePath, saveBody) {
   const matrix = [
     { name: 'root index', method: 'GET', route: '/', checkCsp: true },
     { name: 'editor page', method: 'GET', route: '/editor.html' },
+    { name: 'tutorial page', method: 'GET', route: '/tutorial.html' },
     { name: 'console page', method: 'GET', route: '/dawn_console.html' },
     { name: 'environment.json', method: 'GET', route: '/environment.json' },
     { name: 'dir listing', method: 'GET', route: '/' + codeexamples },

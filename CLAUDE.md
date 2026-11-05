@@ -93,6 +93,7 @@ Installs: Express, Socket.io, @xterm/xterm, big-rational for arbitrary precision
 **Web Frontend** (`/public`):
 - `dawn.js` - Runtime library: module loading, browser/Node.js compatibility, resource caching
 - `index.html` - Landing page: three doors (tutorial, console, IDE)
+- `tutorial.html` - Tutorial front page (poignant-guide style, animated book cover)
 - `dawn_console.html` - Interactive terminal console (renamed from the old `index.html`)
 - `editor.html` - IDE entry point
 - `chapter-*.html` - Tutorial chapters

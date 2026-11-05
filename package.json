@@ -26,6 +26,8 @@
   },
   "scripts": {
     "dawn": "node dawn.js server/main.dawn",
+    "postinstall": "node build_sources.js && node build_flavors.js",
+    "build:sources": "node build_sources.js",
     "build:flavors": "node build_flavors.js",
     "test": "node Test/runner.js",
     "test:update": "node Test/runner.js --update"

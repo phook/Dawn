@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>
+      Phook's (Not So Poignant) Dawn Tutorial
+    </title>
+    <meta name=author content="Phook">
+    <meta name=creator content="Phook">
+
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <style>
+      body {
+        margin: 0;
+        padding: 40px 20px 60px;
+        background-color: black;
+        color: #f5f0e0;
+        font-family: Utopia, Georgia, Times, serif;
+        text-align: center;
+      }
+
+      h1 {
+        font-weight: normal;
+        font-size: 2.1em;
+        margin: 10px 0 4px;
+      }
+
+      h1 .not {
+        color: #b6d264;
+        font-style: italic;
+      }
+
+      .subtitle {
+        color: #8ed8e8;
+        margin: 0 0 30px;
+        font-style: italic;
+      }
+
+      .news {
+        display: inline-block;
+        border: 1px dashed #b6d264;
+        color: #b6d264;
+        padding: 8px 18px;
+        margin: 0 0 34px;
+        font-size: 0.95em;
+      }
+
+      /* the book: shut by default, opens (crossfade to the open-shelf
+         photograph) on hover or focus — and peeks open on its own now
+         and then so the page animates even for idle visitors */
+      a.book {
+        display: inline-block;
+        position: relative;
+        line-height: 0;
+        outline: none;
+      }
+
+      a.book img {
+        display: block;
+        width: min(680px, 92vw);
+        height: auto;
+      }
+
+      a.book img.open {
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: opacity .9s ease;
+        animation: peek 9s ease-in-out infinite;
+      }
+
+      @keyframes peek {
+        0%, 72% { opacity: 0; }
+        80%, 90% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+
+      a.book:hover img.open,
+      a.book:focus img.open {
+        animation: none;
+        opacity: 1;
+      }
+
+      a.book:hover,
+      a.book:focus {
+        transform: perspective(1200px) rotateX(2deg) scale(1.015);
+        transition: transform .9s ease;
+      }
+
+      .hint {
+        color: #8a8577;
+        font-size: 0.9em;
+        font-style: italic;
+        margin: 14px 0 30px;
+      }
+
+      .menu {
+        font-size: 1.05em;
+        margin: 0 0 44px;
+      }
+
+      .menu a {
+        color: #8ed8e8;
+        text-decoration: none;
+      }
+
+      .menu a:hover {
+        text-decoration: underline;
+      }
+
+      .menu .sep {
+        color: #b6d264;
+        padding: 0 10px;
+      }
+
+      ol.chapters {
+        list-style: none;
+        padding: 0;
+        margin: 0 auto 50px;
+        max-width: 620px;
+        text-align: left;
+      }
+
+      ol.chapters li {
+        border-bottom: 1px dotted #3a3a3a;
+        padding: 12px 6px;
+      }
+
+      ol.chapters a {
+        color: #f5f0e0;
+        text-decoration: none;
+        font-size: 1.15em;
+      }
+
+      ol.chapters a:hover {
+        color: #b6d264;
+      }
+
+      ol.chapters .blurb {
+        display: block;
+        color: #8a8577;
+        font-size: 0.9em;
+        font-style: italic;
+        margin-top: 3px;
+      }
+
+      .credit {
+        color: #8a8577;
+        font-size: 0.95em;
+        line-height: 1.7;
+      }
+
+      .credit a {
+        color: #8a8577;
+      }
+    </style>
+</head>
+<body>
+
+  <h1>Phook's <span class="not">(not so poignant)</span> Tutorial</h1>
+  <p class="subtitle">for Dawn</p>
+
+  <p class="news">Ohh! Fresh chapters snuck up! Goddaw, Dawn &mdash; strings, numbers and a whole program, drawings everywhichway.</p>
+
+  <a class="book" href="chapter-1.html" title="open the book">
+    <img src="images/2007-cover-shut.jpg" alt="Phook's (not so poignant) tutorial for Dawn &mdash; the book, shut">
+    <img class="open" src="images/2007-cover-open.jpg" alt="Phook's (not so poignant) tutorial for Dawn &mdash; the book, open">
+  </a>
+  <p class="hint">(the book opens when you touch it &mdash; go on, open the book)</p>
+
+  <p class="menu">
+    <a href="chapter-1.html">open the book</a>
+    <span class="sep">&#164;</span>
+    <a href="#chapters">the chapters??</a>
+    <span class="sep">&#164;</span>
+    <a href="dawn_console.html">but the console??!</a>
+  </p>
+
+  <ol class="chapters" id="chapters">
+    <li>
+      <a href="chapter-1.html">1. About this Tutorial</a>
+      <span class="blurb">in which we meet, and pictures are shown for no reason at all</span>
+    </li>
+    <li>
+      <a href="chapter-2.html">2. Goddaw, Dawn</a>
+      <span class="blurb">in which URIs are bound together with >> and the world makes sense again</span>
+    </li>
+    <li>
+      <a href="chapter-3.html">3. A Quick (and Hopefully Not Too Painful) Introduction to Dawn (with a Badly Drawn Rabbit)</a>
+      <span class="blurb">in which a rabbit teaches you the whole language, whether it likes it or not</span>
+    </li>
+  </ol>
+
+  <p class="credit">
+    Tenderly written and illustrated by Phook.<br>
+    Cover collage and book pix bow to <a href="https://poignant.guide/">why the lucky stiff</a>.
+  </p>
+
+</body>
+</html>

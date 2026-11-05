@@ -19,13 +19,20 @@ Snapshot of the runtime and toolchain status. Numbers come from running
 ## What changed 2026-11-03 (landing page; the terminal console moved)
 
 `public/index.html` is now a landing page with three vertical divisions —
-tutorial (`chapter-1.html`), console (`dawn_console.html`) and IDE
+tutorial (`tutorial.html`), console (`dawn_console.html`) and IDE
 (`editor.html`) — and the old terminal-console `index.html` was renamed to
 `public/dawn_console.html` (no page referenced it by name; both servers reach
 the console page by filename and the landing page as the `/` default document,
 so nothing in the route matrices changed except the parity probe, which now
 hits `/dawn_console.html` explicitly). The landing page is dependency-free
-HTML/CSS matching the console's black/monospace aesthetic.
+HTML/CSS matching the console's black/monospace aesthetic. The tutorial door
+opens on `public/tutorial.html`, a poignant.guide-style front page built around
+the two 2007 cover photographs (`images/2007-cover-shut.jpg` /
+`-open.jpg`): the book sits shut and opens (crossfade + tilt) on hover or
+focus, with an idle peek so it animates on its own; chapter list, poignant-style
+link row (`open the book ¤ the chapters?? ¤ but the console??!`) and credit.
+Chapters' `Contents` links (and chapter 1's banner `previous`) now point at
+`tutorial.html`; the parity matrix gained a `/tutorial.html` probe.
 
 ## What changed 2026-11-02 (BNFT flavors are compiled, interpreter dethroned)
 
