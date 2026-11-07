@@ -20,24 +20,39 @@ body {
 }
 
 header {
+  position: relative;
   text-align: center;
-  padding: 34px 20px 26px;
-  border-bottom: 1px solid hsla(0, 0%, 67%, .25);
+  padding: 44px 20px 36px;
+  background-image: url(images/dawn_watercolor.png);
+  background-size: cover;
+  background-position: center 42%;
+}
+
+header::after {
+  /* keep the wordmark readable over the bright sky */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: hsla(0, 0%, 100%, .18);
 }
 
 header h1 {
+  position: relative;
+  z-index: 1;
   margin: 0;
   font-size: 44px;
   font-weight: normal;
   letter-spacing: 12px;
   text-indent: 12px; /* balance the trailing letter-spacing */
-  color: hsla(0, 0%, 87%, .99);
+  color: hsla(258, 35%, 18%, .99);
 }
 
 header p {
+  position: relative;
+  z-index: 1;
   margin: 14px 0 0;
   font-size: 14px;
-  color: hsla(0, 0%, 55%, .99);
+  color: hsla(258, 25%, 30%, .99);
 }
 
 nav {
@@ -53,7 +68,8 @@ nav a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
+  gap: 14px;
+  padding: 28px 16px;
   text-decoration: none;
   color: hsla(0, 0%, 67%, .99);
   border-left: 1px solid hsla(0, 0%, 67%, .25);
@@ -62,6 +78,27 @@ nav a {
 
 nav a:first-child {
   border-left: none;
+}
+
+nav a .cue {
+  width: min(320px, 100%);
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border: 1px solid hsla(0, 0%, 67%, .25);
+  background: #111111;
+}
+
+nav a .cue img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity .3s;
+}
+
+nav a:hover .cue img,
+nav a:focus-visible .cue img {
+  opacity: .82;
 }
 
 nav a .number {
@@ -110,7 +147,6 @@ nav a:focus-visible .arrow {
   nav a {
     border-left: none;
     border-top: 1px solid hsla(0, 0%, 67%, .25);
-    padding: 40px 20px;
   }
 
   nav a:first-child {
@@ -126,18 +162,21 @@ nav a:focus-visible .arrow {
 </header>
 <nav>
   <a href="tutorial.html">
+    <span class="cue"><img src="images/cover.jpg" alt="Phook's (not so poignant) tutorial for Dawn cover"></span>
     <span class="number">1</span>
     <span class="name">TUTORIAL</span>
     <span class="description">Learn the language, chapter by chapter</span>
     <span class="arrow">&#x2192;</span>
   </a>
   <a href="dawn_console.html">
+    <span class="cue"><img src="images/console.jpg" alt="The Dawn console" style="object-position: top"></span>
     <span class="number">2</span>
     <span class="name">CONSOLE</span>
     <span class="description">Try Dawn in an interactive terminal</span>
     <span class="arrow">&#x2192;</span>
   </a>
   <a href="editor.html">
+    <span class="cue"><img src="images/Ide.jpg" alt="The Dawn IDE" style="object-position: top"></span>
     <span class="number">3</span>
     <span class="name">IDE</span>
     <span class="description">Write, edit and run Dawn programs</span>

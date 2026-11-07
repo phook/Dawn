@@ -47,24 +47,34 @@
 
       /* the book: shut by default, opens (crossfade to the open-shelf
          photograph) on hover or focus — and peeks open on its own now
-         and then so the page animates even for idle visitors */
+         and then so the page animates even for idle visitors.
+         the window crops the photograph slightly and shifts it left so
+         the BOOK (not the paper cast around it) sits centered */
       a.book {
-        display: inline-block;
+        display: block;
         position: relative;
+        width: min(680px, 92vw);
+        aspect-ratio: 4 / 3;
+        margin: 0 auto;
+        overflow: hidden;
         line-height: 0;
         outline: none;
       }
 
       a.book img {
-        display: block;
-        width: min(680px, 92vw);
+        position: absolute;
+        top: 50%;
+        left: -14%;
+        width: 114%;
         height: auto;
+        transform: translateY(-50%);
+      }
+
+      a.book img.shut {
+        opacity: 1;
       }
 
       a.book img.open {
-        position: absolute;
-        top: 0;
-        left: 0;
         opacity: 0;
         transition: opacity .9s ease;
         animation: peek 9s ease-in-out infinite;
@@ -164,7 +174,7 @@
   <p class="news">Ohh! Fresh chapters snuck up! Goddaw, Dawn &mdash; strings, numbers and a whole program, drawings everywhichway.</p>
 
   <a class="book" href="chapter-1.html" title="open the book">
-    <img src="images/2007-cover-shut.jpg" alt="Phook's (not so poignant) tutorial for Dawn &mdash; the book, shut">
+    <img class="shut" src="images/2007-cover-shut.jpg" alt="Phook's (not so poignant) tutorial for Dawn &mdash; the book, shut">
     <img class="open" src="images/2007-cover-open.jpg" alt="Phook's (not so poignant) tutorial for Dawn &mdash; the book, open">
   </a>
   <p class="hint">(the book opens when you touch it &mdash; go on, open the book)</p>

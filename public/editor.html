@@ -180,6 +180,13 @@ function POST(url, json, callback)   { Do("POST", url, json, callback); return "
 function PUT(url, json, callback)    { Do("PUT", url, json, callback); return "ok"; }
 function DELETE(url, json, callback) { Do("DELETE", url, json, callback); return "ok"; }
 
+// when the site does not run on localhost the file: routes are unreachable by
+// design — the editor's file target is the browser's localstorage: repository
+function isLocalHost() {
+    return ["localhost", "127.0.0.1", "::1", "::ffff:127.0.0.1"].indexOf(location.hostname) !== -1;
+}
+function LSscheme() { return Dawn.require("Scheme/localstorage"); }
+
 var editElement = document.getElementById("editor");
 var editor = null;
 if (editElement) {
@@ -404,6 +411,33 @@ function openPath(path) {
     }
     var tab = createTab(path);
     switchToTab(tab);
+    if (path.indexOf("localstorage:") === 0) {
+        var LSm = LSscheme();
+        if (!LSm) { console.log("localstorage: scheme not available"); return; }
+        var stored = LSm.read_raw(path);
+        if (!stored) { console.log("Not found in localstorage:", path); return; }
+        var lsText = new TextDecoder().decode(stored.bytes);
+        if (!/^text\//.test(stored.mime) && stored.mime !== "application/json"
+            && stored.mime !== "application/dawn" && stored.mime !== "application/javascript") {
+            // opaque: show a placeholder, never convert/flag/save the bytes
+            tab.binary = true;
+            tab.canonical = lsText;
+            tab.session.setValue("[binary content — not shown as text]", -1);
+            tab.session.getUndoManager().reset();
+            tab.dirty = false;
+            renderTab(tab);
+            if (tab === activeTab) checkSyntax();
+            return;
+        }
+        tab.canonical = lsText; // pristine stored content — the dirty baseline
+        lsText = convertToFlavor(lsText, tab.flavor);
+        tab.session.setValue(lsText, -1);
+        tab.session.getUndoManager().reset();
+        tab.dirty = false;
+        renderTab(tab);
+        if (tab === activeTab) checkSyntax();
+        return;
+    }
     GET(buildFetchUrl(path), function(data) {
         if (tabs.indexOf(tab) === -1) return; // closed while loading
         var source = data || "";
@@ -551,10 +585,13 @@ function saveFile() {
 	var dawnSource="";
     var flavor = tab.flavor;
     console.log("DEBUG saveFile: flavor=", flavor, "path=", tab.path, "content length=", content.length);
+    // non-localhost (or an existing localstorage: tab) saves to the browser's
+    // localstorage: repository — the file: routes are localhost-only by design
+    var useLS = (tab.path && tab.path.indexOf("localstorage:") === 0) || !isLocalHost();
     if (!tab.path) {
         var name = prompt("File name:", "untitled.dawn");
         if (!name) return;
-        tab.path = "file:///" + name;
+        tab.path = (useLS ? "localstorage:/" : "file:///") + name;
         renderTab(tab);
         applyTabState();
     }
@@ -573,6 +610,20 @@ function saveFile() {
         console.log("DEBUG: flavorparser not available, not saving");
 		return;
 	}
+    if (useLS) {
+        var LSm = LSscheme();
+        if (!LSm) { console.log("Save failed: localstorage: scheme not available"); return; }
+        if (!LSm.write_raw(tab.path, dawnSource, "text/dawn")) {
+            console.log("Save failed (storage quota?):", tab.path);
+            return;
+        }
+        console.log("Saved:", tab.path);
+        tab.canonical = dawnSource; // the stored content is the new dirty baseline
+        tab.dirty = computeDirty(tab);
+        renderTab(tab);
+        if (tab === activeTab) checkSyntax();
+        return;
+    }
     var http = new XMLHttpRequest();
     http.open("PUT", "/_file?path=" + encodeURIComponent(tab.path), true);
     http.onreadystatechange = function() {
@@ -803,7 +854,90 @@ GET(buildFetchUrl(environment.dawnPath), function(data) {
     } catch (e) {
         project.textContent = "Parse error: " + (e.message || e);
     }
+    renderLocalstorageSection(project);
 });
+
+// ── the localstorage: repository section ────────────────────────────────────
+// The browser-side file target (the editor's save destination when the site
+// does not run on localhost, and a place to keep files on any host). Lazy
+// tree: directories are the path prefixes of stored files.
+function renderLocalstorageSection(projectEl) {
+    var LS = LSscheme();
+    if (!LS) return; // scheme module not fetchable — no section
+    function renderLsTree(parentEl, tree, level, parentUrl) {
+        var ul = makeEl("ul");
+        parentEl.appendChild(ul);
+        Object.keys(tree).sort().forEach(function(name) {
+            var entry = tree[name];
+            var childUrl = parentUrl + name;
+            var indent = makeEl("span", { className: "indent", style: "display:inline-block;width:" + (level * 12) + "px" });
+            var lrow = makeEl("li");
+            var llabel = makeEl("span", { text: name, style: "margin-left:2px" });
+            if (entry && entry.contentType === "text/directory-json") {
+                var lcaret = makeEl("span", { className: "caret right" });
+                var licon = makeEl("span", { className: "icon icon-folder" });
+                lrow.appendChild(makeEl("span", null, [indent, licon, llabel, lcaret]));
+                var nested = makeEl("ul", { className: "nested" });
+                var lopen = false;
+                var toggleDir = function(ev) {
+                    ev.stopPropagation();
+                    lopen = !lopen;
+                    nested.classList.toggle("open", lopen);
+                    lcaret.classList.toggle("right", !lopen);
+                    lcaret.classList.toggle("down", lopen);
+                    if (lopen && !nested.dataset.loaded) {
+                        nested.dataset.loaded = "1";
+                        var sub = {};
+                        try { sub = LS.list(childUrl) || {}; } catch (e) { sub = {}; }
+                        renderLsTree(nested, sub, level + 1, childUrl + "/");
+                    }
+                };
+                lrow.addEventListener("click", toggleDir);
+                lcaret.addEventListener("click", toggleDir);
+                lrow.style.cursor = "pointer";
+                lrow.style.userSelect = "none";
+                ul.appendChild(lrow);
+                ul.appendChild(nested);
+            } else {
+                var fileIcon = name.endsWith(".dawn")
+                    ? makeEl("span", { className: "icon icon-file-dawn" })
+                    : makeEl("span", { className: "icon-tree-spacer" });
+                lrow.appendChild(makeEl("span", null, [indent, fileIcon, llabel]));
+                lrow.setAttribute("data-path", childUrl);
+                lrow.addEventListener("click", function(ev) {
+                    ev.stopPropagation();
+                    selectFile(childUrl, lrow);
+                });
+                ul.appendChild(lrow);
+            }
+        });
+    }
+    var row = makeEl("li");
+    row.style.cursor = "pointer";
+    row.style.userSelect = "none";
+    var caret = makeEl("span", { className: "caret right" });
+    var icon = makeEl("span", { className: "icon icon-folder" });
+    var label = makeEl("span", { text: "localstorage", style: "margin-left:2px" });
+    row.appendChild(makeEl("span", null, [icon, label, caret]));
+    var nestedUl = makeEl("ul", { className: "nested" });
+    var lsOpen = false;
+    var toggleRoot = function() {
+        lsOpen = !lsOpen;
+        nestedUl.classList.toggle("open", lsOpen);
+        caret.classList.toggle("right", !lsOpen);
+        caret.classList.toggle("down", lsOpen);
+        if (lsOpen && !nestedUl.dataset.loaded) {
+            nestedUl.dataset.loaded = "1";
+            var listing = {};
+            try { listing = LS.list("localstorage:") || {}; } catch (e) { listing = {}; }
+            renderLsTree(nestedUl, listing, 1, "localstorage:/");
+        }
+    };
+    row.addEventListener("click", toggleRoot);
+    caret.addEventListener("click", toggleRoot);
+    projectEl.appendChild(row);
+    projectEl.appendChild(nestedUl);
+}
 
 // start with one untitled tab
 if (editor) newFile();
